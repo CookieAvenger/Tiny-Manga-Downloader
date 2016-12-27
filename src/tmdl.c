@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include "tmdl.h"
 
 bool verbose = false;
 char* saveDirectory = NULL;
@@ -11,6 +11,7 @@ char* saveDirectory = NULL;
 void terminate_handler(int signal) {
     //here we delete downloading directory - what if the zip is running?
     //gotta reap that child process first if it exists
+    //only if our temp location directory is not null
     exit(9);
 }
 
@@ -42,6 +43,10 @@ void print_error(int err, void *notUsing) {
 
 bool getVerbose() {
     return verbose;
+}
+
+char *getSaveDirectory() {
+    return saveDirectory;
 }
 
 //Checks if arguments are correct and exits if otherwise

@@ -1,7 +1,3 @@
-Thread the downloading??
--lpthread
-
-if a save location is not provided then save to current directory
 - in current directory make a new folder named the series name - and make sure invalid charecters are not saved as folder name
 - in that folder make cbz files for each chapter
 
