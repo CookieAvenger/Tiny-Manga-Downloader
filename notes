@@ -1,0 +1,20 @@
+Thread the downloading??
+-lpthread
+
+if a save location is not provided then save to current directory
+- in current directory make a new folder named the series name - and make sure invalid charecters are not saved as folder name
+- in that folder make cbz files for each chapter
+
+if a folder in the name of the series already exists only download chapters that are not already in that folder
+- first check if there isn't a folder in current directory named our series, then check if current directory itself is not named after our series - then make a new folder in current directory that is our series
+
+use a folder, download pictures inside, create a cbr from files in folder
+^call this folder working directory - create on every run, delete at end of every run
+
+when download done - run this in working directory - run bach -c
+zip ../(chapter name here).cbr *
+rm -rf ./
+
+if -v is applied print when a chapter finishes downloading
+and also print each picture download like 3/36 and then zipping, and then done - make sure updates on same line with \r and if last message longer than next have enough spaces to remove it
+don't forget to fflush
