@@ -14,3 +14,8 @@ rm -rf ./
 if -v is applied print when a chapter finishes downloading
 and also print each picture download like 3/36 and then zipping, and then done - make sure updates on same line with \r and if last message longer than next have enough spaces to remove it
 don't forget to fflush
+
+support kissmanga
+and hitomi
+
+gotta deal with cookies - keep a struct, and with challenge responses, do everytime 503 comes up, if after sending fails, ask again for webpage and don't send cookie info

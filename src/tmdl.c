@@ -7,6 +7,8 @@
 
 bool verbose = false;
 char* saveDirectory = NULL;
+char *domain;
+char *seriesPath;
 
 void terminate_handler(int signal) {
     //here we delete downloading directory - what if the zip is running?
@@ -32,6 +34,9 @@ void print_error(int err, void *notUsing) {
             fputs("Do not have nessacary read and write permissions ", stderr);
             fputs("in current directory\n", stderr);
             break;
+        case 5:
+            fputs("Invalid Domain\n", stderr);
+            break;
         case 9:
             fputs("Stopping prematurely\n", stderr);
             break;
@@ -55,6 +60,22 @@ void argcheck(int argc, char** argv) {
         exit(1);
     }
     //run a check on arg[1] to connect to the site
+    char *domainCheck = strstr(argv[1], "kissmanga");
+    if (domainCheck != NULL) {
+        seriesPath = strstr(domainCheck, "/");
+        if (seriesPath == NULL) {
+            exit(5);
+        }
+        int charectersInDomain = strlen(domainCheck) - strlen(seriesPath);
+        domain = malloc(sizeof(char) * (charectersInDomain + 1));
+        if (domain == NULL) {
+            exit(21);
+        }
+        strncpy(domain, domainCheck, charectersInDomain);
+        domain[charectersInDomain] = '\0';
+    } else {
+        exit(5);
+    }
     if (argc >= 3) {
         for (int i = 3; i <= argc; i++) {
             if (!verbose && ((strcmp(argv[i-1], "-v") == 0) ||
