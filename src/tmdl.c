@@ -4,27 +4,27 @@
 #include <string.h>
 #include <unistd.h>
 #include "tmdl.h"
+#include "networking.h"
 
 bool verbose = false;
 char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;
-int connection; 
 
-void set_connection(int fd) {
-    connection = fd;
+char *get_series_path() {
+    return seriesPath;
 }
 
-int get_connection() {
-    return connection;
+bool get_verbose() {
+    return verbose;
+}
+
+char *get_save_directory() {
+    return saveDirectory;
 }
 
 char *get_domain() {
     return domain;
-}
-
-char *get_series_path() {
-    return seriesPath;
 }
 
 void terminate_handler(int signal) {
@@ -54,6 +54,9 @@ void print_error(int err, void *notUsing) {
         case 5:
             fprintf(stderr, "%s is an invalid domain\n", domain);
             break;
+        case 6:
+            fputs("Invalid series location\n", stderr);
+            break;
         case 9:
             fputs("Stopping prematurely\n", stderr);
             break;
@@ -66,25 +69,20 @@ void print_error(int err, void *notUsing) {
     }
 }
 
-bool get_verbose() {
-    return verbose;
-}
-
-char *get_save_directory() {
-    return saveDirectory;
-}
-
 //Checks if arguments are correct and exits if otherwise
-void argument_check(int argc, char** argv) {
+Site argument_check(int argc, char** argv) {
     if (argc < 2 || argc > 4) {
         exit(1);
     }
-    //run a check on arg[1] to connect to the site
+    Site domainUsed = other; 
+    //run a check on arg[1] to connect to the site only supporting kiss rn 
     char *domainCheck = strstr(argv[1], "kissmanga");
     if (domainCheck != NULL) {
+        //We are using going with kissmanga
+        domainUsed = kissmanga;
         seriesPath = strstr(domainCheck, "/");
         if (seriesPath == NULL) {
-            exit(5);
+            exit(6);
         }
         int charectersInDomain = strlen(domainCheck) - strlen(seriesPath);
         domain = malloc(sizeof(char) * (charectersInDomain + 1));
@@ -94,6 +92,7 @@ void argument_check(int argc, char** argv) {
         strncpy(domain, domainCheck, charectersInDomain);
         domain[charectersInDomain] = '\0';
     } else {
+        //put other domain checks here
         exit(5);
     }
     if (argc >= 3) {
@@ -130,6 +129,7 @@ void argument_check(int argc, char** argv) {
            exit(21); 
         }
     }
+    return domainUsed;
 }
 
 int main(int argc, char** argv) {
@@ -138,8 +138,8 @@ int main(int argc, char** argv) {
     signal(SIGCHLD, SIG_IGN);
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
-    argument_check(argc, argv);
-    connect_to_domain();
-    
-    close(connection);
+    Site domainUsed = argument_check(argc, argv);
+    if (domainUsed == kissmanga) {
+        //km methods
+    } 
 }

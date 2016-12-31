@@ -23,3 +23,6 @@ gotta deal with cookies - keep a struct, and with challenge responses, do everyt
 do not fully impliment cookies - but put that as a thing to do, for now get it up and running :P
 
 comment all methods
+
+also allow options like download from 000 ect.
+and if they put in a chapter download from that chapter onwards ect.
