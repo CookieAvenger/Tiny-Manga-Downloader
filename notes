@@ -19,3 +19,7 @@ support kissmanga
 and hitomi
 
 gotta deal with cookies - keep a struct, and with challenge responses, do everytime 503 comes up, if after sending fails, ask again for webpage and don't send cookie info
+
+do not fully impliment cookies - but put that as a thing to do, for now get it up and running :P
+
+comment all methods

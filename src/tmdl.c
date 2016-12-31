@@ -6,9 +6,26 @@
 #include "tmdl.h"
 
 bool verbose = false;
-char* saveDirectory = NULL;
+char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;
+int connection; 
+
+void set_connection(int fd) {
+    connection = fd;
+}
+
+int get_connection() {
+    return connection;
+}
+
+char *get_domain() {
+    return domain;
+}
+
+char *get_series_path() {
+    return seriesPath;
+}
 
 void terminate_handler(int signal) {
     //here we delete downloading directory - what if the zip is running?
@@ -35,7 +52,7 @@ void print_error(int err, void *notUsing) {
             fputs("in current directory\n", stderr);
             break;
         case 5:
-            fputs("Invalid Domain\n", stderr);
+            fprintf(stderr, "%s is an invalid domain\n", domain);
             break;
         case 9:
             fputs("Stopping prematurely\n", stderr);
@@ -43,19 +60,22 @@ void print_error(int err, void *notUsing) {
         case 21:
             fputs("System error\n", stderr);
             break;
+        case 22:
+            fputs("Network error\n", stderr);
+            break;
     }
 }
 
-bool getVerbose() {
+bool get_verbose() {
     return verbose;
 }
 
-char *getSaveDirectory() {
+char *get_save_directory() {
     return saveDirectory;
 }
 
 //Checks if arguments are correct and exits if otherwise
-void argcheck(int argc, char** argv) {
+void argument_check(int argc, char** argv) {
     if (argc < 2 || argc > 4) {
         exit(1);
     }
@@ -118,5 +138,8 @@ int main(int argc, char** argv) {
     signal(SIGCHLD, SIG_IGN);
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
-    argcheck(argc, argv);
+    argument_check(argc, argv);
+    connect_to_domain();
+    
+    close(connection);
 }
