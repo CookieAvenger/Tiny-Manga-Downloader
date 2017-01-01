@@ -11,11 +11,6 @@
 //FD that socket is on
 int connection;
 
-//Close connection after every read
-void close_connection() {
-    close(connection);
-}
-
 //Connect to the domain in the main method and save the connection there
 void connect_to_domain() {
     struct addrinfo* addressInfo;
@@ -50,7 +45,7 @@ void send_HTTP_request(char *file, char *cookie, char *userAgent) {
     char *requestString;
     if (cookie != NULL && userAgent != NULL) {
         //Send request with Cookie
-        requestString = (char *)malloc(sizeof(char) * (strlen(file) +
+        requestString = (char *) malloc(sizeof(char) * (strlen(file) +
                 strlen(get_domain()) + strlen(cookie) +strlen(userAgent) + 
                 50));
         if (requestString == NULL) {
@@ -64,7 +59,7 @@ void send_HTTP_request(char *file, char *cookie, char *userAgent) {
         }
     } else {
         //Send without cookie
-        requestString = (char *)malloc(sizeof(char) * (strlen(file) +
+        requestString = (char *) malloc(sizeof(char) * (strlen(file) +
                 strlen(get_domain()) + 26));
         if (requestString == NULL) {
             exit(21);

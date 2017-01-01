@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "tmdl.h"
 #include "networking.h"
+#include "kissMangaRead.h"
+#include "generalMethods.h"
 
 bool verbose = false;
 char *saveDirectory = NULL;
@@ -66,6 +68,12 @@ void print_error(int err, void *notUsing) {
         case 22:
             fputs("Network error\n", stderr);
             break;
+        case 24:
+            //Not handled at all - python failed to run
+            break;
+        case 25:
+            //Handled elsewhere - cookie script failed
+            break;
     }
 }
 
@@ -85,7 +93,7 @@ Site argument_check(int argc, char** argv) {
             exit(6);
         }
         int charectersInDomain = strlen(domainCheck) - strlen(seriesPath);
-        domain = malloc(sizeof(char) * (charectersInDomain + 1));
+        domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
         if (domain == NULL) {
             exit(21);
         }
@@ -121,7 +129,7 @@ Site argument_check(int argc, char** argv) {
     if (saveDirectory == NULL) {
         char cwd[1024];
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            saveDirectory = cwd;
+            saveDirectory = make_permenent_string(cwd);
             if (access(saveDirectory, R_OK|W_OK) == -1) {
                 exit(4);
             }
@@ -134,12 +142,11 @@ Site argument_check(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     signal(SIGPIPE, SIG_IGN);
-    //ignore if execs fail - should change later
-    signal(SIGCHLD, SIG_IGN);
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
     Site domainUsed = argument_check(argc, argv);
     if (domainUsed == kissmanga) {
-        //km methods
+        //km start method here
+        bypassDDOSprotection();
     } 
 }
