@@ -2,6 +2,29 @@
 #include <stdio.h>
 #include <string.h>
 
+//Get substring of string inbetween a start and end
+char *get_substring(char *string, char *start, char *end, int error) {
+    char *startOfSubstring = strstr(string, start);
+    if (startOfSubstring == NULL) {
+        exit(error);
+    }
+    char *endOfSubstring = strstr((startOfSubstring + strlen(start)), end);
+    if (endOfSubstring == NULL) {
+        exit(error);
+    }
+    int charectersInSubstring = (strlen(startOfSubstring) - strlen(start)) -
+            strlen(endOfSubstring);
+    char *substring = (char *) malloc(sizeof(char) *
+            (charectersInSubstring + 1));
+    if (substring == NULL) {
+        exit(21);
+    }
+    strncpy(substring, (startOfSubstring + strlen(start)), 
+            charectersInSubstring);
+    substring[charectersInSubstring] = '\0';
+    return substring;
+}
+
 char *make_permenent_string(char *string) {
     char *persistantString = malloc(sizeof(char) * strlen(string));
     if (persistantString == NULL) {

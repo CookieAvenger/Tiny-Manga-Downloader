@@ -7,12 +7,10 @@
 #include "tmdl.h"
 #include <stdlib.h>
 #include <string.h>
-
-//FD that socket is on
-int connection;
+#include "generalMethods.h"
 
 //Connect to the domain in the main method and save the connection there
-void connect_to_domain() {
+int connect_to_domain() {
     struct addrinfo* addressInfo;
     int errorCheck = getaddrinfo(get_domain(), NULL, NULL, &addressInfo);
     if (errorCheck) {
@@ -35,13 +33,13 @@ void connect_to_domain() {
             sizeof(socketAddress)) < 0) {
         exit(22);
     }
-    connection = fd;
+    return fd;
     //Don't forget to eventually close the socket - close(fd);
 }
 
 //Send a http 1.1 request
-void send_HTTP_request(char *file, char *cookie, char *userAgent) {
-    connect_to_domain();
+int send_HTTP_request(char *file, char *cookie, char *userAgent) {
+    int fd = connect_to_domain();
     char *requestString;
     if (cookie != NULL && userAgent != NULL) {
         //Send request with Cookie
@@ -70,10 +68,10 @@ void send_HTTP_request(char *file, char *cookie, char *userAgent) {
         }
     }
     
-    if (write(connection, requestString, strlen(requestString)) < 1) {
+    if (write(fd, requestString, strlen(requestString)) < 1) {
         exit(22);
     }
     
     free(requestString);
+    return fd;
 }
-

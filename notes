@@ -23,6 +23,18 @@ gotta deal with cookies - keep a struct, and with challenge responses, do everyt
 do not fully impliment cookies - but put that as a thing to do, for now get it up and running :P
 
 comment all methods
+and global variables
 
 also allow options like download from 000 ect.
 and if they put in a chapter download from that chapter onwards ect.
+
+allow for multiple urls
+- loop through each argument and change variable accordingly
+- make -v have to be last
+- folder to save 2nd last if -v otherwise last
+
+create a list of chapter structs then go through said structs
+
+what if instead of series just a chapter page is given - then just download the chapter
+
+clean up code!!

@@ -68,6 +68,9 @@ void print_error(int err, void *notUsing) {
         case 22:
             fputs("Network error\n", stderr);
             break;
+        case 23:
+            fputs("Unkown error parsing cookie information\n", stderr);
+            break;
         case 24:
             //Not handled at all - python failed to run
             break;
@@ -146,7 +149,6 @@ int main(int argc, char** argv) {
     on_exit(print_error, NULL);
     Site domainUsed = argument_check(argc, argv);
     if (domainUsed == kissmanga) {
-        //km start method here
-        bypassDDOSprotection();
+        start_kissmanga_download();
     } 
 }
