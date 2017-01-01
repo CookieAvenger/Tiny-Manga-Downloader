@@ -5,8 +5,9 @@
 #include <unistd.h>
 #include "tmdl.h"
 #include "networking.h"
-#include "kissMangaRead.h"
+#include "kissMangaDownload.h"
 #include "generalMethods.h"
+#include "save.h"
 
 bool verbose = false;
 char *saveDirectory = NULL;
@@ -151,6 +152,7 @@ int main(int argc, char** argv) {
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
     Site domainUsed = argument_check(argc, argv);
+    set_source(domainUsed);
     if (domainUsed == kissmanga) {
         start_kissmanga_download();
     } 
