@@ -77,6 +77,9 @@ void print_error(int err, void *notUsing) {
         case 25:
             //Handled elsewhere - cookie script failed
             break;
+        case 26:
+            fputs("Webpage parsing error\n", stderr);
+            break;
     }
 }
 

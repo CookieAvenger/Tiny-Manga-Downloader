@@ -133,11 +133,24 @@ char *get_kissmanga_page(char *file) {
     return page;
 }
 
+char *get_kissmanga_chapter(char *link) {
+    char *path = concat(get_series_path(), "/");
+    char *chapter = concat(path, link);
+    free(path);
+    free(link);
+    char *page = get_kissmanga_page(chapter);
+    free(chapter);
+    return page;
+}
+
 char *handle_codes(char *page) {
     //3XX error codes are redirects
     if (strncmp(page + 9, "3", 1) == 0) {
         char *redirectTo = get_substring(page, "Location: ", "\n", 6);
-        return get_kissmanga_page(redirectTo);
+        free(page);
+        page = get_kissmanga_page(redirectTo);
+        free(redirectTo);
+        return page;
     //4XX error codes are issues like page doesnt exist ect.
     } else if (strncmp(page + 9, "4", 1) == 0) {
         return NULL;
@@ -145,32 +158,15 @@ char *handle_codes(char *page) {
     return page;
 }
 
-void download_kissmanga_series(char *randomChapterLink) {
-    
-}
-
-void start_kissmanga_download() {
-    bypassDDOSprotection();
-    char *test = get_kissmanga_page(get_series_path());
-    if (test == NULL) {
-        exit(6);
+void setFolderName(char *chapterPage) {
+    char *testString = (char *) malloc(sizeof(char) * (strlen(get_domain())
+            + strlen(get_series_path()) + 25));
+    if (testString == NULL) {
+        exit(21);
     }
-    char *testString = (char *) malloc(sizeof(char) * 
-            strlen(get_series_path()) + 7);
-    sprintf(testString, "href=\"%s/", get_series_path());
-    char *result = strstr(test, testString);
-    //Need a better way of testing
-    if (result != NULL) {
-        //Series Page
-        //Now we open any chapter
-        char *chapterLink = get_substring(test, testString, "\"", 6);
-        free(testString);
-        free(test);
-        download_kissmanga_series(chapterLink);
-    } else {
-        //Chapter Page
-        printf("%s\n", test);
-        free(testString);
-        free(test);
-    }
+    sprintf(testString, "<a href=\"http://%s%s\">\nManga\n", get_domain(),
+            get_series_path());
+    char *folder = get_substring(chapterPage, testString, 
+            "information</a>", 26);
+    set_folder_name(folder);
 }
