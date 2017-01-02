@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -pedantic -std=gnu99
 all: tmdl
 
-tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o save.o
+tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o
 	${CC} ${CFLAGS} $^ -o $@
 
 tmdl.o: tmdl.c tmdl.h
@@ -20,7 +20,7 @@ kissMangaRead.o: kissMangaRead.c kissMangaRead.h
 kissMangaDownload.o: kissMangaDownload.c kissMangaDownload.h
 	${CC} ${CFLAGS} -c $<
 
-save.o: save.c save.h
+chaptersToDownload.o: chaptersToDownload.c chaptersToDownload.h
 	${CC} ${CFLAGS} -c $<
 
 clean:

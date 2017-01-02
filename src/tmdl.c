@@ -7,7 +7,7 @@
 #include "networking.h"
 #include "kissMangaDownload.h"
 #include "generalMethods.h"
-#include "save.h"
+#include "chaptersToDownload.h"
 
 bool verbose = false;
 char *saveDirectory = NULL;
@@ -99,7 +99,7 @@ Site argument_check(int argc, char** argv) {
         if (seriesPath == NULL) {
             exit(6);
         }
-        int charectersInDomain = strlen(domainCheck) - strlen(seriesPath);
+        size_t charectersInDomain = seriesPath - domainCheck;
         domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
         if (domain == NULL) {
             exit(21);

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
+#include "chaptersToDownload.h"
 
 char *cookie = NULL;
 char *userAgent = NULL;
@@ -17,7 +18,7 @@ void update_cookie(char *cookieInfo) {
         free(cookie);
         free(userAgent);
     }
-    char *startOfCookie = strstr(cookieInfo, "'");
+    char *startOfCookie = strstr(cookieInfo, "'") + 1;
     if (startOfCookie == NULL) {
         exit(23);
     }
@@ -25,28 +26,28 @@ void update_cookie(char *cookieInfo) {
     if (endOfCookie == NULL) {
         exit(23);
     }
-    int charectersInCookie = strlen(startOfCookie) - strlen(endOfCookie) - 1;
+    size_t charectersInCookie = endOfCookie - startOfCookie;
     cookie = (char *) malloc(sizeof(char) * (charectersInCookie + 1));
     if (cookie == NULL) {
         exit(21);
     }
-    strncpy(cookie, (startOfCookie + 1), charectersInCookie);
+    strncpy(cookie, startOfCookie, charectersInCookie);
     cookie[charectersInCookie] = '\0';
     
-    char *startOfAgent = strstr((endOfCookie + 1), "'");
+    char *startOfAgent = strstr((endOfCookie + 1), "'") + 1;
     if (startOfAgent == NULL) {
         exit(23);
     }
-    char *endOfAgent = strstr((startOfAgent + 1), "'");
+    char *endOfAgent = strstr(startOfAgent, "'");
     if (endOfAgent == NULL) {
         exit(23);
     }
-    int charectersInAgent = strlen(startOfAgent) - strlen(endOfAgent) - 1;
+    size_t charectersInAgent = endOfAgent - startOfAgent;
     userAgent = (char *) malloc(sizeof(char) * (charectersInAgent + 1));
     if (userAgent == NULL) {
         exit(21);
     }
-    strncpy(userAgent, (startOfAgent + 1), charectersInAgent);
+    strncpy(userAgent, startOfAgent, charectersInAgent);
     userAgent[charectersInAgent] = '\0';
     free(cookieInfo);
 }
@@ -118,7 +119,7 @@ char *get_kissmanga_page(char *file) {
         if (page != NULL) {
             free(page);
             if (get_verbose()) {
-                fputs("Failed to access kissmanga, trying again.", stderr);
+                fputs("Failed to access kissmanga, trying again.\n", stderr);
             }
             bypassDDOSprotection();
         }

@@ -1,6 +1,6 @@
 #include "kissMangaRead.h"
 #include "generalMethods.h"
-#include "save.h"
+#include "chaptersToDownload.h"
 #include "tmdl.h"
 #include <stdlib.h>
 #include <stdio.h>
