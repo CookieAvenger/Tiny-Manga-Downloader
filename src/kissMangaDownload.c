@@ -11,7 +11,16 @@ void download_kissmanga_series(char *randomChapterLink) {
     if (initialPage == NULL) {
         exit(26);
     }
-    setFolderName(initialPage); 
+    set_series_folder(initialPage); 
+    char *skipFirst = strstr(initialPage, "</select>") + 9;
+    char * chaptersSection = get_substring(skipFirst, "</select>", 
+            "</select>", 26);
+    free(initialPage);
+    char **chaptersUnparsed = continuous_substring(chaptersSection, 
+            "<option value=", "</option>");
+    free(chaptersSection);
+    //remeber to free chapters Unparsed with string array free
+    //to get link just substring " and ", for chapter name > and \n
 }
 
 void start_kissmanga_download() {

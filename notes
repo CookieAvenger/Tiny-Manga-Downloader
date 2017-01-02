@@ -38,3 +38,5 @@ create a list of chapter structs then go through said structs
 what if instead of series just a chapter page is given - then just download the chapter
 
 clean up code!!
+
+quick fail downloading chapters - and move on don't exit

@@ -13,43 +13,44 @@ char *userAgent = NULL;
 
 //Some repitition here - tried to solve with get_substring method but couldn't
 //as second substring requred end of first - will tackle again later
-void update_cookie(char *cookieInfo) {
+int update_cookie(char *cookieInfo) {
     if (cookie != NULL && userAgent != NULL) {
         free(cookie);
         free(userAgent);
     }
     char *startOfCookie = strstr(cookieInfo, "'") + 1;
     if (startOfCookie == NULL) {
-        exit(23);
+        return 23;
     }
     char *endOfCookie = strstr((startOfCookie + 1), "'");
     if (endOfCookie == NULL) {
-        exit(23);
+        return 23;
     }
     size_t charectersInCookie = endOfCookie - startOfCookie;
     cookie = (char *) malloc(sizeof(char) * (charectersInCookie + 1));
     if (cookie == NULL) {
-        exit(21);
+        return 21;
     }
     strncpy(cookie, startOfCookie, charectersInCookie);
     cookie[charectersInCookie] = '\0';
     
     char *startOfAgent = strstr((endOfCookie + 1), "'") + 1;
     if (startOfAgent == NULL) {
-        exit(23);
+        return 23;
     }
     char *endOfAgent = strstr(startOfAgent, "'");
     if (endOfAgent == NULL) {
-        exit(23);
+        return 23;
     }
     size_t charectersInAgent = endOfAgent - startOfAgent;
     userAgent = (char *) malloc(sizeof(char) * (charectersInAgent + 1));
     if (userAgent == NULL) {
-        exit(21);
+        return 21;
     }
     strncpy(userAgent, startOfAgent, charectersInAgent);
     userAgent[charectersInAgent] = '\0';
     free(cookieInfo);
+    return 0;
 }
 
 //Create python script - temporary solution
@@ -78,6 +79,7 @@ void bypassDDOSprotection() {
     pipe(fds);
     int pid = fork();
     if (pid == -1) {
+        remove(script);
         exit(21);
     } else if (pid == 0) {
         //child
@@ -89,10 +91,15 @@ void bypassDDOSprotection() {
     }
     //parent
     close(fds[1]);
-    update_cookie(read_all_from_fd(fds[0])); 
+    int error = update_cookie(read_all_from_fd(fds[0])); 
+    if (error != 0) {
+        remove(script);
+        exit(error);
+    }
     int status;
     //put here || WIFEXITED
     if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+        remove(script);
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
@@ -102,6 +109,7 @@ void bypassDDOSprotection() {
                 "sudo -H pip install cfscrape\n"
                 "Some systems may require to install with both \"pip2\" "
                 "and \"pip3\" instead of just \"pip\".\n", stderr);
+        remove(script);
         exit(25);
     } 
     remove(script);
@@ -169,5 +177,6 @@ void setFolderName(char *chapterPage) {
             get_series_path());
     char *folder = get_substring(chapterPage, testString, 
             "information</a>", 26);
+    free(testString);
     set_folder_name(folder);
 }
