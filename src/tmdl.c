@@ -8,6 +8,8 @@
 #include "kissMangaDownload.h"
 #include "generalMethods.h"
 #include "chaptersToDownload.h"
+#include "currentChapter.h"
+#include <sys/wait.h>
 
 bool verbose = false;
 char *saveDirectory = NULL;
@@ -31,9 +33,12 @@ char *get_domain() {
 }
 
 void terminate_handler(int signal) {
-    //here we delete downloading directory - what if the zip is running?
-    //gotta reap that child process first if it exists
-    //only if our temp location directory is not null
+    //I know init will auto reap the child, but if it the zip is running I gotta wait
+    //so just wait, when wait is done or fails, delete direcctory
+    int status;
+    //don't care if wait fails, should fail most of the time in fact
+    wait(&status);
+    delete_folder(get_temporary_folder());
     exit(9);
 }
 
@@ -73,7 +78,7 @@ void print_error(int err, void *notUsing) {
             fputs("Unkown error parsing cookie information\n", stderr);
             break;
         case 24:
-            //Not handled at all - python failed to run
+            //Not handled at all - exec failed
             break;
         case 25:
             //Handled elsewhere - cookie script failed
@@ -154,6 +159,8 @@ int main(int argc, char** argv) {
     Site domainUsed = argument_check(argc, argv);
     set_source(domainUsed);
     if (domainUsed == kissmanga) {
-        start_kissmanga_download();
+        setup_kissmanga_download();
     } 
+    download_entire_queue();
+    return 0;
 }

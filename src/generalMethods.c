@@ -1,15 +1,63 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+void delete_folder(char *folder) {
+    int pid = fork();
+    if (pid == -1) {
+        exit(21);
+    } else if (pid == 0) {
+        //child
+        execlp("rm", "rm", "-rf", folder, NULL);
+        exit(24); 
+    }
+    //parent
+    int status;
+    if (wait(&status) == -1) {             
+        exit(21);                                                        
+    }                                                                    
+    //should never fail, we have read write permission to that folder
+}                                                                        
+
+void create_folder(char *folder) {                                         
+    int pid = fork();                                                    
+    if (pid == -1) {                                                     
+        exit(21);                                                        
+    } else if (pid == 0) {                                               
+        //child                                                          
+        execlp("mkdir", "mkdir", "-p", folder, NULL);           
+        exit(24);                                                        
+    }                                                                    
+    //parent                                                             
+    int status;                                                          
+    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
+        exit(21);                                                        
+    }                                                                    
+    if (WEXITSTATUS(status) != 0) {                                      
+        //This can only happen if something is a file instead of a folder
+        //as we already know the file exists and we can write to it      
+        exit(6);                                                         
+        //If it already exists then still return 0 - so all g            
+    }                                                                    
+}                                                                        
+
 
 char *get_substring(char *string, char *start, char *end, int error) {
     char *startOfSubstring = strstr(string, start);
     if (startOfSubstring == NULL) {
+        if (error == -1) {
+            return NULL;
+        }
         exit(error);
     }
     startOfSubstring += strlen(start);
     char *endOfSubstring = strstr(startOfSubstring, end);
     if (endOfSubstring == NULL) {
+        if (error == -1) {
+            return NULL;
+        }
         exit(error);
     }
     size_t charectersInSubstring = endOfSubstring - startOfSubstring;
@@ -33,6 +81,7 @@ char **continuous_substring(char *string, char *start, char *end) {
     char *startOfSubstring;
     char *endOfSubstring;
     int startLength = strlen(start), endLength = strlen(end);
+    int remainingLength = strlen(string);
     //0 == 0 kinda looks like a weird face... no other reason it's not 1
     while (0 == 0) {
         if (string == NULL) {
@@ -41,8 +90,11 @@ char **continuous_substring(char *string, char *start, char *end) {
         startOfSubstring = strstr(string, start);
         if (startOfSubstring == NULL) {
             break;
-        } else if (strlen(startOfSubstring) > startLength) {
+        }
+        remainingLength -= (startOfSubstring - string);
+        if (remainingLength > startLength) {
             startOfSubstring += startLength;
+            remainingLength -= startLength;
         } else {
             break;
         }
@@ -50,6 +102,7 @@ char **continuous_substring(char *string, char *start, char *end) {
         if (endOfSubstring == NULL) {
             break;
         }
+        remainingLength -= (endOfSubstring - startOfSubstring);
         size_t charectersInSubstring = endOfSubstring - startOfSubstring;
         char *substring = (char *) malloc(sizeof(char) *
                 (charectersInSubstring + 1));
@@ -70,8 +123,9 @@ char **continuous_substring(char *string, char *start, char *end) {
         }
         substringsFound[count - 1] = substring;
 
-        if (strlen(endOfSubstring) > endLength) {
+        if (remainingLength > endLength) {
             string = endOfSubstring + endLength;
+            remainingLength -= endLength;
         }
     }
     substringsFound[count] = NULL;

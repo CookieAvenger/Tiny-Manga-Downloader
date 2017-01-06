@@ -6,6 +6,21 @@
 #include <stdio.h>
 #include <string.h>
 
+char **setup_kissmanga_chapter(Chapter *current) {
+    char *page = get_kissmanga_chapter(current->link);
+    if (page == NULL) {
+        fprintf(stderr, "Failed to access: %s\n", current->name);
+        return NULL;
+    }
+    char *unparsedImageList = get_substring(page, "lstImage", "currImage", -1);
+    free(page);
+    if (unparsedImageList == NULL) {
+        fprintf(stderr, "Couldn't parse chapter: %s\n", current->name);
+        return NULL;
+    }
+    return continuous_substring(unparsedImageList, "\"", "\"");
+}
+
 //to get link just substring " and ", for chapter name > and \n
 void fill_up_queue(char **unparsedChapters) {
     int chaptersNumber = get_string_array_length(unparsedChapters);
@@ -26,7 +41,7 @@ void download_kissmanga_series(char *randomChapterLink) {
     if (initialPage == NULL) {
         exit(26);
     }
-    set_series_folder(initialPage); 
+    parse_and_set_series_folder(initialPage); 
     char *skipFirst = strstr(initialPage, "</select>") + 9;
     char * chaptersSection = get_substring(skipFirst, "</select>", 
             "</select>", 26);
@@ -38,8 +53,8 @@ void download_kissmanga_series(char *randomChapterLink) {
     //string_array_free(chaptersUnparsed); freed during fill up
 }
 
-void start_kissmanga_download() {
-    bypassDDOSprotection();
+void setup_kissmanga_download() {
+    bypass_DDOS_protection();
     char *testType = get_kissmanga_page(get_series_path());
     if (testType == NULL) {
         exit(6);

@@ -70,7 +70,7 @@ char *makeCookieScript() {
 
 //Currently makes and runs a python script, intend to make in house at some
 //point - current implementation needs cfscrape installed
-void bypassDDOSprotection() {
+void bypass_DDOS_protection() {
     if (get_verbose()) {
         puts("Attempting to bypass cloudflares DDOS protection");
     }
@@ -129,7 +129,7 @@ char *get_kissmanga_page(char *file) {
             if (get_verbose()) {
                 fputs("Failed to access kissmanga, trying again.\n", stderr);
             }
-            bypassDDOSprotection();
+            bypass_DDOS_protection();
         }
         int fd = send_HTTP_request(file, cookie, userAgent);
         page = read_all_from_fd(fd);
@@ -167,7 +167,7 @@ char *handle_codes(char *page) {
     return page;
 }
 
-void setFolderName(char *chapterPage) {
+void parse_and_set_series_folder(char *chapterPage) {
     char *testString = (char *) malloc(sizeof(char) * (strlen(get_domain())
             + strlen(get_series_path()) + 25));
     if (testString == NULL) {
@@ -176,7 +176,7 @@ void setFolderName(char *chapterPage) {
     sprintf(testString, "<a href=\"http://%s%s\">\nManga\n", get_domain(),
             get_series_path());
     char *folder = get_substring(chapterPage, testString, 
-            "information</a>", 26);
+            "\ninformation</a>", 26);
     free(testString);
     set_series_folder(folder);
 }

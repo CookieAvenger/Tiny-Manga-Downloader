@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -std=gnu99 -g
+CFLAGS = -Wall -pedantic -std=gnu99 #-g
 all: tmdl
 
-tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o
+tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o
 	${CC} ${CFLAGS} $^ -o $@
 
 tmdl.o: tmdl.c tmdl.h
@@ -21,6 +21,9 @@ kissMangaDownload.o: kissMangaDownload.c kissMangaDownload.h
 	${CC} ${CFLAGS} -c $<
 
 chaptersToDownload.o: chaptersToDownload.c chaptersToDownload.h
+	${CC} ${CFLAGS} -c $<
+
+currentChapter.o : currentChapter.c currentChapter.h
 	${CC} ${CFLAGS} -c $<
 
 clean:
