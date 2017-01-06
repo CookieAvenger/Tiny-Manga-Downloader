@@ -3,10 +3,11 @@
 #include <string.h>
 
 char *get_substring(char *string, char *start, char *end, int error) {
-    char *startOfSubstring = strstr(string, start) + strlen(start);
+    char *startOfSubstring = strstr(string, start);
     if (startOfSubstring == NULL) {
         exit(error);
     }
+    startOfSubstring += strlen(start);
     char *endOfSubstring = strstr(startOfSubstring, end);
     if (endOfSubstring == NULL) {
         exit(error);
@@ -31,10 +32,18 @@ char **continuous_substring(char *string, char *start, char *end) {
     }
     char *startOfSubstring;
     char *endOfSubstring;
+    int startLength = strlen(start), endLength = strlen(end);
     //0 == 0 kinda looks like a weird face... no other reason it's not 1
     while (0 == 0) {
-        startOfSubstring = strstr(string, start) + strlen(start);
+        if (string == NULL) {
+            break;
+        }
+        startOfSubstring = strstr(string, start);
         if (startOfSubstring == NULL) {
+            break;
+        } else if (strlen(startOfSubstring) > startLength) {
+            startOfSubstring += startLength;
+        } else {
             break;
         }
         endOfSubstring = strstr(startOfSubstring, end);
@@ -49,17 +58,21 @@ char **continuous_substring(char *string, char *start, char *end) {
         }
         strncpy(substring, startOfSubstring, charectersInSubstring);
         substring[charectersInSubstring] = '\0';
-        string = endOfSubstring + strlen(end);
         
         count ++;
         if (count == dynamic) {
             dynamic *= 2;
-            substringsFound = realloc(substringsFound, dynamic);
+            substringsFound = (char **) realloc(substringsFound, 
+                    sizeof(char *) * dynamic);
             if (substringsFound == NULL) {
                 exit(21);
             }
         }
         substringsFound[count - 1] = substring;
+
+        if (strlen(endOfSubstring) > endLength) {
+            string = endOfSubstring + endLength;
+        }
     }
     substringsFound[count] = NULL;
     return substringsFound;

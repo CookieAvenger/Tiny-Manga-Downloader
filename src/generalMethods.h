@@ -5,3 +5,4 @@ char *make_permenent_string(char *string);
 char *get_substring(char *string, char *start, char *end, int error);
 char **continuous_substring(char *string, char *start, char *end);
 int get_string_array_length(char **stringArray);
+void string_array_free(char **stringArray);

@@ -12,3 +12,4 @@ int get_current_downloadi_number();
 void free_download_array();
 void add_to_download_list(Chapter *toAdd);
 Chapter *pop_from_download();
+void free_chapter(Chapter *toFree);

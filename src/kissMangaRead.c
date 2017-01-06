@@ -178,5 +178,5 @@ void setFolderName(char *chapterPage) {
     char *folder = get_substring(chapterPage, testString, 
             "information</a>", 26);
     free(testString);
-    set_folder_name(folder);
+    set_series_folder(folder);
 }

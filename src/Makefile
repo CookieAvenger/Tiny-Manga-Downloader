@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -std=gnu99
+CFLAGS = -Wall -pedantic -std=gnu99 -g
 all: tmdl
 
 tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o

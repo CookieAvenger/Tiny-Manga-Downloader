@@ -1,4 +1,9 @@
 #include "chaptersToDownload.h"
+#include <stdlib.h>
+#include "tmdl.h"
+#include "generalMethods.h"
+
+//Turn into a real queue later to save space
 
 Site source;
 char *seriesFolder;
@@ -10,8 +15,10 @@ int length = 0;
 //Current point up to which we are up to
 int pointer = 0;
 
-void set_folder_name(char *folder) {
-    seriesFolder = folder;
+void set_series_folder(char *folder) {
+    char *path = concat(get_save_directory(), "/");
+    seriesFolder = concat(path, folder);
+    free(path);
 }
 
 void set_source(Site domainUsed) {
@@ -47,7 +54,8 @@ void add_to_download_list(Chapter *toAdd) {
     length++;
     if (length == dynamic) {
         dynamic *= 2;
-        downloadArray = (Chapter **) realloc(downloadArray, dynamic);
+        downloadArray = (Chapter **) realloc(downloadArray, 
+                sizeof(Chapter *) * dynamic);
         if (downloadArray == NULL) {
             exit(21);
         }
@@ -61,4 +69,10 @@ Chapter *pop_from_download() {
     } else {
         return downloadArray[pointer - 1];
     }
+}
+
+void free_chapter(Chapter *toFree) {
+    free(toFree->name);
+    free(toFree->link);
+    free(toFree);
 }
