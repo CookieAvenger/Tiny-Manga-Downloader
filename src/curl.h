@@ -1,2 +1,2 @@
 
-void download_a_file(char *url);
+int download_file(char *url, char *fileName);

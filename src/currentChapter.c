@@ -28,12 +28,28 @@ bool chapterExists(char *toCheck) {
     return existance;
 }
 
+char *get_file_name(char *url) {
+    char *fileName = rstrstr(url, "/");
+    if (fileName == NULL) {
+        //Pretty much immpossible, will deal with later
+        fileName = "Unknown";
+    }
+    char *fullPathName = concat(temporaryFolder, fileName);
+    return fullPathName;
+}
+
 void process_and_download_urls(char **pictureUrls) {
-    download_a_file(pictureUrls[0]);
+    int numberOfUrls = get_string_array_length(pictureUrls);
+    for (int i = 0; i < numberOfUrls; i++) {
+        download_file(pictureUrls[i], get_file_name(pictureUrls[i]));
+    }
     exit(0);
     //get file name and content null - say failed to get here
+    //work out what failed is in curl
     //free while doing
     //also if verbose put progress here
+    //getting i pick out of number in chapter # out of this many chapters for this manga
+    //Manually working out file name isn't working out - see if curl can help
 }
 
 void download_chapter(Chapter *current, Site source) {

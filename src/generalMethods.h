@@ -8,3 +8,4 @@ int get_string_array_length(char **stringArray);
 void string_array_free(char **stringArray);
 void delete_folder(char *folder);
 void create_folder(char *folder);
+char *rstrstr(char *s1, char *s2);

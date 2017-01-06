@@ -4,6 +4,20 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+char *rstrstr(char *s1, char *s2) {
+    size_t  s1len = strlen(s1);
+    size_t  s2len = strlen(s2);
+    if (s2len > s1len) {
+        return NULL;
+    }
+    for (char *s = s1 + s1len - s2len; s >= s1; --s) {
+        if (strncmp(s, s2, s2len) == 0) {
+            return s;
+        }
+    }
+    return NULL;
+}
+
 void delete_folder(char *folder) {
     int pid = fork();
     if (pid == -1) {

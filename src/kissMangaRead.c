@@ -115,7 +115,7 @@ void bypass_DDOS_protection() {
     remove(script);
     free(script);
     if (get_verbose()) {
-        puts("Bypassed cloudflare DDOS protection");
+        puts("Bypassed cloudflares DDOS protection");
     }
 }
 
