@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "networking.h"
 #include "curl.h"
 
 char *temporaryFolder;
@@ -29,33 +28,6 @@ bool chapterExists(char *toCheck) {
     return existance;
 }
 
-/*
-char *process_and_download_url(char *url) {
-    char *httpTest = strstr(url, "http://");
-    if (httpTest != NULL) {
-        url += 7;
-    }
-    char *file = strstr(url, "/");
-    if (file == NULL) {
-        return NULL;
-    }
-    size_t charectersInDomain = file - url;
-    char *domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
-    if (domain == NULL) {
-        exit(21);
-    }
-    strncpy(domain, url, charectersInDomain);
-    domain[charectersInDomain] = '\0';
-   /int fd = send_HTTP_request(domain, file, NULL, NULL, -1);
-    free(domain);
-    if (fd == -1) {
-        return NULL;
-    }
-    char *image = read_all_from_fd(fd);
-    printf("%s", image);
-    exit(0);
-}
-*/
 void process_and_download_urls(char **pictureUrls) {
     download_a_file(pictureUrls[0]);
     exit(0);

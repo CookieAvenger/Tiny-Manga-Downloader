@@ -1,0 +1,1 @@
+curl --silent --libcurl /tmp/test.c 'http://2.bp.blogspot.com/-wYzTMRMgnkA/VhU0QuAdWoI/AAAAAAAEnUI/wWq_M1HJj7Q/s0-Ic42/000.jpg' > test

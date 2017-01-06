@@ -131,7 +131,7 @@ char *get_kissmanga_page(char *file) {
             }
             bypass_DDOS_protection();
         }
-        int fd = send_HTTP_request(file, cookie, userAgent);
+        int fd = send_HTTP_request(get_domain(), file, cookie, userAgent);
         page = read_all_from_fd(fd);
         page = handle_codes(page);
         if (page == NULL) {

@@ -10,9 +10,9 @@
 #include "generalMethods.h"
 
 //Connect to the domain in the main method and save the connection there
-int connect_to_domain() {
+int connect_to_domain(char *domain) {
     struct addrinfo* addressInfo;
-    int errorCheck = getaddrinfo(get_domain(), NULL, NULL, &addressInfo);
+    int errorCheck = getaddrinfo(domain, NULL, NULL, &addressInfo);
     if (errorCheck) {
         exit(5);
     }
@@ -38,13 +38,13 @@ int connect_to_domain() {
 }
 
 //Send a http 1.1 request
-int send_HTTP_request(char *file, char *cookie, char *userAgent) {
-    int fd = connect_to_domain();
+int send_HTTP_request(char *domain, char *file, char *cookie, char *userAgent) {
+    int fd = connect_to_domain(domain);
     char *requestString;
     if (cookie != NULL && userAgent != NULL) {
         //Send request with Cookie
         requestString = (char *) malloc(sizeof(char) * (strlen(file) +
-                strlen(get_domain()) + strlen(cookie) +strlen(userAgent) + 
+                strlen(domain) + strlen(cookie) +strlen(userAgent) + 
                 50));
         if (requestString == NULL) {
             exit(21);
@@ -53,18 +53,18 @@ int send_HTTP_request(char *file, char *cookie, char *userAgent) {
             sprintf(requestString, 
                     "GET %s HTTP/1.0\r\nHost: %s\r\nCookie: %s\r\n"
                     "User-Agent: %s\r\n\r\n", 
-                    file, get_domain(), cookie, userAgent);
+                    file, domain, cookie, userAgent);
         }
     } else {
         //Send without cookie
         requestString = (char *) malloc(sizeof(char) * (strlen(file) +
-                strlen(get_domain()) + 26));
+                strlen(domain) + 26));
         if (requestString == NULL) {
             exit(21);
         } else {
             sprintf(requestString, 
                     "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", 
-                    file, get_domain());
+                    file, domain);
         }
     }
     
