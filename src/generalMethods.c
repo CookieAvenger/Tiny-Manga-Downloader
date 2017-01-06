@@ -173,16 +173,16 @@ char *read_all_from_fd(int fd) {
         exit(21);
     }
     //classic annoying read here 
-    char *text = (char *) malloc(sizeof(char) * 4);
+    int next, dynamic = 4, count = 0;
+    char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
         exit(21);
     }
-    int next, dynamic = 4, count = 0;
     while(next = fgetc(source), next != EOF) {
         count++;
         if (count == dynamic) {
             dynamic *= 2;
-            text = (char *) realloc(text, dynamic);
+            text = (char *) realloc(text, sizeof(char) * dynamic);
             if (text == NULL) {
                 exit(21);
             }
