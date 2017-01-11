@@ -6,6 +6,7 @@ char *get_substring(char *string, char *start, char *end, int error);
 char **continuous_substring(char *string, char *start, char *end);
 int get_string_array_length(char **stringArray);
 void string_array_free(char **stringArray);
-void delete_folder(char *folder);
+void delete_folder(char *folder, int error);
 void create_folder(char *folder);
 char *rstrstr(char *s1, char *s2);
+char *str_replace(char *original, char *replace, char *alternative);

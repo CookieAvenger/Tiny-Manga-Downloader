@@ -11,9 +11,14 @@
 #include <sys/wait.h>
 
 bool verbose = false;
+bool zip = true;
 char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;
+
+bool get_zip_approval() {
+    return zip;
+}
 
 char *get_series_path() {
     return seriesPath;
@@ -37,12 +42,13 @@ void terminate_handler(int signal) {
     int status;
     //don't care if wait fails, should fail most of the time in fact
     wait(&status);
-    delete_folder(get_temporary_folder());
+    delete_folder(get_temporary_folder(), -1);
     exit(9);
 }
 
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
+    delete_folder(get_temporary_folder(), -1);
     switch(err) {
         case 1:
             fputs("Usage: tmdl url [savelocation] [-v]\n", stderr);
@@ -84,6 +90,13 @@ void print_error(int err, void *notUsing) {
             break;
         case 26:
             fputs("Webpage parsing error\n", stderr);
+            break;
+        case 27:
+            fputs("Zipping failed, try with storing in folders instead\n",
+                    stderr);
+            break;
+        case 28:
+            fputs("Failed to copy to new folder\n", stderr);
             break;
     }
 }
@@ -138,7 +151,8 @@ Site argument_check(int argc, char** argv) {
         }
     }
     if (saveDirectory == NULL) {
-        char cwd[1024];
+        //reimpliment getcwd so you don't have to use a buffer
+        char cwd[4096];
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
             saveDirectory = make_permenent_string(cwd);
             if (access(saveDirectory, R_OK|W_OK) == -1) {

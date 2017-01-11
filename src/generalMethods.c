@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+//Kudos to http://stackoverflow.com/users/140740/digitalross
 char *rstrstr(char *s1, char *s2) {
     size_t  s1len = strlen(s1);
     size_t  s2len = strlen(s2);
@@ -18,10 +19,12 @@ char *rstrstr(char *s1, char *s2) {
     return NULL;
 }
 
-void delete_folder(char *folder) {
+void delete_folder(char *folder, int error) {
     int pid = fork();
     if (pid == -1) {
-        exit(21);
+        if (error != -1) {
+            exit(21);
+        }
     } else if (pid == 0) {
         //child
         execlp("rm", "rm", "-rf", folder, NULL);
@@ -30,7 +33,9 @@ void delete_folder(char *folder) {
     //parent
     int status;
     if (wait(&status) == -1) {             
-        exit(21);                                                        
+        if (error != -1) {
+            exit(21);
+        }                                                        
     }                                                                    
     //should never fail, we have read write permission to that folder
 }                                                                        
@@ -56,7 +61,6 @@ void create_folder(char *folder) {
         //If it already exists then still return 0 - so all g            
     }                                                                    
 }                                                                        
-
 
 char *get_substring(char *string, char *start, char *end, int error) {
     char *startOfSubstring = strstr(string, start);
@@ -206,4 +210,57 @@ char *read_all_from_fd(int fd) {
     text[count] = '\0';
     fclose(source);
     return text;
+}
+
+//Kudos to http://stackoverflow.com/users/44065/jmucchiello
+// You must free the result if result is non-NULL.
+char *str_replace(char *original, char *replace, char *alternative) {
+    char *result; // the return string
+    char *insert;    // the next insert point
+    char *temporary;    // varies
+    int replaceLength;  // length of rep (the string to remove)
+    int alternativeLength; // length of with (the string to replace rep with)
+    int differenceLength; // distance between rep and end of last rep
+    int count;    // number of replacements
+
+    // sanity checks and initialization
+    if (!original || !replace) {
+        return NULL;
+    }
+    replaceLength = strlen(replace);
+    if (replaceLength == 0) {
+        return NULL; // empty rep causes infinite loop during count
+    }
+    if (alternative == NULL) {
+        alternative = "";
+    }
+    alternativeLength = strlen(alternative);
+
+    // count the number of replacements needed
+    insert = original;
+    for (count = 0; (temporary = strstr(insert, replace)) != NULL; ++count) {
+        insert = temporary + replaceLength;
+    }
+
+    temporary = result = malloc(strlen(original) + (alternativeLength - 
+            replaceLength) * count + 1);
+
+    if (result == NULL) {
+        exit(21);
+    }
+
+    // first time through the loop, all the variable are set correctly
+    // from here on,
+    //    tmp points to the end of the result string
+    //    ins points to the next occurrence of rep in orig
+    //    orig points to the remainder of orig after "end of rep"
+    while (count--) {
+        insert = strstr(original, replace);
+        differenceLength = insert - original;
+        temporary = strncpy(temporary, original, differenceLength) + differenceLength;
+        temporary = strcpy(temporary, alternative) + alternativeLength;
+        original += differenceLength + replaceLength; // move to next "end of rep"
+    }
+    strcpy(temporary, original);
+    return result;
 }

@@ -35,7 +35,7 @@ int get_download_length() {
     return length;
 }
 
-int get_current_download_number() {
+int get_current_download_chapter() {
     return pointer;
 }
 
@@ -56,6 +56,10 @@ void free_download_array() {
 }
 
 void add_to_download_list(Chapter *toAdd) {
+    char *toFree = toAdd->name;
+    char *formattedName = str_replace(toAdd->name, " ", "\\ ");
+    toAdd->name = formattedName;
+    free(toFree);
     if (dynamic == 0) {
         dynamic = 4;
         downloadArray = (Chapter **) malloc(sizeof(Chapter *) * dynamic);

@@ -84,6 +84,7 @@ void bypass_DDOS_protection() {
     } else if (pid == 0) {
         //child
         dup2(fds[1], 1);
+        close(2);
         execlp("python", "python", script, NULL); 
         //Exit 24 is python not installed but no point printing out
         //no one is reading the childs stderr
@@ -91,11 +92,6 @@ void bypass_DDOS_protection() {
     }
     //parent
     close(fds[1]);
-    int error = update_cookie(read_all_from_fd(fds[0])); 
-    if (error != 0) {
-        remove(script);
-        exit(error);
-    }
     int status;
     //put here || WIFEXITED
     if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
@@ -103,7 +99,8 @@ void bypass_DDOS_protection() {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
-        fputs("If the latest version of cfscrape and a version of python is " 
+        fputs("Ensure you are connected to the internet otherwise\n"
+                "If the latest version of cfscrape and a version of python is " 
                 "already installed please just rerun your last command.\n"
                 "To install cfscrape please run the following command:\n"
                 "sudo -H pip install cfscrape\n"
@@ -112,7 +109,11 @@ void bypass_DDOS_protection() {
         remove(script);
         exit(25);
     } 
+    int error = update_cookie(read_all_from_fd(fds[0])); 
     remove(script);
+    if (error != 0) {
+        exit(error);
+    }
     free(script);
     if (get_verbose()) {
         puts("Bypassed cloudflares DDOS protection");

@@ -56,3 +56,12 @@ figure out images about joining scans and remove them - basiclly by hashing and 
 - keep some kind of auto updater?
 
 -Make sure kissmanga side of things is kept seperate from the rest of the program
+
+- custom md5 hash it or not?
+
+- use a binary search tree for the hashmap so when I search if something alreayd exists I can do it in log n time!
+
+thread the mapcheccking
+
+-z means zip
+-f means folder, keep the option
