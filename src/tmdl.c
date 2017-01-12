@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 bool verbose = false;
-bool zip = true;
+bool zip = false;
 char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;
@@ -37,17 +37,14 @@ char *get_domain() {
 }
 
 void terminate_handler(int signal) {
-    //I know init will auto reap the child, but if it the zip is running I gotta wait
-    //so just wait, when wait is done or fails, delete direcctory
-    int status;
-    //don't care if wait fails, should fail most of the time in fact
-    wait(&status);
-    delete_folder(get_temporary_folder(), -1);
     exit(9);
 }
 
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
+    //don't care if wait fails, should fail most of the time in fact
+    int status;
+    wait(&status);
     delete_folder(get_temporary_folder(), -1);
     switch(err) {
         case 1:
@@ -71,7 +68,7 @@ void print_error(int err, void *notUsing) {
             fputs("Invalid series location\n", stderr);
             break;
         case 9:
-            fputs("Stopping prematurely\n", stderr);
+            fputs("\nStopping prematurely\n", stderr);
             break;
         case 21:
             fputs("System error\n", stderr);
@@ -138,7 +135,7 @@ Site argument_check(int argc, char** argv) {
                 //if not exit
                 if (access(argv[i-1], F_OK) != -1) {
                     if (access(argv[i-1], W_OK|R_OK) != -1) {
-                        saveDirectory = argv[i-1];
+                        saveDirectory = realpath(argv[i-1], NULL);
                     } else {
                         exit(3);
                     }

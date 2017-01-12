@@ -77,11 +77,16 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
     if (pid == -1) {
         exit(22);
     } else if (pid == 0) {
-        fprintf(stderr, "\nzip %s %s\n", toMoveTo, contentsToMove);
-        close(0), close(1), close(2);
+        //close(0), close(1), close(2);
         //child
         if (get_zip_approval()) {
-            execlp("zip", "zip", toMoveTo, contentsToMove, NULL);
+            char *commandToRun = (char *) malloc(sizeof(char) * 
+                    (strlen(toMoveTo) + strlen(contentsToMove) + 8));
+            if (commandToRun == NULL) {
+                exit(21);
+            }
+            sprintf(commandToRun, "\"zip %s %s\"", toMoveTo, contentsToMove);
+            execlp("bash", "bash", "-c", commandToRun, NULL);
         } else {
             execlp("mv", "mv", contentsToMove, toMoveTo, NULL);
         }
@@ -117,19 +122,19 @@ void move_downloaded(Chapter *current) {
         finalMoveTo = concat(moveToConstructor, "/");
         contents = get_temporary_folder();
     }
-    free(moveToConstructor);
+    free(moveToConstructor);;
     copy_contents(finalMoveTo, contents);
     free(finalMoveTo);
     if (get_zip_approval()) {
         free(contents);
-        //delete_folder(temporaryFolder, 1);
+        delete_folder(temporaryFolder, 1);
     }
 }
 
 void download_chapter(Chapter *current, Site source) {
     if (chapterExists(current->name)) {
         if (get_verbose()) {
-            printf("Skipping %s - already downloaded\n", current->name);
+            printf("\rSkipping %s - already downloaded", current->name);
         }
         return;
     }
