@@ -4,6 +4,10 @@ tmdl
 #vim stuff
 *.swp
 
+#testimages
+*.jpg
+*.png
+
 # Object files
 *.o
 *.ko

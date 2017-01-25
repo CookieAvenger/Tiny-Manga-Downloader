@@ -27,6 +27,7 @@ void delete_folder(char *folder, int error) {
         }
     } else if (pid == 0) {
         //child
+        close(1), close(2);
         execlp("rm", "rm", "-rf", folder, NULL);
         exit(24); 
     }
@@ -46,6 +47,7 @@ void create_folder(char *folder) {
         exit(21);                                                        
     } else if (pid == 0) {                                               
         //child                                                          
+        close(1), close(2);
         execlp("mkdir", "mkdir", "-p", folder, NULL);           
         exit(24);                                                        
     }                                                                    

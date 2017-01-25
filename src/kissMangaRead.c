@@ -54,6 +54,8 @@ int update_cookie(char *cookieInfo) {
 }
 
 //Create python script - temporary solution
+//Could alternatively just pipe in the commands and exit when done - but...
+//already implimented this way :p
 char *makeCookieScript() {
     char *scriptName = concat(get_save_directory(), "/cookiegrabber.py");
     FILE *cookieScript = fopen(scriptName, "w");

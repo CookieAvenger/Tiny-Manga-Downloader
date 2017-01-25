@@ -18,10 +18,6 @@ don't forget to fflush
 support kissmanga
 and hitomi
 
-gotta deal with cookies - keep a struct, and with challenge responses, do everytime 503 comes up, if after sending fails, ask again for webpage and don't send cookie info
-
-do not fully impliment cookies - but put that as a thing to do, for now get it up and running :P
-
 comment all methods
 and global variables
 
@@ -32,8 +28,6 @@ allow for multiple urls
 - loop through each argument and change variable accordingly
 - make -v have to be last
 - folder to save 2nd last if -v otherwise last
-
-create a list of chapter structs then go through said structs
 
 what if instead of series just a chapter page is given - then just download the chapter
 
@@ -65,3 +59,6 @@ thread the mapcheccking
 
 -z means zip
 -f means folder, keep the option
+
+improve the verbose print
+improve the name of the image and the extension it is saved as

@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 bool verbose = false;
-bool zip = false;
+bool zip = true;
 char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;

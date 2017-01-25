@@ -32,6 +32,7 @@ bool chapterExists(char *toCheck) {
     return existance;
 }
 
+//Needs improving
 char *get_file_name(char *url, int fileNameCounter) {
     fileNameCounter += 1;
     char *fileExtension = rstrstr(url, ".");
@@ -67,8 +68,6 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         free(pictureUrls[i]);
     }
     free(pictureUrls);
-    //also if verbose put progress here
-    //getting i pick out of number in chapter # out of this many chapters for this manga
     //Manually working out file name isn't working out - see if curl can help
 }
 
@@ -77,15 +76,15 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
     if (pid == -1) {
         exit(22);
     } else if (pid == 0) {
-        //close(0), close(1), close(2);
+        close(1), close(2);
         //child
         if (get_zip_approval()) {
             char *commandToRun = (char *) malloc(sizeof(char) * 
-                    (strlen(toMoveTo) + strlen(contentsToMove) + 8));
+                    (strlen(toMoveTo) + strlen(contentsToMove) + 11));
             if (commandToRun == NULL) {
                 exit(21);
             }
-            sprintf(commandToRun, "\"zip %s %s\"", toMoveTo, contentsToMove);
+            sprintf(commandToRun, "zip -jkq %s %s", toMoveTo, contentsToMove);
             execlp("bash", "bash", "-c", commandToRun, NULL);
         } else {
             execlp("mv", "mv", contentsToMove, toMoveTo, NULL);
@@ -115,8 +114,11 @@ void move_downloaded(Chapter *current) {
     char *moveToConstructor = concat(get_series_folder(), current->name);
     if (get_zip_approval()) {
         //zip
-        finalMoveTo = concat(moveToConstructor, ".cbz");
-        contents = concat(get_temporary_folder(), "*");
+        char *tempFinalMoveTo = concat(moveToConstructor, ".cbz");
+        char *tempContents = concat(get_temporary_folder(), "*");
+        finalMoveTo = str_replace(tempFinalMoveTo, " ", "\\ ");
+        contents = str_replace(tempContents, " ", "\\ ");
+        free(tempFinalMoveTo), free(tempContents);
     } else {
         //move
         finalMoveTo = concat(moveToConstructor, "/");
