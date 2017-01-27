@@ -1,0 +1,10 @@
+cfscrape
+python
+libcurl
+bash
+zip
+md5sum
+
+rm
+mkdir
+mv

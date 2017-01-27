@@ -4,10 +4,15 @@ tmdl
 #vim stuff
 *.swp
 
-#testimages
+#test downlaods
 *.jpg
 *.png
 *.cbz
+
+#test scripts
+*.sh
+*.py
+*.txt
 
 # Object files
 *.o
