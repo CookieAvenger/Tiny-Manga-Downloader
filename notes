@@ -36,6 +36,7 @@ clean up code!!
 quick fail downloading chapters - and move on don't exit
 
 keep auto-updating desired mangas - just run the url every day automatically or whatever
+store somewhere where to update from and so if you just run tmdl in that folder it'll just work on updating it
 
 figure out images about joining scans and remove them - basiclly by hashing and comparing hashes, whatever repeats delete
 

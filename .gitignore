@@ -7,6 +7,7 @@ tmdl
 #testimages
 *.jpg
 *.png
+*.cbz
 
 # Object files
 *.o

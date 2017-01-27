@@ -27,4 +27,4 @@ currentChapter.o : currentChapter.c currentChapter.h
 	${CC} ${CFLAGS} -c $<
 
 clean:
-	rm *.o
+	rm *.o && rm tmdl
