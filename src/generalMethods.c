@@ -60,7 +60,6 @@ void create_folder(char *folder) {
         //This can only happen if something is a file instead of a folder
         //as we already know the file exists and we can write to it      
         exit(6);                                                         
-        //If it already exists then still return 0 - so all g            
     }                                                                    
 }                                                                        
 
@@ -265,4 +264,24 @@ char *str_replace(char *original, char *replace, char *alternative) {
     }
     strcpy(temporary, original);
     return result;
+}
+
+//For specific use with argv otherwise need to copy each char * individually
+char **remove_string_from_array(int originalLength, char **originalArray
+        , char *toRemove) {
+    //if works right then just one thing will be removed and need a null so
+    //just original length +1 is in case nothing gets removed
+    char **finalArray = (char **) malloc(sizeof(char *) * (originalLength + 1));
+    if (finalArray == NULL) {
+        exit(21);
+    }
+    int j = 0;
+    for (int i = 0; i < originalLength; i++) {
+        if (strcmp(originalArray[i], toRemove) != 0) {
+            finalArray[j] = originalArray[i];
+            j++;
+        }
+    }
+    finalArray[j] = NULL;
+    return finalArray;
 }

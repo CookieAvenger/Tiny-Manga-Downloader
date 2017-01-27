@@ -67,6 +67,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         }
         free(pictureUrls[i]);
     }
+    puts("");
     free(pictureUrls);
     //Manually working out file name isn't working out - see if curl can help
 }
@@ -107,7 +108,7 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
 
 void move_downloaded(Chapter *current) {
     if (get_verbose()) {
-        printf("\rMoving chapter %s", current->name);
+        printf("Moving chapter %s\n", current->name);
         fflush(stdout);
     } 
     char *finalMoveTo, *contents;
@@ -136,7 +137,7 @@ void move_downloaded(Chapter *current) {
 void download_chapter(Chapter *current, Site source) {
     if (chapterExists(current->name)) {
         if (get_verbose()) {
-            printf("\rSkipping %s - already downloaded", current->name);
+            printf("Skipping %s - already downloaded\n", current->name);
         }
         return;
     }

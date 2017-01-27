@@ -1,9 +1,10 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=gnu99#-g
+LIBLINK = -lcurl#-lpthreads
 all: tmdl
 
 tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o
-	${CC} ${CFLAGS} $^ -o $@ -lcurl
+	${CC} ${CFLAGS} $^ -o $@ ${LIBLINK}
 
 tmdl.o: tmdl.c tmdl.h
 	${CC} ${CFLAGS} -c $<
@@ -27,4 +28,4 @@ currentChapter.o : currentChapter.c currentChapter.h
 	${CC} ${CFLAGS} -c $<
 
 clean:
-	rm *.o && rm tmdl
+	find . -type f -name '*.o' -delete

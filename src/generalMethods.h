@@ -10,3 +10,5 @@ void delete_folder(char *folder, int error);
 void create_folder(char *folder);
 char *rstrstr(char *s1, char *s2);
 char *str_replace(char *original, char *replace, char *alternative);
+char **remove_string_from_array(int originalLength, char **originalArray
+        , char *toRemove);

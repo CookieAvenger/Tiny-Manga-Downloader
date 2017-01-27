@@ -7,17 +7,6 @@ if a folder in the name of the series already exists only download chapters that
 use a folder, download pictures inside, create a cbr from files in folder
 ^call this folder working directory - create on every run, delete at end of every run
 
-when download done - run this in working directory - run bach -c
-zip ../(chapter name here).cbr *
-rm -rf ./
-
-if -v is applied print when a chapter finishes downloading
-and also print each picture download like 3/36 and then zipping, and then done - make sure updates on same line with \r and if last message longer than next have enough spaces to remove it
-don't forget to fflush
-
-support kissmanga
-and hitomi
-
 comment all methods
 and global variables
 
@@ -63,3 +52,5 @@ thread the mapcheccking
 
 improve the verbose print
 improve the name of the image and the extension it is saved as
+
+impliment download of a single chapter kissMangaDownload.c:78

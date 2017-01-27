@@ -50,14 +50,15 @@ void download_kissmanga_series(char *randomChapterLink) {
             "<option value=", "</option>");
     free(chaptersSection);
     fill_up_queue(chaptersUnparsed);
-    //string_array_free(chaptersUnparsed); freed during fill up
 }
 
 void setup_kissmanga_download() {
     bypass_DDOS_protection();
     char *testType = get_kissmanga_page(get_series_path());
     if (testType == NULL) {
-        exit(6);
+        fprintf(stderr, "This url: %s, is an invalid series location, skipping"
+                , get_current_url());
+        return;
     }
     char *testString = (char *) malloc(sizeof(char) * 
             (strlen(get_series_path()) + 7));
@@ -69,13 +70,13 @@ void setup_kissmanga_download() {
     //Need a better way of testing
     if (result != NULL) {
         //Series Page
-        //Now we open any chapter
         char *chapterLink = get_substring(testType, testString, "\"", 26);
         free(testString);
         free(testType);
         download_kissmanga_series(chapterLink);
     } else {
         //Chapter Page
+        //To do
         printf("%s\n", testType);
         free(testString);
         free(testType);

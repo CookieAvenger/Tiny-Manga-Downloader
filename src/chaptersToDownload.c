@@ -30,10 +30,14 @@ char *get_series_folder() {
 
 void set_series_folder(char *folder) {
     char *path = concat(get_save_directory(), "/");
-    char *fullFolder = concat(path, folder);
-    free(path);
-    seriesFolder = concat(fullFolder, "/");
-    free(fullFolder);
+    if (strcmp(rstrstr(get_save_directory(), "/")+1, folder) == 0) {
+        seriesFolder = path;
+    } else {
+        char *fullFolder = concat(path, folder);
+        free(path);
+        seriesFolder = concat(fullFolder, "/");
+        free(fullFolder);
+    }
 }
 
 void set_source(Site domainUsed) {
@@ -108,6 +112,9 @@ Chapter *pop_from_download() {
 }
 
 void download_entire_queue() {
+    if (length == 0) {
+        return;
+    }
     setup_temporary_folder();
     Chapter *current;
     while (current = pop_from_download(), current != NULL) {

@@ -1,5 +1,6 @@
 #include <stdbool.h>
 
+char *get_current_url();
 bool get_verbose();
 char *get_save_directory();
 char *get_domain();
