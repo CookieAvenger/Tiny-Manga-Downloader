@@ -64,6 +64,9 @@ bool is_leaf(avlTreeNode *node) {
 
 avlTreeNode *create_new_node(void *newValue) {
     avlTreeNode *newNode = (avlTreeNode *) malloc(sizeof(avlTreeNode));
+    if (newNode == NULL) {
+        exit(21);
+    }
     newNode->value = newValue;
     newNode->leftSubtreeHeight = newNode->rightSubtreeHeight = 0;
     newNode->leftChild = newNode->rightChild = newNode->parent = NULL;
@@ -204,6 +207,7 @@ bool insert_node(avlTree *tree, void *insert) {
     avlTreeNode *newNode = create_new_node(insert);
     if (tree->root == NULL) {
         tree->root = newNode;
+        tree->size = 1;
         return true;
     }
     avlTreeNode *currentNode = tree->root;
@@ -220,6 +224,7 @@ bool insert_node(avlTree *tree, void *insert) {
                 newNode->parent = currentNode;
                 currentNode->leftChild = newNode;
                 rebalance_tree(tree, currentNode);
+                tree->size++;
                 return true;
             }
         } else {
@@ -229,6 +234,7 @@ bool insert_node(avlTree *tree, void *insert) {
                 newNode->parent = currentNode;
                 currentNode->rightChild = newNode;
                 rebalance_tree(tree, currentNode);
+                tree->size++;
                 return true;
             }
         }
@@ -274,6 +280,102 @@ bool delete_node(avlTree *tree, void *remove) {
         }
     }
     rebalance_tree(tree, toRemove->parent);
+    tree->size--;
     free(toRemove);
     return true;
 }
+
+int is_sorted(void **sortedKeys, 
+        int (*comparator) (const void *, const void *)) {
+    int i = 0;
+    void *first, *second;
+    while (first = sortedKeys[i], second = sortedKeys[++i], second != NULL) {
+        if ((*comparator)(first, second) >= 0) {
+            return -1;
+        }
+    }
+    return i;
+}
+
+avlTreeNode *fast_construction (void **sortedKeys, int start, int end) {
+    if ((start - end) == 0) {
+        return create_new_node(sortedKeys[start]);
+    } else if ((end - start) < 0 ) {
+        return NULL;
+    }
+    int median = start + ((end-start)/2);
+    avlTreeNode *toReturn = create_new_node(sortedKeys[median]);
+    toReturn->leftChild = fast_construction(sortedKeys, start, start + median - 1);
+    toReturn->rightChild = fast_construction(sortedKeys, start + median + 1, end);
+    int max;
+    if (toReturn->leftChild == NULL) {
+        toReturn->leftSubtreeHeight = 0;
+    } else {
+        max = toReturn->leftChild->leftSubtreeHeight;
+        if (toReturn->leftChild->rightSubtreeHeight > max) {
+            max = toReturn->leftChild->rightSubtreeHeight;
+        }
+        toReturn->leftSubtreeHeight = max;
+    }
+    if (toReturn->rightChild == NULL) {
+        toReturn->rightSubtreeHeight = 0;
+    } else {
+        max = toReturn->rightChild->leftSubtreeHeight;
+        if (toReturn->rightChild->rightSubtreeHeight > max) {
+            max = toReturn->rightChild->rightSubtreeHeight;
+        }
+        toReturn->rightSubtreeHeight = max;
+    }
+    return toReturn;
+}
+
+avlTree *sorted_construction (void **sortedKeys,
+        int (*comparator) (const void *, const void *)) {
+    if (sortedKeys == NULL || sortedKeys[0] == NULL) {
+        return NULL;
+    }
+    avlTree *inConstruction = (avlTree *) malloc(sizeof(avlTree));
+    if (inConstruction == NULL) {
+        exit(21);
+    }
+    inConstruction->comparator = (*comparator);
+    inConstruction->root = NULL;
+    inConstruction->size = 0;
+    int length = is_sorted(sortedKeys, (*comparator));
+    if (length != -1) {
+        inConstruction->root = fast_construction(sortedKeys, 0, length - 1);
+        inConstruction->size = length;
+    } else {
+        int i = 0;
+        void *toInsert;
+        while(toInsert = sortedKeys[i++], toInsert != NULL) {
+            insert_node(inConstruction, toInsert);
+        }
+    }
+    return inConstruction;
+}
+
+//does not free values
+void free_tree (avlTree *tree) {
+    //to impliment
+}
+
+//Replace recursive method with a stack based one at a later date
+int fill_array(avlTreeNode *node, void **array, int position) {
+    if (node->leftChild != NULL) {
+        position = fill_array(node->leftChild, array, position);
+    }
+    array[position++] = node->value;
+    if (node->rightChild != NULL) {
+        position = fill_array(node->rightChild, array, position);
+    }
+    return position;
+}
+
+void **get_array (avlTree *tree) {
+    void **toReturn = (void **) malloc(sizeof(void *) * (tree->size + 1));
+    fill_array(tree->root, toReturn, 0);
+    return toReturn;
+}
+
+//WRITE AN INVARIENT FOR TESTING
