@@ -27,5 +27,8 @@ chaptersToDownload.o: chaptersToDownload.c chaptersToDownload.h
 currentChapter.o : currentChapter.c currentChapter.h
 	${CC} ${CFLAGS} -c $<
 
+avlTree.o : avlTree.c avlTree.h
+	${CC} ${CFLAGS} -c $<
+
 clean:
 	find . -type f -name '*.o' -delete

@@ -1,5 +1,5 @@
-#ifndef TYPEDEF
-#define TYPEDEF
+#ifndef CHAPTER
+#define CHAPTER
 
 typedef enum site { kissmanga, other } Site;
                                             

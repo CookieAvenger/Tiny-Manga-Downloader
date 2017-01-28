@@ -70,6 +70,9 @@ Chapter *pop_from_download() {
     ChapterQueue *newHead = head->next;
     free(head);
     head = newHead;
+    if (head == NULL) {
+        tail = NULL;
+    }
     overallPointer++;
     return toDownload;
 }
