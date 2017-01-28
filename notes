@@ -34,23 +34,30 @@ figure out images about joining scans and remove them - basiclly by hashing and 
 -at first duplicate, unzip folder delete file, rezip, remove location data from hashmap, and delete the just downloaded file, if duplicate found and location is null, only delete new one
 -try to keep the hashmap small, so after say 10 chapters all the hashes with locations in them, we can discard it, -e prevents this discard
 -at the end we save the hashmap to a hidden file in the folder .duplicatehashset
--also provide a function, so you go into the folder and just run the program and it'll update the chapters - store settings in hidden file .settings
+-also provide a function, so you go into the folder and just run the program and it'll update the chapters - store settings in hidden file .settings here also goes site it came from
 - if new url run in the folder - update the .settings file given the name of the magnga ends up the same
 
 - keep some kind of auto updater?
 
 -Make sure kissmanga side of things is kept seperate from the rest of the program
 
-- custom md5 hash it or not?
-
 - use a binary search tree for the hashmap so when I search if something alreayd exists I can do it in log n time!
 
 thread the mapcheccking
-
--z means zip
--f means folder, keep the option
 
 improve the verbose print
 improve the name of the image and the extension it is saved as
 
 impliment download of a single chapter kissMangaDownload.c:78
+
+make a massive defines file for all the places I search for in source code to get stuff so if the site changes its easier to update
+
+create an md5sum file .md5 and read from it and append to it, so every time a new image downloads, get the md5 of it, then check if it already exists in avl tree, if not add to tree and append to file
+also save the md5s in the file so it can be easy to constrct in O(n) time
+make avl tree
+
+also make my own tries or suffix trees for my own searching through website source code
+
+make universal avl tree that takes void * and uses a compare function
+
+predessor search succesor search, dictionary look up - just a predessor wrapper

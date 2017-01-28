@@ -56,7 +56,7 @@ void setup_kissmanga_download() {
     bypass_DDOS_protection();
     char *testType = get_kissmanga_page(get_series_path());
     if (testType == NULL) {
-        fprintf(stderr, "This url: %s, is an invalid series location, skipping"
+        fprintf(stderr, "This url: %s, is an invalid series location, skipping\n"
                 , get_current_url());
         return;
     }

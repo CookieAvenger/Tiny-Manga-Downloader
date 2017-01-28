@@ -101,7 +101,7 @@ void bypass_DDOS_protection() {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
-        fputs("Ensure you are connected to the internet otherwise\n"
+        fputs("Ensure you are connected to the internet and address is correct\n"
                 "If the latest version of cfscrape and a version of python is " 
                 "already installed please just rerun your last command.\n"
                 "To install cfscrape please run the following command:\n"

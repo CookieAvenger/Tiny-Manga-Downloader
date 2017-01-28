@@ -8,6 +8,13 @@ typedef struct chapter {
     char *link;                             
 } Chapter;                                  
 
+struct chapterqueue {
+    Chapter *current;
+    struct chapterqueue *next;
+};
+
+typedef struct chapterqueue ChapterQueue;
+
 void set_series_folder(char *folder);
 void set_source(Site domainUsed);
 int get_download_length();

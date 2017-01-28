@@ -45,6 +45,7 @@ char *get_domain() {
 }
 
 void terminate_handler(int signal) {
+    fputs("\n", stderr);
     exit(9);
 }
 
@@ -55,7 +56,7 @@ void print_error(int err, void *notUsing) {
     wait(&status);
     delete_folder(get_temporary_folder(), -1);
     if (currentUrl != NULL) {
-        fprintf(stderr, "Error occured with: %s\n", currentUrl);
+        fprintf(stderr, "Error occured at: %s\n", currentUrl);
     }
     switch(err) {
         case 1:
@@ -82,7 +83,7 @@ void print_error(int err, void *notUsing) {
             fputs("No save location given\n", stderr);
             break;
         case 9:
-            fputs("\nStopping prematurely\n", stderr);
+            fputs("Stopping prematurely\n", stderr);
             break;
         case 21:
             fputs("System error\n", stderr);

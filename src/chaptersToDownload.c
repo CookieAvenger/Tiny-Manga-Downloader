@@ -10,19 +10,10 @@
 
 Site source;
 char *seriesFolder;
-Chapter **downloadArray;
-//Malloced size of array
-int dynamic = 0;
-//Size of array used
-int length = 0;
-//Current point up to which we are up to
-int pointer = 0;
-
+ChapterQueue *head = NULL;
+ChapterQueue *tail = NULL;
 int fullLength = 0;
-
 int overallPointer = 0;
-
-int time = 0;
 
 char *get_series_folder() {
     return seriesFolder;
@@ -58,68 +49,41 @@ void free_chapter(Chapter *toFree) {
     free(toFree);
 }
 
-//After each pop free a chapter then
-void free_download_array() {
-    if (time++ == 1) {
-        for (int i = 0; i < length; i++) {
-           free_chapter(downloadArray[i]); 
-        }
-    }
-    free(downloadArray);
-}
-
 void add_to_download_list(Chapter *toAdd) {
-    if (dynamic == 0) {
-        dynamic = 4;
-        downloadArray = (Chapter **) malloc(sizeof(Chapter *) * dynamic);
-        if (downloadArray == NULL) {
-            exit(21);
-        }
+    ChapterQueue *new = (ChapterQueue *) malloc(sizeof(ChapterQueue));
+    new->current = toAdd;
+    new->next = NULL;
+    if (head == NULL) {
+        head = tail = new;
+    } else {
+        tail->next = new;
+        tail = new;
     }
-    length++;
-    if (length == dynamic) {
-        dynamic *= 2;
-        downloadArray = (Chapter **) realloc(downloadArray, 
-                sizeof(Chapter *) * dynamic);
-        if (downloadArray == NULL) {
-            exit(21);
-        }
-    }
-    downloadArray[length - 1] = toAdd;
     fullLength++;
 }
 
 Chapter *pop_from_download() {
-    if (pointer++ >= length) {
+    if (head == NULL) {
         return NULL;
-    } else {
-        if ((length - pointer + 1) <= (dynamic / 4)) {
-            dynamic -= (dynamic / 2);
-            Chapter **newArray = (Chapter **) malloc (sizeof(Chapter *) 
-                    * dynamic);
-            memcpy(newArray, &downloadArray[pointer - 1], 
-                    sizeof(Chapter **) * dynamic);
-            free_download_array();
-            //have to see if this length is right by adding stuff 
-            // - will find out later
-            length -= (pointer - 1);
-            pointer = 1;
-            downloadArray = newArray;
-        }
-        overallPointer++;
-        return downloadArray[pointer - 1];
     }
+    Chapter *toDownload = head->current;
+    ChapterQueue *newHead = head->next;
+    free(head);
+    head = newHead;
+    overallPointer++;
+    return toDownload;
 }
 
 void download_entire_queue() {
-    if (length == 0) {
+    if (fullLength == 0) {
         return;
     }
     setup_temporary_folder();
-    Chapter *current;
-    while (current = pop_from_download(), current != NULL) {
-        download_chapter(current, source);
+    Chapter *toDownload;
+    while (toDownload = pop_from_download(), toDownload != NULL) {
+        download_chapter(toDownload, source);
+        free_chapter(toDownload);
     }
-    free_download_array(); 
-    pointer = length = dynamic = fullLength = overallPointer = time =  0;
+    fullLength = overallPointer = 0;
+    head = tail = NULL;
 }
