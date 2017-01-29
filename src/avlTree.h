@@ -27,8 +27,11 @@ typedef struct avltree {
 bool insert_node (avlTree *tree, void *insert); 
 //free remove and search after calling - but never insert
 bool delete_node (avlTree *tree, void *remove); 
+//strictly greater than
 void *successor_search (avlTree *tree, void *search);
+//less than or equal to
 void *predecessor_search (avlTree *tree, void *search);
+//equal to
 void *dictionary_lookup (avlTree *tree, void *search);
 //do a sanity check when constructing and ensure it actually is sorted
 //just comparator every side ny side term then fast construct O(n) time

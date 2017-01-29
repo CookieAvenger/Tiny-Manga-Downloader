@@ -1,9 +1,13 @@
 #include "avlTree.h"
 #include <stdlib.h>
 
+//#include <stdio.h>
+//bool invarient (avlTree *tree);
+
 //NEED TO MAKE REBALANCE METHOD THAT CALLS LEFT-LEFT RIGHT-LEFT ect.
 
 //p search type is predecessor, s search type is successor, and d is dictionary
+//strictness is stricly larger than or stricly less than
 avlTreeNode *internal_search(avlTree *tree, void *search
         , char searchType) {
     avlTreeNode *toReturn = NULL;
@@ -13,10 +17,13 @@ avlTreeNode *internal_search(avlTree *tree, void *search
             return toReturn;
         }
         int result = tree->comparator(currentNode->value, search);
-        if (result == 0) {
-            toReturn = currentNode;
-            return toReturn;
-        } else if (result > 0) {
+        if (searchType != 's') {
+            if (result == 0) {
+                toReturn = currentNode;
+                return toReturn;
+            }
+        }
+        if (result > 0) {
             if (searchType == 's') {
                 toReturn = currentNode;
             }
@@ -208,6 +215,7 @@ bool insert_node(avlTree *tree, void *insert) {
     if (tree->root == NULL) {
         tree->root = newNode;
         tree->size = 1;
+        //invarient(tree);
         return true;
     }
     avlTreeNode *currentNode = tree->root;
@@ -225,6 +233,7 @@ bool insert_node(avlTree *tree, void *insert) {
                 currentNode->leftChild = newNode;
                 rebalance_tree(tree, currentNode);
                 tree->size++;
+                //invarient(tree);
                 return true;
             }
         } else {
@@ -235,6 +244,7 @@ bool insert_node(avlTree *tree, void *insert) {
                 currentNode->rightChild = newNode;
                 rebalance_tree(tree, currentNode);
                 tree->size++;
+                //invarient(tree);
                 return true;
             }
         }
@@ -267,7 +277,11 @@ bool delete_node(avlTree *tree, void *remove) {
 
     }
     //ToRemove now has to be a leaf
-    if(tree->comparator (toRemove->parent->leftChild->value, 
+    if (toRemove->parent == NULL) {
+        if (valueFree) {
+            free(toRemove->value);
+        }
+    } else if(tree->comparator (toRemove->parent->leftChild->value, 
             toRemove->value) == 0) {
         toRemove->parent->leftChild = NULL;
         if (valueFree) {
@@ -282,6 +296,7 @@ bool delete_node(avlTree *tree, void *remove) {
     rebalance_tree(tree, toRemove->parent);
     tree->size--;
     free(toRemove);
+    //invarient(tree);
     return true;
 }
 
@@ -298,15 +313,15 @@ int is_sorted(void **sortedKeys,
 }
 
 avlTreeNode *fast_construction (void **sortedKeys, int start, int end) {
-    if ((start - end) == 0) {
+    if ((end - start) == 0) {
         return create_new_node(sortedKeys[start]);
     } else if ((end - start) < 0 ) {
         return NULL;
     }
     int median = start + ((end-start)/2);
     avlTreeNode *toReturn = create_new_node(sortedKeys[median]);
-    toReturn->leftChild = fast_construction(sortedKeys, start, start + median - 1);
-    toReturn->rightChild = fast_construction(sortedKeys, start + median + 1, end);
+    toReturn->leftChild = fast_construction(sortedKeys, start, (median - 1));
+    toReturn->rightChild = fast_construction(sortedKeys, (median + 1), end);
     int max;
     if (toReturn->leftChild == NULL) {
         toReturn->leftSubtreeHeight = 0;
@@ -326,6 +341,7 @@ avlTreeNode *fast_construction (void **sortedKeys, int start, int end) {
         }
         toReturn->rightSubtreeHeight = max;
     }
+    //invarient(toReturn);
     return toReturn;
 }
 
@@ -338,10 +354,10 @@ avlTree *sorted_construction (void **sortedKeys,
     if (inConstruction == NULL) {
         exit(21);
     }
-    inConstruction->comparator = (*comparator);
+    inConstruction->comparator = comparator;
     inConstruction->root = NULL;
     inConstruction->size = 0;
-    int length = is_sorted(sortedKeys, (*comparator));
+    int length = is_sorted(sortedKeys, comparator);
     if (length != -1) {
         inConstruction->root = fast_construction(sortedKeys, 0, length - 1);
         inConstruction->size = length;
@@ -372,10 +388,29 @@ int fill_array(avlTreeNode *node, void **array, int position) {
     return position;
 }
 
+//Last element is NULL
 void **get_array (avlTree *tree) {
+    if (tree == NULL || tree->root == NULL || tree->size == 0) {
+        return NULL;
+    }
     void **toReturn = (void **) malloc(sizeof(void *) * (tree->size + 1));
     fill_array(tree->root, toReturn, 0);
+    toReturn[tree->size] = NULL;
     return toReturn;
 }
 
-//WRITE AN INVARIENT FOR TESTING
+/*
+bool invarient (avlTree *tree) {
+    void **toCheck = get_array(tree);
+    if (toCheck == NULL) {
+        return true;
+    }
+    if (!is_sorted(toCheck, tree->comparator)) {
+        int i = 0;
+        void *toPrint;
+        while (toPrint = toCheck[i++], toPrint != NULL) {
+            printf("%s\n", (char *) toPrint);
+        }
+    }
+}
+*/
