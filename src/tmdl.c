@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "tmdl.h"
@@ -19,6 +19,7 @@ char *domain;
 char *seriesPath;
 char *currentUrl = NULL;
 int remainingUrls;
+bool save = false;
 
 char *get_current_url() {
     return currentUrl;
@@ -49,19 +50,48 @@ void terminate_handler(int signal) {
     exit(9);
 }
 
+void save_settings() {
+    char *settingsPath = concat(get_series_folder(), "/.settings.tmdl");
+    FILE *settingsFile = fopen(settingsPath, "w");
+    if (settingsFile == NULL) {
+        if (verbose == true) {
+        fputs("Cannot save settings... how have you "
+                "managed to do this :/", stderr);
+        }
+        return;
+    }
+    fprintf(settingsFile, "%s\n%s\n", domain, seriesPath); 
+    if (verbose) {
+        fputs("v\n", settingsFile);
+    } else {
+        fputs("s\n", settingsFile);
+    }
+    if (zip) {
+        fputs("z\n", settingsFile);
+    } else {
+        fputs("f\n", settingsFile);
+    }
+    fclose(settingsFile);
+}
+
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
     //don't care if wait fails, should fail most of the time in fact
-    int status;
-    wait(&status);
-    delete_folder(get_temporary_folder(), -1);
+    if (save) {
+        int status;
+        wait(&status);
+        delete_folder(get_temporary_folder(), -1);
+        save_settings();
+        //save blacklist goes here too
+    }
     if (currentUrl != NULL) {
         fprintf(stderr, "Error occured at: %s\n", currentUrl);
     }
     switch(err) {
         case 1:
-            fputs("Usage: tmdl <url> [<urls>] <savelocation>|-c [-v] [-f] [-z]\n"
-                    , stderr);
+            fputs("Usage: tmdl\n", stderr);
+            fputs("   or: tmdl <url> [<urls>] <savelocation>|-c", stderr);
+            fputs("   or: tmdl -u <savelocation>", stderr);
             break;
         case 2:
             fputs("Directory provided does not exist - ensure one is provided\n"
@@ -82,7 +112,7 @@ void print_error(int err, void *notUsing) {
         case 7:
             fputs("No save location given\n", stderr);
             break;
-        case 9:
+        case 11:
             fputs("Stopping prematurely\n", stderr);
             break;
         case 21:
@@ -110,32 +140,91 @@ void print_error(int err, void *notUsing) {
         case 28:
             fputs("Failed to copy to new folder\n", stderr);
             break;
+        case 31:
+            fputs("Settings file is invalid or does not exist\n", stderr);
     }
 }
 
-void process_flag (char *flag) {
+void set_save_directory_as_current() {
+    //reimpliment getcwd so you don't have to use a buffer
+    char cwd[4096];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        saveDirectory = make_permenent_string(cwd);
+        if (access(saveDirectory, R_OK|W_OK) == -1) {
+            exit(4);
+        }
+    } else {
+       exit(21); 
+    }
+}
+
+Site parse_settings(FILE *settingsFile) {
+    Site domainUsed = other;
+    domain = read_from_file(settingsFile, '\n');
+    if (domain[0] == '\0') {
+        exit(31);
+    }
+    if (strncmp(domain, "kissmanga", 9) == 0) {
+        domainUsed = kissmanga;
+    } else {
+        //need other checks here
+        exit(31);
+    }
+    seriesPath = read_from_file(settingsFile, '\n');
+    if (seriesPath[0] == '\0') {
+        puts("hi");
+        exit(31);
+    }
+    char *parse;
+    while(parse = read_from_file(settingsFile, '\n'), parse[0] != '\0') {
+        if (parse[0] == 's' && parse[1] == '\0') {
+            verbose = false;
+        } else if (parse[0] == 'v' && parse[1] == '\0') {
+            verbose = true;
+        } else if (parse[0] == 'f' && parse[1] == '\0') {
+            zip = false;
+        } else if (parse[0] == 'z' && parse[1] == '\0') {
+            zip = true;
+        } else {
+            exit(31);
+        }
+        free(parse);
+    }
+    return domainUsed;
+}
+
+Site read_settings() {
+    char *settingsPath = concat(get_series_folder(), "/.settings.tmdl");
+    FILE *settingsFile = fopen(settingsPath, "r");
+    if (settingsFile == NULL) {
+        exit(31);
+    }
+    Site domainUsed = parse_settings(settingsFile);    
+    fclose(settingsFile);
+    currentUrl = get_series_folder();
+    remainingUrls = 0;
+    return domainUsed;
+}
+
+bool process_flag (char *flag) {
     if (flag == NULL || flag[0] == '\0') {
         exit(1);
     } else if (flag[0] == 'v' && flag[1] == '\0') {
         verbose = true;
+    } else if (flag[0] == 's' && flag[1] == '\0') {
+        verbose = false;
     } else if (flag[0] == 'z' && flag[1] == '\0') {
         zip = true;
     } else if (flag[0] == 'f' && flag[1] == '\0') {
         zip = false;
     } else if (flag[0] == 'c' && flag[1] == '\0') {
-        //reimpliment getcwd so you don't have to use a buffer
-        char cwd[4096];
-        if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            saveDirectory = make_permenent_string(cwd);
-            if (access(saveDirectory, R_OK|W_OK) == -1) {
-                exit(4);
-            }
-        } else {
-           exit(21); 
-        }
+        set_save_directory_as_current();
+    } else if (flag[0] == 'u' && flag[1] == '\0') {
+        return true;
     } else {
         exit(1);
     }
+    return false;
 }
 
 Site process_first_url(char *url) {
@@ -160,26 +249,7 @@ Site process_first_url(char *url) {
     return domainUsed;
 }
 
-Site argument_check(int argc, char** argv) {
-    if (argc < 3) {
-        exit(1);
-    }
-    remainingUrls = argc - 1;
-    int firstUrl = 0;
-    char *lastArg = NULL;
-    Site domainUsed = other;
-    for (int i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            remainingUrls--;
-            process_flag(argv[i]+1);
-        } else if (firstUrl == 0) {
-            remainingUrls--, firstUrl++;
-            currentUrl = argv[i];
-            domainUsed = process_first_url(argv[i]);
-        } else {
-            lastArg = argv[i];
-        }
-    }
+void set_save_directory(char *lastArg) {
     if (saveDirectory == NULL) {
         if (lastArg != NULL) {
             if (access(lastArg, F_OK) != -1) {
@@ -196,6 +266,49 @@ Site argument_check(int argc, char** argv) {
             exit(7);
         }
     }
+}
+
+bool current_folder_update_mode (int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == 'u') {
+            return false;
+        } 
+    }
+    return true;
+}
+
+Site argument_check(int argc, char** argv) {
+    Site domainUsed = other;
+    if (current_folder_update_mode(argc, argv)) {
+        set_save_directory_as_current();
+        set_series_folder(NULL);
+        domainUsed = read_settings();
+    }
+    remainingUrls = argc - 1;
+    int firstUrl = 0;
+    char *lastArg = NULL;
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            remainingUrls--;
+            bool update = process_flag(argv[i]+1);
+            if (update) {
+                if (++i >= argc) {
+                    exit(1);
+                }
+                set_save_directory(argv[i]);
+                set_series_folder(NULL);
+                domainUsed = read_settings();
+                firstUrl++;
+            }
+        } else if (firstUrl == 0) {
+            remainingUrls--, firstUrl++;
+            currentUrl = argv[i];
+            domainUsed = process_first_url(argv[i]);
+        } else {
+            lastArg = argv[i];
+        }
+    }
+    set_save_directory(lastArg);
     if (currentUrl == NULL) {
         exit(1);
     }
@@ -237,7 +350,11 @@ int main(int argc, char** argv) {
         fprintf(stderr, "This url: %s is from an unsupported domain, skipping\n"
                 , currentUrl);
     } 
+    //join blacklist thread somehow
+    save = true;
     download_entire_queue();
+    save_settings();
+    //save blacklist here
     //fork and continue is needed
     //return it's status not 0
     return duplicate_and_continue(argc, argv);

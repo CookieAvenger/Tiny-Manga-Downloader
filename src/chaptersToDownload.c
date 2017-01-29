@@ -4,12 +4,8 @@
 #include "currentChapter.h"
 #include <string.h>
 
-#include <stdio.h>
-
-//Turn into a real queue later to save space
-
 Site source;
-char *seriesFolder;
+char *seriesFolder = NULL;
 ChapterQueue *head = NULL;
 ChapterQueue *tail = NULL;
 int fullLength = 0;
@@ -20,15 +16,26 @@ char *get_series_folder() {
 }
 
 void set_series_folder(char *folder) {
-    char *path = concat(get_save_directory(), "/");
-    if (strcmp(rstrstr(get_save_directory(), "/")+1, folder) == 0) {
+    if (seriesFolder != NULL) {
+        return;
+    }
+    if (folder == NULL) {
+        char *path = concat(get_save_directory(), "/");
         seriesFolder = path;
     } else {
-        char *fullFolder = concat(path, folder);
-        free(path);
-        seriesFolder = concat(fullFolder, "/");
-        free(fullFolder);
+        char *path = concat(get_save_directory(), "/");
+        if (strcmp(rstrstr(get_save_directory(), "/")+1, folder) == 0) {
+            seriesFolder = path;
+        } else {
+            char *fullFolder = concat(path, folder);
+            free(path);
+            seriesFolder = concat(fullFolder, "/");
+            free(fullFolder);
+        }
     }
+    //start backlist thread somehow
+    //can't be here, have to find else where cuz here verbose may not be set yet :/
+    //could make it print at first handle file, or after join, or... something
 }
 
 void set_source(Site domainUsed) {

@@ -56,6 +56,9 @@ create an md5sum file .md5 and read from it and append to it, so every time a ne
 also save the md5s in the file so it can be easy to constrct in O(n) time
 make avl tree
 
+the .settings file - if it's read then that means that do not set folder name from website
+also change argument error, only is a valid settings file is found you can run tmdl with no arguments
+
 also make my own tries or suffix trees for my own searching through website source code
 
 make universal avl tree that takes void * and uses a compare function

@@ -1,6 +1,5 @@
 #include "kissMangaDownload.h"
 #include "tmdl.h"
-#include <stdio.h>
 #include "generalMethods.h"
 #include <stdlib.h>
 #include <unistd.h>

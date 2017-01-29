@@ -7,7 +7,6 @@
 //NEED TO MAKE REBALANCE METHOD THAT CALLS LEFT-LEFT RIGHT-LEFT ect.
 
 //p search type is predecessor, s search type is successor, and d is dictionary
-//strictness is stricly larger than or stricly less than
 avlTreeNode *internal_search(avlTree *tree, void *search
         , char searchType) {
     avlTreeNode *toReturn = NULL;
@@ -59,14 +58,6 @@ void *dictionary_lookup (avlTree *tree, void *search) {
         return NULL;
     }
     return foundNode->value;
-}
-
-//If never used remove
-bool is_leaf(avlTreeNode *node) {
-    if ((node->leftChild == NULL) && (node->rightChild == NULL)) {
-        return true;
-    }
-    return false;
 }
 
 avlTreeNode *create_new_node(void *newValue) {
@@ -251,7 +242,6 @@ bool insert_node(avlTree *tree, void *insert) {
     }
 }
 
-//Remember to free remove if required after calling this
 bool delete_node(avlTree *tree, void *remove) {
     avlTreeNode *toRemove = internal_search(tree, remove, 'd');
     if (toRemove == NULL) {
@@ -341,7 +331,6 @@ avlTreeNode *fast_construction (void **sortedKeys, int start, int end) {
         }
         toReturn->rightSubtreeHeight = max;
     }
-    //invarient(toReturn);
     return toReturn;
 }
 
@@ -368,12 +357,28 @@ avlTree *sorted_construction (void **sortedKeys,
             insert_node(inConstruction, toInsert);
         }
     }
+    //invarient(toReturn);
     return inConstruction;
 }
 
-//does not free values
-void free_tree (avlTree *tree) {
-    //to impliment
+//Replace recursive method with a stack based one at a later date
+void free_subtree(avlTreeNode *node, bool toFree) {
+    if (node->leftChild != NULL) {
+        free_subtree(node->leftChild, toFree);
+    }
+    if (node->rightChild != NULL) {
+        free_subtree(node->rightChild, toFree);
+    }
+    if (toFree) {
+        free(node->value);
+    }
+    free(node);
+}
+
+//get_array copyings location - be aware of this
+void free_tree (avlTree *tree, bool toFree) {
+    free_subtree(tree->root, toFree);
+    free(tree);
 }
 
 //Replace recursive method with a stack based one at a later date
@@ -388,7 +393,6 @@ int fill_array(avlTreeNode *node, void **array, int position) {
     return position;
 }
 
-//Last element is NULL
 void **get_array (avlTree *tree) {
     if (tree == NULL || tree->root == NULL || tree->size == 0) {
         return NULL;

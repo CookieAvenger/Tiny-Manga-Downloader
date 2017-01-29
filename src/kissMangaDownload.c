@@ -3,7 +3,6 @@
 #include "chaptersToDownload.h"
 #include "tmdl.h"
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
 char **setup_kissmanga_chapter(Chapter *current) {

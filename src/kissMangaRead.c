@@ -18,11 +18,11 @@ int update_cookie(char *cookieInfo) {
         free(cookie);
         free(userAgent);
     }
-    char *startOfCookie = strstr(cookieInfo, "'") + 1;
-    if (startOfCookie == NULL) {
+    char *startOfCookie = strstr(cookieInfo, "'");
+    if (startOfCookie++ == NULL) {
         return 23;
     }
-    char *endOfCookie = strstr((startOfCookie + 1), "'");
+    char *endOfCookie = strstr((startOfCookie), "'");
     if (endOfCookie == NULL) {
         return 23;
     }
@@ -34,10 +34,10 @@ int update_cookie(char *cookieInfo) {
     strncpy(cookie, startOfCookie, charectersInCookie);
     cookie[charectersInCookie] = '\0';
     
-    char *startOfAgent = strstr((endOfCookie + 1), "'") + 1;
-    if (startOfAgent == NULL) {
+    char *startOfAgent = strstr((endOfCookie + 1), "'");
+    if (startOfAgent++ == NULL) {
         return 23;
-    }
+    } 
     char *endOfAgent = strstr(startOfAgent, "'");
     if (endOfAgent == NULL) {
         return 23;

@@ -186,6 +186,28 @@ char* concat(const char *s1, const char *s2) {
     return result;
 }
 
+char *read_from_file(FILE *source, int end) {
+    //classic annoying read here 
+    int next, dynamic = 4, count = 0;
+    char *text = (char *) malloc(sizeof(char) * dynamic);
+    if (text == NULL) {
+        exit(21);
+    }
+    while(next = fgetc(source), (next != EOF) && (next != end)) {
+        count++;
+        if (count == dynamic) {
+            dynamic *= 2;
+            text = (char *) realloc(text, sizeof(char) * dynamic);
+            if (text == NULL) {
+                exit(21);
+            }
+        }
+        text[count - 1] = (char) next;
+    }
+    text[count] = '\0';
+    return text;
+}
+
 char *read_all_from_fd(int fd) {
     FILE *source = fdopen(fd, "r");
     if (source == NULL) {
