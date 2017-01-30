@@ -404,6 +404,8 @@ void **get_array (avlTree *tree) {
 }
 
 /*
+//also impliment a check that size stays accurate and leftsubtreeheight
+//and rightsubtreeheight stays accurate for every single node
 bool invarient (avlTree *tree) {
     void **toCheck = get_array(tree);
     if (toCheck == NULL) {

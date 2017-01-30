@@ -12,14 +12,26 @@
 #include "currentChapter.h"
 #include <sys/wait.h>
 
-bool verbose = false;
+bool delete = true;
+bool verbose = true;
 bool zip = true;
 char *saveDirectory = NULL;
 char *domain;
 char *seriesPath;
 char *currentUrl = NULL;
 int remainingUrls;
+//Weather to save settings and blacklist
 bool save = false;
+//weather we are using the settings file or not 
+bool usingSettings = false;
+
+bool get_using_settings() {
+    return usingSettings;
+}
+
+bool get_delete() {
+    return delete;
+}
 
 char *get_current_url() {
     return currentUrl;
@@ -47,16 +59,16 @@ char *get_domain() {
 
 void terminate_handler(int signal) {
     fputs("\n", stderr);
-    exit(9);
+    exit(11);
 }
 
 void save_settings() {
-    char *settingsPath = concat(get_series_folder(), "/.settings.tmdl");
+    char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
     FILE *settingsFile = fopen(settingsPath, "w");
     if (settingsFile == NULL) {
         if (verbose == true) {
-        fputs("Cannot save settings... how have you "
-                "managed to do this :/", stderr);
+            fputs("Cannot save settings... how have you "
+                    "managed to do this :/", stderr);
         }
         return;
     }
@@ -70,6 +82,11 @@ void save_settings() {
         fputs("z\n", settingsFile);
     } else {
         fputs("f\n", settingsFile);
+    }
+    if (delete) {
+        fputs("d\n", settingsFile);
+    } else {
+        fputs("k\n", settingsFile);
     }
     fclose(settingsFile);
 }
@@ -87,11 +104,20 @@ void print_error(int err, void *notUsing) {
     if (currentUrl != NULL) {
         fprintf(stderr, "Error occured at: %s\n", currentUrl);
     }
+    if (usingSettings && verbose && (err == 6 || err == 22 || err == 23 || err == 26)) {
+        fputs("Try updating the domain in the first line of .settings "
+                "or the series location (part after domain) if this keeps occuring"
+                " the site location may be old now\n", stderr);
+    }
     switch(err) {
         case 1:
             fputs("Usage: tmdl\n", stderr);
-            fputs("   or: tmdl <url> [<urls>] <savelocation>|-c", stderr);
-            fputs("   or: tmdl -u <savelocation>", stderr);
+            fputs("   or: tmdl <url> [<urls>] <savelocation>|-c\n", stderr);
+            fputs("   or: tmdl -u <savelocation> [<savelocations>]\n", stderr);
+            fputs("post command options:\n", stderr);
+            fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
+            fputs("[-z] for zipped chapters (default) or [-f] for folders\n", stderr);
+            fputs("[-d] to delete duplicates (default) or [-k] to keep\n", stderr);
             break;
         case 2:
             fputs("Directory provided does not exist - ensure one is provided\n"
@@ -160,7 +186,7 @@ void set_save_directory_as_current() {
 
 Site parse_settings(FILE *settingsFile) {
     Site domainUsed = other;
-    domain = read_from_file(settingsFile, '\n');
+    domain = read_from_file(settingsFile, '\n', true);
     if (domain[0] == '\0') {
         exit(31);
     }
@@ -170,13 +196,13 @@ Site parse_settings(FILE *settingsFile) {
         //need other checks here
         exit(31);
     }
-    seriesPath = read_from_file(settingsFile, '\n');
+    seriesPath = read_from_file(settingsFile, '\n', true);
     if (seriesPath[0] == '\0') {
         puts("hi");
         exit(31);
     }
     char *parse;
-    while(parse = read_from_file(settingsFile, '\n'), parse[0] != '\0') {
+    while(parse = read_from_file(settingsFile, '\n', true), parse[0] != '\0') {
         if (parse[0] == 's' && parse[1] == '\0') {
             verbose = false;
         } else if (parse[0] == 'v' && parse[1] == '\0') {
@@ -185,6 +211,10 @@ Site parse_settings(FILE *settingsFile) {
             zip = false;
         } else if (parse[0] == 'z' && parse[1] == '\0') {
             zip = true;
+        } else if (parse[0] == 'd' && parse[1] == '\0') {
+            delete = true;
+        } else if (parse[0] == 'k' && parse[1] == '\0') {
+            delete = false;
         } else {
             exit(31);
         }
@@ -194,7 +224,7 @@ Site parse_settings(FILE *settingsFile) {
 }
 
 Site read_settings() {
-    char *settingsPath = concat(get_series_folder(), "/.settings.tmdl");
+    char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
     FILE *settingsFile = fopen(settingsPath, "r");
     if (settingsFile == NULL) {
         exit(31);
@@ -221,6 +251,10 @@ bool process_flag (char *flag) {
         set_save_directory_as_current();
     } else if (flag[0] == 'u' && flag[1] == '\0') {
         return true;
+    } else if (flag[0] == 'd' && flag[1] == '\0') {
+        delete = true;
+    } else if (flag[0] == 'k' && flag[1] == '\0') {
+        delete = false;
     } else {
         exit(1);
     }
@@ -280,6 +314,7 @@ bool current_folder_update_mode (int argc, char **argv) {
 Site argument_check(int argc, char** argv) {
     Site domainUsed = other;
     if (current_folder_update_mode(argc, argv)) {
+        usingSettings = true;
         set_save_directory_as_current();
         set_series_folder(NULL);
         domainUsed = read_settings();
@@ -295,6 +330,7 @@ Site argument_check(int argc, char** argv) {
                 if (++i >= argc) {
                     exit(1);
                 }
+                usingSettings = true;
                 set_save_directory(argv[i]);
                 set_series_folder(NULL);
                 domainUsed = read_settings();
@@ -343,6 +379,9 @@ int main(int argc, char** argv) {
     on_exit(print_error, NULL);
     Site domainUsed = argument_check(argc, argv);
     set_source(domainUsed);
+    if (usingSettings) {
+        //start blacklist load thread
+    }
     if (domainUsed == kissmanga) {
         //if initial page is invalid just skip it
         setup_kissmanga_download();

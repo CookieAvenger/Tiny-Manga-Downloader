@@ -13,6 +13,7 @@ tmdl
 *.sh
 *.py
 *.txt
+*.out
 
 # C files
 *.o

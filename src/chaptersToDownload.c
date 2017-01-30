@@ -33,9 +33,9 @@ void set_series_folder(char *folder) {
             free(fullFolder);
         }
     }
-    //start backlist thread somehow
-    //can't be here, have to find else where cuz here verbose may not be set yet :/
-    //could make it print at first handle file, or after join, or... something
+    if (!get_using_settings()) {
+        //start backlist load thread somehow
+    }
 }
 
 void set_source(Site domainUsed) {

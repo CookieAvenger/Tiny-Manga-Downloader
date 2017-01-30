@@ -86,7 +86,7 @@ void bypass_DDOS_protection() {
     } else if (pid == 0) {
         //child
         dup2(fds[1], 1);
-        close(2);
+        close(fds[0]), close(2);
         execlp("python", "python", script, NULL); 
         //Exit 24 is python not installed but no point printing out
         //no one is reading the childs stderr
@@ -111,7 +111,8 @@ void bypass_DDOS_protection() {
         remove(script);
         exit(25);
     } 
-    int error = update_cookie(read_all_from_fd(fds[0])); 
+    int error = update_cookie(read_all_from_fd(fds[0], false)); 
+    close(fds[0]);
     remove(script);
     if (error != 0) {
         exit(error);
@@ -135,7 +136,7 @@ char *get_kissmanga_page(char *file) {
             bypass_DDOS_protection();
         }
         int fd = send_HTTP_request(get_domain(), file, cookie, userAgent);
-        page = read_all_from_fd(fd);
+        page = read_all_from_fd(fd, false);
         page = handle_codes(page);
         if (page == NULL) {
             return NULL;

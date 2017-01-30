@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stdbool.h>
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
 char *rstrstr(char *s1, char *s2) {
@@ -19,7 +20,23 @@ char *rstrstr(char *s1, char *s2) {
     return NULL;
 }
 
-void delete_folder(char *folder, int error) {
+void delete_file (char *path) {
+    int pid = fork();
+    if (pid == -1) {
+        exit(21);
+    } else if (pid == 0) {
+        //child
+        close(1), close(2);
+        execlp("rm", "rm", "-f", path, NULL);
+        exit(24); 
+    }
+    //parent
+    int status;
+    wait(&status);             
+    //should never fail, we have read write permission to that folder
+}
+
+void delete_folder (char *folder, int error) {
     int pid = fork();
     if (pid == -1) {
         if (error != -1) {
@@ -33,11 +50,17 @@ void delete_folder(char *folder, int error) {
     }
     //parent
     int status;
-    if (wait(&status) == -1) {             
+    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
         if (error != -1) {
             exit(21);
         }                                                        
-    }                                                                    
+    }
+    if (WEXITSTATUS(status) != 0) {
+        if (error != -1) {
+            //is this the right error :/
+            exit(3);
+        }
+    }                 
     //should never fail, we have read write permission to that folder
 }                                                                        
 
@@ -186,8 +209,66 @@ char* concat(const char *s1, const char *s2) {
     return result;
 }
 
-char *read_from_file(FILE *source, int end) {
-    //classic annoying read here 
+//for use with hash reading cuz gives perfect sized array back
+char **read_entire_file(FILE *source, int seperator, bool perfectSize) {
+    int fileDynamic = 4, fileCount = 0, next, dynamic = 4, count = 0;
+    char **seperatedFile = (char **) malloc(sizeof(char *) * fileDynamic);
+    if (seperatedFile == NULL) {
+        exit(21);
+    }
+    while (0 == 0) {
+        fileCount++;
+        if (fileCount == fileDynamic) {
+            fileDynamic *= 2;
+            seperatedFile = (char **) realloc(seperatedFile, 
+                    sizeof(char *) * fileDynamic);
+            if (seperatedFile == NULL) {
+                exit(21);
+            }
+        }
+        char *text = (char *) malloc(sizeof(char) * dynamic);
+        if (text == NULL) {
+            exit(21);
+        }
+        while(next = fgetc(source), next != seperator) {
+            count++;
+            if (count == dynamic) {
+                dynamic *= 2;
+                text = (char *) realloc(text, sizeof(char) * dynamic);
+                if (text == NULL) {
+                    exit(21);
+                }
+            }
+            if (next == EOF) {
+                text[count - 1] = '\0';
+                text = realloc(text, sizeof(char) * (count));
+                if (text[0] == '\0') {
+                    free(text);
+                    fileCount--;
+                } else {
+                    seperatedFile[fileCount - 1] = text;
+                }
+                seperatedFile[fileCount] = NULL;
+                return seperatedFile;
+            }
+            text[count - 1] = (char) next;
+        }
+        text[count++] = '\0';
+        if (perfectSize) {
+            text = realloc(text, sizeof(char) * (count));
+        }
+        if (text[0] == '\0') {
+            free(text);
+            fileCount--;
+        } else {
+            seperatedFile[fileCount - 1] = text;
+        }
+        dynamic = 4, count = 0;
+    }
+}
+
+//for use with hash reading cuz gives perfect sized array back
+char *read_from_file(FILE *source, int end, bool perfectSize) {
     int next, dynamic = 4, count = 0;
     char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
@@ -204,11 +285,14 @@ char *read_from_file(FILE *source, int end) {
         }
         text[count - 1] = (char) next;
     }
-    text[count] = '\0';
+    text[count++] = '\0';
+    if (perfectSize) {
+        text = (char *) realloc(text, sizeof(char) * count);
+    }
     return text;
 }
 
-char *read_all_from_fd(int fd) {
+char *read_all_from_fd(int fd, bool perfectSize) {
     FILE *source = fdopen(fd, "r");
     if (source == NULL) {
         exit(21);
@@ -230,7 +314,10 @@ char *read_all_from_fd(int fd) {
         }
         text[count - 1] = (char) next;
     }
-    text[count] = '\0';
+    text[count++] = '\0';
+    if (perfectSize) {
+        text = (char *) realloc(text, sizeof(char) * count);
+    }
     fclose(source);
     return text;
 }

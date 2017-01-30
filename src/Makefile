@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=gnu99#-g
-LIBLINK = -lcurl#-lpthreads
+LIBLINK = -lcurl -lpthread
 all: tmdl
 
 tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o
@@ -31,4 +31,4 @@ avlTree.o : avlTree.c avlTree.h
 	${CC} ${CFLAGS} -c $<
 
 clean:
-	find . -type f -name '*.o' -delete
+	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete

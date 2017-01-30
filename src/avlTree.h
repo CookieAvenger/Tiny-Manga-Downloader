@@ -16,8 +16,8 @@
 
 struct avltreenode {
     void *value;
-    int leftSubtreeHeight;
-    int rightSubtreeHeight;
+    unsigned long leftSubtreeHeight;
+    unsigned long rightSubtreeHeight;
     
     struct avltreenode *leftChild;
     struct avltreenode *rightChild;
@@ -29,7 +29,7 @@ typedef struct avltreenode avlTreeNode;
 typedef struct avltree {
     avlTreeNode *root;
     int (*comparator) (const void *, const void *);
-    int size;
+    unsigned long long size;
 } avlTree;
 
 
@@ -43,10 +43,6 @@ void *successor_search (avlTree *tree, void *search);
 void *predecessor_search (avlTree *tree, void *search);
 //equal to
 void *dictionary_lookup (avlTree *tree, void *search);
-//do a sanity check when constructing and ensure it actually is sorted
-//just comparator every side ny side term then fast construct O(n) time
-//if not just insert each term one by one - O(nlogn) same time as merge sorting
-//and fast constructing, so insert instead
 //free sorted keys after wards but not each void * individually
 //last key given has to be NULL, thats how we know the end
 avlTree *sorted_construction (void **sortedKeys, 
@@ -58,6 +54,6 @@ avlTree *sorted_construction (void **sortedKeys,
 void **get_array (avlTree *tree);
 //toFree is weather or not to free the values, note get_array only copies value
 //location not actual value, so keep that in mind when using it
-void free_tree(avltTree *tree, bool toFree);
+void free_tree(avlTree *tree, bool toFree);
 
 #endif

@@ -1,5 +1,9 @@
 #include <stdbool.h>
 
+void threadedLoad();
+
+void joinThreadedLoad();
+
 //read blacklist from file or initialised a new one
 //needs to have appropriate read write errors
 //run this as a thread after the folder location is set and have it join before
@@ -14,4 +18,5 @@ bool blacklist_handle_file (char *filePath);
 
 //have this happen on exit, also when all chapters finish downloading
 //needs to have appropriate read write errors
+//what if tree returns null
 void save_blacklist();

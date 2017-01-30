@@ -3,7 +3,7 @@ python
 libcurl
 bash
 zip
-sha1sum
+sha256sum
 
 rm
 mkdir
