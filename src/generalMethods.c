@@ -4,6 +4,24 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <sys/stat.h>
+
+int sigintEvent = 0;
+
+void sigint_enumerate() {
+    sigintEvent++;
+}
+
+void enter_critical_code() {
+    signal(SIGINT, sigint_enumerate);
+}
+
+void exit_critical_code() {
+    signal(SIGINT, terminate_handler);
+    if (sigintEvent > 0) {
+        terminate_handler(2);
+    }
+}
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
 char *rstrstr(char *s1, char *s2) {
@@ -190,6 +208,15 @@ void string_array_free(char **stringArray) {
     free(stringArray);
 }
 
+
+bool is_file(const char* name) {
+    struct stat sb;
+    if (stat(pathname, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+        return false;
+    }
+    return true;
+}
+
 char *make_permenent_string(char *string) {
     char *persistantString = malloc(sizeof(char) * strlen(string));
     if (persistantString == NULL) {
@@ -210,71 +237,21 @@ char* concat(const char *s1, const char *s2) {
 }
 
 //for use with hash reading cuz gives perfect sized array back
-char **read_entire_file(FILE *source, int seperator, bool perfectSize) {
-    int fileDynamic = 4, fileCount = 0, next, dynamic = 4, count = 0;
-    char **seperatedFile = (char **) malloc(sizeof(char *) * fileDynamic);
-    if (seperatedFile == NULL) {
-        exit(21);
-    }
-    while (0 == 0) {
-        fileCount++;
-        if (fileCount == fileDynamic) {
-            fileDynamic *= 2;
-            seperatedFile = (char **) realloc(seperatedFile, 
-                    sizeof(char *) * fileDynamic);
-            if (seperatedFile == NULL) {
-                exit(21);
-            }
-        }
-        char *text = (char *) malloc(sizeof(char) * dynamic);
-        if (text == NULL) {
-            exit(21);
-        }
-        while(next = fgetc(source), next != seperator) {
-            count++;
-            if (count == dynamic) {
-                dynamic *= 2;
-                text = (char *) realloc(text, sizeof(char) * dynamic);
-                if (text == NULL) {
-                    exit(21);
-                }
-            }
-            if (next == EOF) {
-                text[count - 1] = '\0';
-                text = realloc(text, sizeof(char) * (count));
-                if (text[0] == '\0') {
-                    free(text);
-                    fileCount--;
-                } else {
-                    seperatedFile[fileCount - 1] = text;
-                }
-                seperatedFile[fileCount] = NULL;
-                return seperatedFile;
-            }
-            text[count - 1] = (char) next;
-        }
-        text[count++] = '\0';
-        if (perfectSize) {
-            text = realloc(text, sizeof(char) * (count));
-        }
-        if (text[0] == '\0') {
-            free(text);
-            fileCount--;
-        } else {
-            seperatedFile[fileCount - 1] = text;
-        }
-        dynamic = 4, count = 0;
-    }
-}
-
-//for use with hash reading cuz gives perfect sized array back
 char *read_from_file(FILE *source, int end, bool perfectSize) {
-    int next, dynamic = 4, count = 0;
+    int next;
+    unsigned long dynamic = 4, count = 0;
     char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
         exit(21);
     }
-    while(next = fgetc(source), (next != EOF) && (next != end)) {
+    while(next = fgetc(source), (next != end)) {
+        if (next == EOF) {
+            if (count == 0) {
+                free(text);
+                return NULL;
+            }
+            break;
+        }
         count++;
         if (count == dynamic) {
             dynamic *= 2;
@@ -298,7 +275,8 @@ char *read_all_from_fd(int fd, bool perfectSize) {
         exit(21);
     }
     //classic annoying read here 
-    int next, dynamic = 4, count = 0;
+    int next;
+    unsigned long dynamic = 4, count = 0;
     char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
         exit(21);

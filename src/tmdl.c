@@ -58,6 +58,7 @@ char *get_domain() {
 }
 
 void terminate_handler(int signal) {
+    signal(SIGINT, SIG_IGN);
     fputs("\n", stderr);
     exit(11);
 }
@@ -187,7 +188,7 @@ void set_save_directory_as_current() {
 Site parse_settings(FILE *settingsFile) {
     Site domainUsed = other;
     domain = read_from_file(settingsFile, '\n', true);
-    if (domain[0] == '\0') {
+    if (domain == NULL || domain[0] == '\0') {
         exit(31);
     }
     if (strncmp(domain, "kissmanga", 9) == 0) {
@@ -197,12 +198,12 @@ Site parse_settings(FILE *settingsFile) {
         exit(31);
     }
     seriesPath = read_from_file(settingsFile, '\n', true);
-    if (seriesPath[0] == '\0') {
-        puts("hi");
+    if (domain == NULL || seriesPath[0] == '\0') {
         exit(31);
     }
     char *parse;
-    while(parse = read_from_file(settingsFile, '\n', true), parse[0] != '\0') {
+    while(parse = read_from_file(settingsFile, '\n', true), 
+            (parse == NULL) || (parse[0] != '\0')) {
         if (parse[0] == 's' && parse[1] == '\0') {
             verbose = false;
         } else if (parse[0] == 'v' && parse[1] == '\0') {
@@ -286,7 +287,7 @@ Site process_first_url(char *url) {
 void set_save_directory(char *lastArg) {
     if (saveDirectory == NULL) {
         if (lastArg != NULL) {
-            if (access(lastArg, F_OK) != -1) {
+            if ((access(lastArg, F_OK) != -1) && (!is_file(lastArg))) {
                 if (access(lastArg, W_OK|R_OK) != -1) {
                     remainingUrls--;
                     saveDirectory = realpath(lastArg, NULL);

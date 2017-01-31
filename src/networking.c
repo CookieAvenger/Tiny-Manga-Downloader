@@ -91,7 +91,7 @@ int download_file(char *url, char *fileName) {
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, fileToSave) ;  
                                                                
     toReturn = curl_easy_perform(handle);                      
-                                                               
+
     curl_easy_cleanup(handle);                                 
     handle = NULL;                                             
                                                                

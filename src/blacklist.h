@@ -1,4 +1,11 @@
-#include <stdbool.h>
+#ifndef BLACKLIST
+#define BLACKLIST
+
+typedef struct blacklistentry {
+    char *hashValue;
+    char *chapterName;
+    char *fileName;
+} blacklistEntry;
 
 void threadedLoad();
 
@@ -14,9 +21,11 @@ void load_blacklist();
 //add to blacklist if not already there, otherwise delete
 //returns true if file deleted, false if not - this changes what the next one
 //needs to be named (cuz they are named iteratively)
-bool blacklist_handle_file (char *filePath);
+void blacklist_handle_file (char *filePath);
 
 //have this happen on exit, also when all chapters finish downloading
 //needs to have appropriate read write errors
 //what if tree returns null
 void save_blacklist();
+
+#endif

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+void enter_critical_code();
+void enter_critical_code();
+bool is_file(const char* name);
 char *concat (const char *s1, const char *s2);
-char **read_entire_file (FILE *source, int seperator, bool perfectSize);
 char *read_from_file (FILE *source, int end, bool perfectSize);
 char *read_all_from_fd (int fd, bool perfectSize);
 char *make_permenent_string (char *string);

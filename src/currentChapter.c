@@ -59,11 +59,16 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
                     i+1, numberOfUrls);
             fflush(stdout);
         }
+        //get file name is kinda a leak here change i to string
         int curlSuccess = download_file(pictureUrls[i], get_file_name(pictureUrls[i], i));
         if (curlSuccess != 0) {
             //make this better at some point
             fprintf(stderr, "Error downloading page %d from %s", i+1, current->name);
         }
+        //rename and return file name her - just send i as string, then read file and rename accordingly
+        //free the i as string here
+        //blacklist_handle_file here
+        //FREE THE FILE PATH AND FILE NAME
         free(pictureUrls[i]);
     }
     puts("");
@@ -84,7 +89,7 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
             if (commandToRun == NULL) {
                 exit(21);
             }
-            sprintf(commandToRun, "zip -jkq %s %s", toMoveTo, contentsToMove);
+            sprintf(commandToRun, "zip -jXq %s %s", toMoveTo, contentsToMove);
             execlp("bash", "bash", "-c", commandToRun, NULL);
         } else {
             execlp("mv", "mv", contentsToMove, toMoveTo, NULL);
