@@ -1,6 +1,6 @@
 #include <stdbool.h>
 
-void terminate_handler(int signal);
+void terminate_handler(int signalSent);
 bool get_using_settings();
 char *get_current_url();
 bool get_verbose();

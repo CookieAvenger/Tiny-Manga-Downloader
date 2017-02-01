@@ -22,8 +22,8 @@ char **setup_kissmanga_chapter(Chapter *current) {
 
 //to get link just substring " and ", for chapter name > and \n
 void fill_up_queue(char **unparsedChapters) {
-    int chaptersNumber = get_string_array_length(unparsedChapters);
-    for (int i = 0; i < chaptersNumber; i++) {
+    unsigned long chaptersNumber = get_string_array_length(unparsedChapters);
+    for (unsigned long i = 0; i < chaptersNumber; i++) {
         Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
         char *linkToAdd = get_substring(unparsedChapters[i], "\"", "\"", 26);
         char *nameToAdd = get_substring(unparsedChapters[i], "\n", "\n", 26);

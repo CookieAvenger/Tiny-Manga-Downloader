@@ -3,13 +3,14 @@
 #include "generalMethods.h"
 #include "currentChapter.h"
 #include <string.h>
+#include "blacklist.h"
 
 Site source;
 char *seriesFolder = NULL;
 ChapterQueue *head = NULL;
 ChapterQueue *tail = NULL;
-int fullLength = 0;
-int overallPointer = 0;
+unsigned long fullLength = 0;
+unsigned long overallPointer = 0;
 
 char *get_series_folder() {
     return seriesFolder;
@@ -34,7 +35,7 @@ void set_series_folder(char *folder) {
         }
     }
     if (!get_using_settings()) {
-        //start backlist load thread somehow
+        threaded_load_blacklist();
     }
 }
 
@@ -42,11 +43,11 @@ void set_source(Site domainUsed) {
     source = domainUsed;
 }
 
-int get_download_length() {
+unsigned long get_download_length() {
     return fullLength;
 }
 
-int get_current_download_chapter() {
+unsigned long get_current_download_chapter() {
     return overallPointer;
 }
 

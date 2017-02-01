@@ -8,6 +8,8 @@ tmdl
 *.jpg
 *.png
 *.cbz
+*.tmdl
+*.sha256
 
 #test scripts
 *.sh

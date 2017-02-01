@@ -7,6 +7,7 @@
 #include "networking.h"
 #include <unistd.h>
 #include <sys/wait.h>
+#include "blacklist.h"
 
 char *temporaryFolder;
 
@@ -15,9 +16,7 @@ char *get_temporary_folder() {
 }
 
 void setup_temporary_folder() {
-    char *fullFolder = concat(get_series_folder(), "Downloading");
-    temporaryFolder = concat(fullFolder, "/");
-    free(fullFolder);
+    temporaryFolder = concat(get_series_folder(), "Downloading/");
 }
 
 bool chapterExists(char *toCheck) {
@@ -31,44 +30,98 @@ bool chapterExists(char *toCheck) {
     return existance;
 }
 
-//Needs improving
-char *get_file_name(char *url, int fileNameCounter) {
-    fileNameCounter += 1;
+char *back_up_file_extension_finder(char *url) {
     char *fileExtension = rstrstr(url, ".");
     if (fileExtension == NULL || fileExtension[1] == '\0' ||
             fileExtension[2] == '\0' || fileExtension[3] == '\0') {
-        //workout later using file command and rename the downloaded file
-        //for now do nothing
         fileExtension = "\0";
     }
+    //largest image file extensions are only 4 charecters - so 5 should be g
     char fileExtensionBuffer[5];
     snprintf(fileExtensionBuffer, 5, "%s", fileExtension);
-    //try not to use a buffer :/
-    char fileName [16];
-    sprintf(fileName, "%d%s", fileNameCounter, fileExtensionBuffer);
-    char *fullPathName = concat(temporaryFolder, fileName);
-    return fullPathName;
+    return make_permenent_string(fileExtensionBuffer);
+}
+
+char *work_out_file_extension(unsigned char *header) {
+    char *extension = NULL;
+    //kudos to https://github.com/inorichi/tachiyomi for this method
+    if (header[0] == 'G' && header[1] == 'I' && header[2] == 'F' 
+            && header[3] == '8') {
+        extension = ".gif";                                               
+    } else if (header[0] == (unsigned char) 0x89 && header[1] == (unsigned char) 0x50 
+            && header[2] == (unsigned char) 0x4E && header[3] == (unsigned char) 0x47 
+            && header[4] == (unsigned char) 0x0D && header[5] == (unsigned char) 0x0A
+            && header[6] == (unsigned char) 0x1A && header[7] == (unsigned char) 0x0A) {        
+        extension = ".png";                                               
+    } else if (header[0] == (unsigned char) 0xFF && header[1] == (unsigned char) 0xD8 
+            && header[2] == (unsigned char) 0xFF) {
+        if ((header[3] == (unsigned char) 0xE0) || (header[3] == (unsigned char) 0xE1 
+                && header[6] == 'E' && header[7] == 'x' && header[8] == 'i'
+                && header[9] == 'f' && header[10] == 0)) {                
+            extension = ".jpeg";                                          
+        } else if (header[3] == (unsigned char) 0xEE) {                           
+            extension = ".jpg";                                           
+        }                                                               
+    }                                                                    
+    if (extension != NULL) {
+        extension = make_permenent_string(extension);
+    }
+    return extension;
+}
+
+char *sort_out_file_extension(char *filePath, char *fileName, char *url) {
+    FILE *image = fopen(filePath, "r");
+    if (image == NULL) {
+        //man these error messages are crap need rehaul
+        exit(3);
+    }
+    //this is not going to be null terminated
+    unsigned char *fileHeader = (unsigned char *) malloc(sizeof(unsigned char) * 64);
+    int readValue = fread(fileHeader, sizeof(unsigned char), 64, image);
+    if (readValue == 0) {
+        //we know the file exsists and have open it so wth
+        exit(21);
+    }
+    char *extension = work_out_file_extension(fileHeader);
+    free(fileHeader);
+    fclose(image);
+    if (extension == NULL) {
+        extension = back_up_file_extension_finder(url); 
+    }
+    if (extension[0] != '\0') {
+        char *finalPath = concat(filePath, extension);
+        move_file(filePath, finalPath);
+        free(finalPath);
+    }
+    char *finalName = concat(fileName, extension);
+    free(extension);
+    return finalName;
 }
 
 void process_and_download_urls(char **pictureUrls, Chapter *current) {
-    int numberOfUrls = get_string_array_length(pictureUrls);
-    for (int i = 0; i < numberOfUrls; i++) {
+    unsigned long numberOfUrls = get_string_array_length(pictureUrls);
+    for (unsigned long i = 0; i < numberOfUrls; i++) {
         if (get_verbose()) {
-            printf("\rDownloading Chapter %d/%d, page %d/%d",
+            printf("\rDownloading Chapter %lu/%lu, page %lu/%lu",
                     get_current_download_chapter(), get_download_length(),
                     i+1, numberOfUrls);
             fflush(stdout);
         }
-        //get file name is kinda a leak here change i to string
-        int curlSuccess = download_file(pictureUrls[i], get_file_name(pictureUrls[i], i));
+        char *fileNumber = unsigned_long_to_string(i+1);
+        char *numberFilePath = concat(temporaryFolder, fileNumber);
+        int curlSuccess = download_file(pictureUrls[i], numberFilePath);
+        //int curlSuccess = download_file(pictureUrls[i], get_file_name(pictureUrls[i], i));
         if (curlSuccess != 0) {
             //make this better at some point
-            fprintf(stderr, "Error downloading page %d from %s", i+1, current->name);
+            fprintf(stderr, "Error downloading page %lu from %s\n", i+1, current->name);
         }
-        //rename and return file name her - just send i as string, then read file and rename accordingly
-        //free the i as string here
-        //blacklist_handle_file here
-        //FREE THE FILE PATH AND FILE NAME
+        char *finalFileName = sort_out_file_extension(numberFilePath, fileNumber, pictureUrls[i]);
+        free(fileNumber);
+        free(numberFilePath);
+        char *finalFilePath = concat(temporaryFolder, finalFileName);
+        blacklist_handle_file(finalFilePath, current->name, finalFileName);
+        free(finalFileName);
+        free(finalFilePath);
         free(pictureUrls[i]);
     }
     puts("");

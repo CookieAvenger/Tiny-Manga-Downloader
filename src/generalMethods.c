@@ -5,10 +5,11 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include "tmdl.h"
 
 int sigintEvent = 0;
 
-void sigint_enumerate() {
+void sigint_enumerate(int signalSent) {
     sigintEvent++;
 }
 
@@ -24,6 +25,7 @@ void exit_critical_code() {
 }
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
+//DOES NOT RETURN NEW MALLOC STRING
 char *rstrstr(char *s1, char *s2) {
     size_t  s1len = strlen(s1);
     size_t  s2len = strlen(s2);
@@ -36,6 +38,28 @@ char *rstrstr(char *s1, char *s2) {
         }
     }
     return NULL;
+}
+
+void move_file (char *from, char *to) {
+    int pid = fork();
+    if (pid == -1) {
+        exit(21);
+    } else if (pid == 0) {
+        //child
+        close(1), close(2);
+        execlp("mv", "mv", "-f",from, to, NULL);
+        exit(24);
+    }
+    //parent
+    int status;
+    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
+        exit(21);
+    }
+    if (WEXITSTATUS(status) != 0) {
+        //is this the right error :/
+        exit(3);
+    }                 
+    //should never fail, we have read write permission to that folder
 }
 
 void delete_file (char *path) {
@@ -192,8 +216,8 @@ char **continuous_substring(char *string, char *start, char *end) {
     return substringsFound;
 }
 
-int get_string_array_length(char **stringArray) {
-    int count = 0;
+unsigned long get_string_array_length(char **stringArray) {
+    unsigned long count = 0;
     while(stringArray[count] != NULL) {
         count++;
     }
@@ -209,9 +233,9 @@ void string_array_free(char **stringArray) {
 }
 
 
-bool is_file(const char* name) {
-    struct stat sb;
-    if (stat(pathname, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+bool is_file(const char* path) {
+    struct stat test;
+    if (stat(path, &test) == 0 && S_ISDIR(test.st_mode)) {
         return false;
     }
     return true;
@@ -355,7 +379,7 @@ char *str_replace(char *original, char *replace, char *alternative) {
 
 //For specific use with argv otherwise need to copy each char * individually
 char **remove_string_from_array(int originalLength, char **originalArray
-        , char *toRemove) {
+        , char *toRemove, bool strict) {
     //if works right then just one thing will be removed and need a null so
     //just original length +1 is in case nothing gets removed
     char **finalArray = (char **) malloc(sizeof(char *) * (originalLength + 1));
@@ -364,11 +388,22 @@ char **remove_string_from_array(int originalLength, char **originalArray
     }
     int j = 0;
     for (int i = 0; i < originalLength; i++) {
-        if (strcmp(originalArray[i], toRemove) != 0) {
+        char *toCompareTo = originalArray[i];
+        if (!strict) {
+            toCompareTo = rstrstr(toCompareTo, toRemove);
+        }
+        if (toCompareTo == NULL || strcmp(originalArray[i], toRemove) != 0) {
             finalArray[j] = originalArray[i];
             j++;
         }
     }
     finalArray[j] = NULL;
     return finalArray;
+}
+
+char *unsigned_long_to_string (unsigned long value) {
+    int charectersRequired = snprintf(NULL, 0, "%lu", value);
+    char *toReturn = (char *) malloc (sizeof(char) * (++charectersRequired));
+    snprintf(toReturn, charectersRequired, "%lu", value);
+    return toReturn; 
 }

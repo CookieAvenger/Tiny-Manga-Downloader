@@ -1,13 +1,18 @@
 #include "avlTree.h"
 #include "blacklist.h"
 #include "generalMethods.h"
-#include <stdlib>
+#include <stdlib.h>
 #include <string.h>
 #include "tmdl.h"
+#include <unistd.h>
+#include <pthread.h>
+#include "chaptersToDownload.h"
+#include <sys/wait.h>
 
 avlTree *blacklist;
 char *blacklistLocation;
 bool hashFail = false;
+pthread_t threadId;
 
 int blacklistComparator (const blacklistEntry *alpha, 
         const blacklistEntry *beta) {
@@ -69,15 +74,17 @@ blacklistEntry **read_blacklist(FILE *blacklistFile) {
         loadedList[count - 1] = next;
     }
     loadedList[count] = NULL;
+    return loadedList;
 }
 
 void load_blacklist() {
     if (!get_delete()) {
         return;
     }
-    blacklistLocation = concat(get_series_folder, ".blacklist.sha256");
-    FILE *blacklistFile = fopen(blacklistLocation, "r");
-    if (blacklistFile == NULL) {
+    blacklistLocation = concat(get_series_folder(), ".blacklist.sha256");
+    bool existance = (access(blacklistLocation, F_OK) != -1) 
+            && is_file(blacklistLocation);
+    if (!existance) {
         blacklist = (avlTree *) malloc(sizeof(avlTree));
         blacklist->size = 0;
         blacklist->comparator = strcmp;
@@ -85,14 +92,31 @@ void load_blacklist() {
             puts("New blacklist being created");
         }
     } else {
+        FILE *blacklistFile = fopen(blacklistLocation, "r");
+        if (blacklistFile == NULL) {
+            exit(3);
+        }
         blacklistEntry **loadedList = read_blacklist(blacklistFile);
         blacklist = sorted_construction(loadedList, blacklistComparator);
         free(loadedList);
+        fclose(blacklistFile);
         if (get_verbose()) {
             puts("Loaded saved blacklist");
         }
     }
-    fclose(blacklistLocation);
+}
+
+void *internal_load_blacklist(void *useless) {
+    load_blacklist();
+    return NULL;
+}
+
+void threaded_load_blacklist() {
+    pthread_create(&threadId, NULL, internal_load_blacklist, NULL); 
+}
+
+void join_threaded_blacklist() {
+    pthread_join(threadId, NULL);
 }
 
 //if fails say blacklist not being used once and then move on
@@ -105,14 +129,14 @@ char *calculate_hash(char *filePath) {
     } else if (pid == 0) {
         //child
         dup2(fds[1], 1);
-        close(fd[0]), close(2);
+        close(fds[0]), close(2);
         execlp("shasum", "shasum", "-U" , "-a", "256", filePath, NULL);
         exit(24);
     }
     //parent
     close(fds[1]);
     bool errorOccured = false;
-    int wait;
+    int status;
     if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
         errorOccured = true;
     }
@@ -129,19 +153,18 @@ char *calculate_hash(char *filePath) {
         }
         return NULL;
     } else {
-        FILE *hashSumStream = fopen(fds[0]);
+        FILE *hashSumStream = fdopen(fds[0], "r");
         if (hashSumStream == NULL) {
             exit(21);
         }
         char *fileHash = read_from_file(hashSumStream, ' ', true);
         fclose(hashSumStream);
-        close(fds[0]); 
         return fileHash;
     }
 }
 
 bool chapter_is_zip(char *chapterLocation) {
-    char *downloadedFileName = concat(chpaterLocation, ".cbz");              
+    char *downloadedFileName = concat(chapterLocation, ".cbz");              
     char *fullPath = concat(get_series_folder(), downloadedFileName);
     //need some kind of check this isn't a directory
     bool isZip = ((access(fullPath, F_OK) != -1) && is_file(fullPath));
@@ -150,35 +173,52 @@ bool chapter_is_zip(char *chapterLocation) {
     return isZip;
 }
 
-void delete_file_in_zip() {
-    
+void delete_file_in_zip(char *zipPath, char *fileName) {
+    int pid = fork();
+    if (pid == -1) {
+        exit(22);
+    } else if (pid == 0) {
+        //child
+        close(1), close(2);
+        execlp("zip", "zip", "-dq", zipPath, fileName, NULL);
+        exit(24);
+    }
+    //parent
+    int status;
+    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+        exit(21);
+    }
+    if (WEXITSTATUS(status) != 0) {
+        if (get_verbose()) {
+            fprintf(stderr, "Failed to delete %s from %s\n", fileName, zipPath);
+        }
+    }
 }
 
 void delete_blacklisted_file(blacklistEntry *toDelete) {
-    if ((strcmp(toDelete->chapterName, "Deleted") == 0) && 
-            (strcmp(toDelete->fileName))) {
+    if ((strcmp(toDelete->chapterName, "Deleted") == 0) || 
+            (strcmp(toDelete->fileName, "Deleted") == 0)) {
         return;
     }
-    char *chapterPath = concat(get_series_folder(), toDelete->chapter); 
+    char *chapterPath = concat(get_series_folder(), toDelete->chapterName); 
     if (chapter_is_zip(chapterPath)) {
-        char *chapterZipLocation = concat(chpaterLocation, ".cbz");              
-        //if zip do appropriate zip thing with correct error message no exit here
-        delete_file_in_zip(chapterZipLocation, toDelete->file);
+        char *chapterZipLocation = concat(chapterPath, ".cbz");              
+        delete_file_in_zip(chapterZipLocation, toDelete->fileName);
         free(chapterZipLocation);
     } else {
         char *tempPath = concat(chapterPath, "/");
-        char *fullFilePath = concat(tempPath, toDelete->file);
+        char *fullFilePath = concat(tempPath, toDelete->fileName);
         delete_file(fullFilePath);
         free(fullFilePath);
         free(tempPath);
     }
     free(chapterPath);
-    free(toDelete->chapter);
-    free(toDelete->file);
-    toDelete->chapterName = toDelete->fileName = "Deleted";
+    free(toDelete->chapterName);
+    free(toDelete->fileName);
+    toDelete->chapterName = make_permenent_string("Deleted");
+    toDelete->fileName = make_permenent_string("Deleted");
 }
 
-//IMPLIMENT LATER TO CHANGE WHAT THE BLACKLIST HOLDS AND UNZIP AND DELETE FIRST DUPLICATE
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     enter_critical_code();
     if (!get_delete()) {
@@ -213,9 +253,23 @@ void save_blacklist() {
     if (!get_delete()) {
         return;
     }
-    char **blacklistToSave = get_array(blacklist);
-    //write to blacklistLocation
-    //loop through freeing everything in structs and struct too
+    FILE *saveFile = fopen(blacklistLocation, "w");
+    if (saveFile == NULL) {
+        exit(3); 
+    }
+    blacklistEntry **blacklistToSave = get_array(blacklist);
+    int i = 0;
+    blacklistEntry *currentEntry;
+    while(currentEntry = blacklistToSave[i++], currentEntry != NULL) {
+        fprintf(saveFile, "%s\n", currentEntry->hashValue);    
+        fprintf(saveFile, "%s\n", currentEntry->chapterName);    
+        fprintf(saveFile, "%s\n", currentEntry->fileName);    
+        free(currentEntry->hashValue);
+        free(currentEntry->chapterName);
+        free(currentEntry->fileName);
+        free(currentEntry);
+    }
     free(blacklistToSave);
+    fclose(saveFile);
     free_tree(blacklist, false);
 }

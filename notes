@@ -13,11 +13,6 @@ and global variables
 also allow options like download from 000 ect.
 and if they put in a chapter download from that chapter onwards ect.
 
-allow for multiple urls
-- loop through each argument and change variable accordingly
-- make -v have to be last
-- folder to save 2nd last if -v otherwise last
-
 what if instead of series just a chapter page is given - then just download the chapter
 
 clean up code!!
@@ -37,24 +32,11 @@ when deleting a file allow file name to be incremented so if the user finds a mi
 -change the way save file is read and all
 - if new url run in the folder - update the .settings file given the name of the magnga ends up the same
 
-- keep some kind of auto updater?
-
--Make sure kissmanga side of things is kept seperate from the rest of the program
-
-- use a binary search tree for the hashmap so when I search if something alreayd exists I can do it in log n time!
-
-thread the mapcheccking
-
 improve the verbose print
-improve the name of the image and the extension it is saved as
 
 impliment download of a single chapter kissMangaDownload.c:78
 
 make a massive defines file for all the places I search for in source code to get stuff so if the site changes its easier to update
-
-create an md5sum file .md5 and read from it and append to it, so every time a new image downloads, get the md5 of it, then check if it already exists in avl tree, if not add to tree and append to file
-also save the md5s in the file so it can be easy to constrct in O(n) time
-make avl tree
 
 the .settings file - if it's read then that means that do not set folder name from website
 also change argument error, only is a valid settings file is found you can run tmdl with no arguments
@@ -64,6 +46,8 @@ have a --version option and a update option - write and executes a script as sud
 where to start load? - at series location, also save at end of normal execution and at exit
 
 also make my own tries or suffix trees for my own searching through website source code
+
+improve error messages
 
 
     /**

@@ -7,9 +7,9 @@ typedef struct blacklistentry {
     char *fileName;
 } blacklistEntry;
 
-void threadedLoad();
+void threaded_load_blacklist();
 
-void joinThreadedLoad();
+void join_threaded_blacklist();
 
 //read blacklist from file or initialised a new one
 //needs to have appropriate read write errors
@@ -21,7 +21,7 @@ void load_blacklist();
 //add to blacklist if not already there, otherwise delete
 //returns true if file deleted, false if not - this changes what the next one
 //needs to be named (cuz they are named iteratively)
-void blacklist_handle_file (char *filePath);
+void blacklist_handle_file (char *filePath, char *chapter, char *file);
 
 //have this happen on exit, also when all chapters finish downloading
 //needs to have appropriate read write errors
