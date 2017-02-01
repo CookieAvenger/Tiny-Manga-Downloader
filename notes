@@ -22,8 +22,6 @@ quick fail downloading chapters - and move on don't exit
 keep auto-updating desired mangas - just run the url every day automatically or whatever
 store somewhere where to update from and so if you just run tmdl in that folder it'll just work on updating it
 
-figure out images about joining scans and remove them - basiclly by hashing and comparing hashes, whatever repeats delete
-
 -hashmap of md5-hashes of pictures and location
 -at first duplicate, unzip folder delete file, rezip, remove location data from hashmap, and delete the just downloaded file, if duplicate found and location is null, only delete new one
 when deleting a file allow file name to be incremented so if the user finds a missing page they can go online and find what page is missing
@@ -49,45 +47,7 @@ also make my own tries or suffix trees for my own searching through website sour
 
 improve error messages
 
+ability to update url of a folder? :/
 
-    /**
-     * Check for additional content type reading first few characters from the given input stream.
-     * 
-     * @return the guessed MIME-type or null if the type could not be determined.
-     */
-    private String guessAdditionalContentTypeFromStream(InputStream is)
-    {
-        String mt = null;
+check and make sure -u with multiple folderss works cuz I didn't specifically impiment that
 
-        if (is != null) {
-            try {
-
-                // Look ahead up to 64 bytes for the longest encoded header
-                is.mark(64);
-                byte[] bytes = new byte[64];
-                int length = is.read(bytes);
-                is.reset();
-                if (length == -1) {
-                    return null;
-                }
-                if (bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == '8') {
-                    mt = "image/gif";
-                } else if (bytes[0] == (byte) 0x89 && bytes[1] == (byte) 0x50 && bytes[2] == (byte) 0x4E
-                    && bytes[3] == (byte) 0x47 && bytes[4] == (byte) 0x0D && bytes[5] == (byte) 0x0A
-                    && bytes[6] == (byte) 0x1A && bytes[7] == (byte) 0x0A) {
-                    mt = "image/png";
-                } else if (bytes[0] == (byte) 0xFF && bytes[1] == (byte) 0xD8 && bytes[2] == (byte) 0xFF) {
-                    if ((bytes[3] == (byte) 0xE0)
-                        || (bytes[3] == (byte) 0xE1 && bytes[6] == 'E' && bytes[7] == 'x' && bytes[8] == 'i'
-                            && bytes[9] == 'f' && bytes[10] == 0)) {
-                        mt = "image/jpeg";
-                    } else if (bytes[3] == (byte) 0xEE) {
-                        mt = "image/jpg";
-                    }
-                }
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage(), e, Log.DEBUG_MODE);
-            }
-        }
-        return mt;
-}
