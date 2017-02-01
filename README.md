@@ -2,7 +2,7 @@
   
 A tiny manga downloader ;)  
 Basics are now working  
-Kissmanga supported  
+kissmanga.com supported  
   
 ##License
   
