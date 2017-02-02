@@ -14,9 +14,10 @@ char *blacklistLocation;
 bool hashFail = false;
 pthread_t threadId;
 
-int blacklistComparator (const blacklistEntry *alpha, 
-        const blacklistEntry *beta) {
-    return strcmp(alpha->hashValue, beta->hashValue);
+int blacklistComparator (const void *alpha, 
+        const void *beta) {
+    return strcmp(((blacklistEntry *) alpha)->hashValue, 
+            ((blacklistEntry *) beta)->hashValue);
 }
 
 //One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line
@@ -87,7 +88,7 @@ void load_blacklist() {
     if (!existance) {
         blacklist = (avlTree *) malloc(sizeof(avlTree));
         blacklist->size = 0;
-        blacklist->comparator = strcmp;
+        blacklist->comparator = blacklistComparator;
         if (get_verbose()) {
             puts("New blacklist being created");
         }
@@ -97,7 +98,8 @@ void load_blacklist() {
             exit(3);
         }
         blacklistEntry **loadedList = read_blacklist(blacklistFile);
-        blacklist = sorted_construction(loadedList, blacklistComparator);
+        blacklist = sorted_construction((void **) loadedList,
+                blacklistComparator);
         free(loadedList);
         fclose(blacklistFile);
         if (get_verbose()) {
@@ -257,7 +259,7 @@ void save_blacklist() {
     if (saveFile == NULL) {
         exit(3); 
     }
-    blacklistEntry **blacklistToSave = get_array(blacklist);
+    blacklistEntry **blacklistToSave = (blacklistEntry **) get_array(blacklist);
     int i = 0;
     blacklistEntry *currentEntry;
     while(currentEntry = blacklistToSave[i++], currentEntry != NULL) {

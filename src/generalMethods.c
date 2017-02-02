@@ -407,3 +407,10 @@ char *unsigned_long_to_string (unsigned long value) {
     snprintf(toReturn, charectersRequired, "%lu", value);
     return toReturn; 
 }
+
+char *make_bash_ready(char *toChange) {
+    char *start = concat("\"", toChange);
+    char *final = concat(start, "\"");
+    free(start);
+    return final;
+}

@@ -3,6 +3,7 @@
 A tiny manga downloader ;)  
 Basics are now working  
 kissmanga.com supported  
+Supports all posix systems  
   
 ##License
   

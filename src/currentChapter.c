@@ -173,9 +173,9 @@ void move_downloaded(Chapter *current) {
     if (get_zip_approval()) {
         //zip
         char *tempFinalMoveTo = concat(moveToConstructor, ".cbz");
-        char *tempContents = concat(get_temporary_folder(), "*");
-        finalMoveTo = str_replace(tempFinalMoveTo, " ", "\\ ");
-        contents = str_replace(tempContents, " ", "\\ ");
+        char *tempContents = make_bash_ready(get_temporary_folder());
+        finalMoveTo = make_bash_ready(tempFinalMoveTo);
+        contents = concat(tempContents, "*");
         free(tempFinalMoveTo), free(tempContents);
     } else {
         //move
