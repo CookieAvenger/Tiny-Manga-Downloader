@@ -1,3 +1,5 @@
+change avtTree to skiplist
+
 parse html special charecters
 
 - in current directory make a new folder named the series name - and make sure invalid charecters are not saved as folder name
