@@ -208,9 +208,12 @@ void download_chapter(Chapter *current, Site source) {
     //download into a folder
     process_and_download_urls(pictureUrls, current);
     //start saving blacklist
-    threaded_save_blacklist(false);
+    //need this to be false when everything is fixed
+    threaded_save_blacklist(true);
     //start zip process here
     move_downloaded(current);
     //join save thread here
     join_threaded_blacklist();
+    //hack for now
+    load_blacklist();
 }
