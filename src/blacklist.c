@@ -16,8 +16,25 @@ pthread_t threadId;
 
 int blacklistComparator (const void *alpha, 
         const void *beta) {
-    return strcmp(((blacklistEntry *) alpha)->hashValue, 
-            ((blacklistEntry *) beta)->hashValue);
+    if (alpha == NULL) {
+        if (beta == NULL) {
+            return 0;
+        }
+        return -1;
+    } else if (beta == NULL) {
+        return 1;
+    }
+    blacklistEntry * a = (blacklistEntry *) alpha;
+    blacklistEntry * b = (blacklistEntry *) beta;
+    if (a->hashValue == NULL) {
+        if (b->hashValue == NULL) {
+            return 0;
+        }
+        return -1;
+    } else if (b->hashValue == NULL) {
+        return 1;
+    }
+    return strcmp(a->hashValue, b->hashValue);
 }
 
 //One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line
@@ -221,6 +238,7 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
     toDelete->fileName = make_permenent_string("Deleted");
 }
 
+//needs fixing
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     enter_critical_code();
     if (!get_delete()) {
@@ -251,7 +269,7 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     exit_critical_code();
 }
 
-void save_blacklist() {
+void save_blacklist(bool toFree) {
     if (!get_delete()) {
         return;
     }
@@ -266,12 +284,29 @@ void save_blacklist() {
         fprintf(saveFile, "%s\n", currentEntry->hashValue);    
         fprintf(saveFile, "%s\n", currentEntry->chapterName);    
         fprintf(saveFile, "%s\n", currentEntry->fileName);    
-        free(currentEntry->hashValue);
-        free(currentEntry->chapterName);
-        free(currentEntry->fileName);
-        free(currentEntry);
+        if (toFree) {
+            free(currentEntry->hashValue);
+            free(currentEntry->chapterName);
+            free(currentEntry->fileName);
+            free(currentEntry);
+        }
     }
     free(blacklistToSave);
     fclose(saveFile);
-    free_tree(blacklist, false);
+    if (toFree) {
+        free_tree(blacklist, false);
+    }
+}
+
+void *internal_save_blacklist(void *toFree) {
+    bool toSend = *(bool *) toFree;
+    save_blacklist(toSend);
+    free(toFree);
+    return NULL;
+}
+
+void threaded_save_blacklist(bool toFree) {
+    bool *toSend = (bool *) malloc(sizeof(bool));
+    *toSend = toFree;
+    pthread_create(&threadId, NULL, internal_save_blacklist, (void *) toSend); 
 }

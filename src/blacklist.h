@@ -1,5 +1,6 @@
 #ifndef BLACKLIST
 #define BLACKLIST
+#include <stdbool.h>
 
 typedef struct blacklistentry {
     char *hashValue;
@@ -8,6 +9,8 @@ typedef struct blacklistentry {
 } blacklistEntry;
 
 void threaded_load_blacklist();
+
+void threaded_save_blacklist(bool toFree);
 
 void join_threaded_blacklist();
 
@@ -26,6 +29,6 @@ void blacklist_handle_file (char *filePath, char *chapter, char *file);
 //have this happen on exit, also when all chapters finish downloading
 //needs to have appropriate read write errors
 //what if tree returns null
-void save_blacklist();
+void save_blacklist(bool toFree);
 
 #endif

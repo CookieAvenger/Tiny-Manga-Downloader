@@ -66,8 +66,11 @@ avlTreeNode *create_new_node(void *newValue) {
         exit(21);
     }
     newNode->value = newValue;
-    newNode->leftSubtreeHeight = newNode->rightSubtreeHeight = 0;
-    newNode->leftChild = newNode->rightChild = newNode->parent = NULL;
+    newNode->leftSubtreeHeight = 0;
+    newNode->rightSubtreeHeight = 0;
+    newNode->leftChild = NULL;
+    newNode->rightChild = NULL;
+    newNode->parent = NULL;
     return newNode;
 }
 

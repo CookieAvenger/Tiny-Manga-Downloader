@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include "chaptersToDownload.h"
+#include "entities.h"
 
 char *cookie = NULL;
 char *userAgent = NULL;
@@ -181,6 +182,9 @@ void parse_and_set_series_folder(char *chapterPage) {
             get_series_path());
     char *folder = get_substring(chapterPage, testString, 
             "\ninformation</a>", 26);
+    char *finalSeriesName = (char *) malloc(sizeof(char) * strlen(folder) + 1);
+    decode_html_entities_utf8(finalSeriesName, folder);
+    free(folder);
     free(testString);
-    set_series_folder(folder);
+    set_series_folder(finalSeriesName);
 }

@@ -101,7 +101,7 @@ void print_error(int err, void *notUsing) {
         wait(&status);
         delete_folder(get_temporary_folder(), -1);
         save_settings();
-        save_blacklist();
+        join_threaded_blacklist();
     }
     if (currentUrl != NULL) {
         fprintf(stderr, "Error occured at: %s\n", currentUrl);
@@ -395,10 +395,12 @@ int main(int argc, char** argv) {
     save = true;
     download_entire_queue();
     save_settings();
-    save_blacklist();
+    threaded_save_blacklist(true);
     //fork and continue is needed
     //return it's status not 0
-    return duplicate_and_continue(argc, argv);
+    int toReturn = duplicate_and_continue(argc, argv);
+    join_threaded_blacklist();
+    return toReturn;
 }
 
 /*

@@ -126,7 +126,6 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
     }
     puts("");
     free(pictureUrls);
-    //Manually working out file name isn't working out - see if curl can help
 }
 
 void copy_contents(char *toMoveTo, char *contentsToMove) {
@@ -208,6 +207,10 @@ void download_chapter(Chapter *current, Site source) {
     create_folder(temporaryFolder);
     //download into a folder
     process_and_download_urls(pictureUrls, current);
+    //start saving blacklist
+    threaded_save_blacklist(false);
     //start zip process here
     move_downloaded(current);
+    //join save thread here
+    join_threaded_blacklist();
 }
