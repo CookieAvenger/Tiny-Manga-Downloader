@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include "blacklist.h"
 
-bool delete = false;
+bool delete = true;
 bool verbose = true;
 bool zip = true;
 char *saveDirectory = NULL;

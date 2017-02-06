@@ -4,7 +4,6 @@
 #include "tmdl.h"
 #include <stdlib.h>
 #include <string.h>
-#include "entities.h"
 
 char **setup_kissmanga_chapter(Chapter *current) {
     char *page = get_kissmanga_chapter(current->link);
@@ -23,15 +22,12 @@ char **setup_kissmanga_chapter(Chapter *current) {
 
 //to get link just substring " and ", for chapter name > and \n
 void fill_up_queue(char **unparsedChapters) {
-    unsigned long chaptersNumber = get_string_array_length(unparsedChapters);
-    for (unsigned long i = 0; i < chaptersNumber; i++) {
+    size_t chaptersNumber = get_pointer_array_length((void **)unparsedChapters);
+    for (size_t i = 0; i < chaptersNumber; i++) {
         Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
         char *linkToAdd = get_substring(unparsedChapters[i], "\"", "\"", 26);
         char *nameToAdd = get_substring(unparsedChapters[i], "\n", "\n", 26);
-        char *finalName = (char *) malloc(sizeof(char) * strlen(nameToAdd) + 1);
-        decode_html_entities_utf8(finalName, nameToAdd);
-        toAdd->name = finalName;
-        free(nameToAdd);
+        toAdd->name = nameToAdd;
         toAdd->link = linkToAdd;
         add_to_download_list(toAdd);
         free(unparsedChapters[i]);

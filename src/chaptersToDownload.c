@@ -9,8 +9,8 @@ Site source;
 char *seriesFolder = NULL;
 ChapterQueue *head = NULL;
 ChapterQueue *tail = NULL;
-unsigned long fullLength = 0;
-unsigned long overallPointer = 0;
+size_t fullLength = 0;
+size_t overallPointer = 0;
 
 char *get_series_folder() {
     return seriesFolder;
@@ -43,11 +43,11 @@ void set_source(Site domainUsed) {
     source = domainUsed;
 }
 
-unsigned long get_download_length() {
+size_t get_download_length() {
     return fullLength;
 }
 
-unsigned long get_current_download_chapter() {
+size_t get_current_download_chapter() {
     return overallPointer;
 }
 

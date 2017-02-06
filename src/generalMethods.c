@@ -216,16 +216,16 @@ char **continuous_substring(char *string, char *start, char *end) {
     return substringsFound;
 }
 
-unsigned long get_string_array_length(char **stringArray) {
-    unsigned long count = 0;
-    while(stringArray[count] != NULL) {
+size_t get_pointer_array_length(void **pointerArray) {
+    size_t count = 0;
+    while(pointerArray[count] != NULL) {
         count++;
     }
     return count;
 }
 
 void string_array_free(char **stringArray) {
-    int length = get_string_array_length(stringArray);
+    int length = get_pointer_array_length((void **) stringArray);
     for (int i = 0; i < length; i ++) {
         free(stringArray[i]);
     }
@@ -263,7 +263,7 @@ char* concat(const char *s1, const char *s2) {
 //for use with hash reading cuz gives perfect sized array back
 char *read_from_file(FILE *source, int end, bool perfectSize) {
     int next;
-    unsigned long dynamic = 4, count = 0;
+    size_t dynamic = 4, count = 0;
     char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
         exit(21);
@@ -300,7 +300,7 @@ char *read_all_from_fd(int fd, bool perfectSize) {
     }
     //classic annoying read here 
     int next;
-    unsigned long dynamic = 4, count = 0;
+    size_t dynamic = 4, count = 0;
     char *text = (char *) malloc(sizeof(char) * dynamic);
     if (text == NULL) {
         exit(21);
@@ -401,10 +401,10 @@ char **remove_string_from_array(int originalLength, char **originalArray
     return finalArray;
 }
 
-char *unsigned_long_to_string (unsigned long value) {
-    int charectersRequired = snprintf(NULL, 0, "%lu", value);
+char *size_to_string (size_t value) {
+    int charectersRequired = snprintf(NULL, 0, "%zu", value);
     char *toReturn = (char *) malloc (sizeof(char) * (++charectersRequired));
-    snprintf(toReturn, charectersRequired, "%lu", value);
+    snprintf(toReturn, charectersRequired, "%zu", value);
     return toReturn; 
 }
 

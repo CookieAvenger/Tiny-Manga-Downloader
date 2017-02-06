@@ -1,4 +1,4 @@
-#include "avlTree.h"
+#include "hashMap.h"
 #include "blacklist.h"
 #include "generalMethods.h"
 #include <stdlib.h>
@@ -8,33 +8,28 @@
 #include <pthread.h>
 #include "chaptersToDownload.h"
 #include <sys/wait.h>
+#include "customParser.c"
 
-avlTree *blacklist;
+hashMap *blacklist;
 char *blacklistLocation;
 bool hashFail = false;
 pthread_t threadId;
 
-int blacklistComparator (const void *alpha, 
+int blacklist_comparator (const void *alpha, 
         const void *beta) {
-    if (alpha == NULL) {
-        if (beta == NULL) {
-            return 0;
-        }
-        return -1;
-    } else if (beta == NULL) {
-        return 1;
-    }
-    blacklistEntry * a = (blacklistEntry *) alpha;
-    blacklistEntry * b = (blacklistEntry *) beta;
-    if (a->hashValue == NULL) {
-        if (b->hashValue == NULL) {
-            return 0;
-        }
-        return -1;
-    } else if (b->hashValue == NULL) {
-        return 1;
-    }
+    blacklistEntry *a = (blacklistEntry *) alpha;
+    blacklistEntry *b = (blacklistEntry *) beta;
     return strcmp(a->hashValue, b->hashValue);
+}
+
+//make for a hexidecimal hash 64 bits and above
+long blacklist_get_key(const void *alpha) {
+    blacklistEntry *a = (blacklistEntry *) alpha;
+    //make a key!
+    //would be nice to process all the charecters, but honestly :/ no point
+    //see we only have 64 bit memory any way, getting a key 256 bits accurate
+    //is pointless
+    return parse_hexadecimal_to_one_long(a->hashValue);    
 }
 
 //One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line
@@ -73,7 +68,7 @@ blacklistEntry *read_single_entry(FILE *blacklistFile) {
 
 blacklistEntry **read_blacklist(FILE *blacklistFile) {
     blacklistEntry *next;
-    unsigned long long dynamic = 4, count = 0;
+    size_t dynamic = 4, count = 0;
     blacklistEntry **loadedList = (blacklistEntry **) 
             malloc(sizeof(blacklistEntry *) * dynamic);
     if (loadedList == NULL) {
@@ -103,9 +98,7 @@ void load_blacklist() {
     bool existance = (access(blacklistLocation, F_OK) != -1) 
             && is_file(blacklistLocation);
     if (!existance) {
-        blacklist = (avlTree *) malloc(sizeof(avlTree));
-        blacklist->size = 0;
-        blacklist->comparator = blacklistComparator;
+        blacklist = new_hash_map(blacklist_comparator, blacklist_get_key);
         if (get_verbose()) {
             puts("New blacklist being created");
         }
@@ -115,8 +108,9 @@ void load_blacklist() {
             exit(3);
         }
         blacklistEntry **loadedList = read_blacklist(blacklistFile);
-        blacklist = sorted_construction((void **) loadedList,
-                blacklistComparator);
+        blacklist = hash_map_construction((void **) loadedList, 
+                get_pointer_array_length((void **) loadedList), 
+                blacklist_comparator, blacklist_get_key);
         free(loadedList);
         fclose(blacklistFile);
         if (get_verbose()) {
@@ -255,7 +249,7 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     newEntry->hashValue = hashSum;
     newEntry->chapterName = make_permenent_string(chapter);
     newEntry->fileName = make_permenent_string(file);
-    blacklistEntry *foundEntry = dictionary_lookup(blacklist, newEntry);
+    blacklistEntry *foundEntry = insert_item_into_map(blacklist, (void *)newEntry);
     if (foundEntry != NULL) {
         delete_blacklisted_file(foundEntry);
         delete_file(filePath);
@@ -263,8 +257,6 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
         free(newEntry->chapterName);
         free(newEntry->fileName);
         free(newEntry);
-    } else {
-        insert_node(blacklist, newEntry);
     }
     exit_critical_code();
 }
@@ -277,7 +269,8 @@ void save_blacklist(bool toFree) {
     if (saveFile == NULL) {
         exit(3); 
     }
-    blacklistEntry **blacklistToSave = (blacklistEntry **) get_array(blacklist);
+    blacklistEntry **blacklistToSave = (blacklistEntry **) 
+            turn_map_into_array(blacklist);
     int i = 0;
     blacklistEntry *currentEntry;
     while(currentEntry = blacklistToSave[i++], currentEntry != NULL) {
@@ -294,7 +287,7 @@ void save_blacklist(bool toFree) {
     free(blacklistToSave);
     fclose(saveFile);
     if (toFree) {
-        free_tree(blacklist, false);
+        free_map(blacklist);
     }
 }
 

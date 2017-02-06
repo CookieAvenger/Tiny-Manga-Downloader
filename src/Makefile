@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=gnu99 -g
-LIBLINK = -lcurl -lpthread
+LIBLINK = -lcurl -lpthread -lm
 all: tmdl
 
-tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o blacklist.o avlTree.o entities.o
+tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o blacklist.o hashMap.o
 	${CC} ${CFLAGS} $^ -o $@ ${LIBLINK}
 
 tmdl.o: tmdl.c tmdl.h
@@ -27,13 +27,13 @@ chaptersToDownload.o: chaptersToDownload.c chaptersToDownload.h
 currentChapter.o : currentChapter.c currentChapter.h
 	${CC} ${CFLAGS} -c $<
 
-avlTree.o : avlTree.c avlTree.h
+hashMap.o : hashMap.c hashMap.h
 	${CC} ${CFLAGS} -c $<
 
 blacklist.o : blacklist.c blacklist.h
 	${CC} ${CFLAGS} -c $<
 
-entities.o : entities.c entities.h
+customParser.o : customParser.c customParser.h
 	${CC} ${CFLAGS} -c $<
 
 clean:

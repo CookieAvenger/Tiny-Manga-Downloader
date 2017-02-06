@@ -1,6 +1,8 @@
 #ifndef CHAPTER
 #define CHAPTER
 
+#include <stddef.h>
+
 typedef enum site { kissmanga, other } Site;
                                             
 typedef struct chapter {                    
@@ -17,8 +19,8 @@ typedef struct chapterqueue ChapterQueue;
 
 void set_series_folder(char *folder);
 void set_source(Site domainUsed);
-unsigned long get_download_length();
-unsigned long get_current_download_chapter();
+size_t get_download_length();
+size_t get_current_download_chapter();
 void add_to_download_list(Chapter *toAdd);
 void download_entire_queue();
 char *get_series_folder();

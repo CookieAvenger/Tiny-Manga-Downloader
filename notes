@@ -1,15 +1,7 @@
-change avtTree to skiplist
-
-parse html special charecters
-
-- in current directory make a new folder named the series name - and make sure invalid charecters are not saved as folder name
-- in that folder make cbz files for each chapter
-
-if a folder in the name of the series already exists only download chapters that are not already in that folder
-- first check if there isn't a folder in current directory named our series, then check if current directory itself is not named after our series - then make a new folder in current directory that is our series
-
-use a folder, download pictures inside, create a cbr from files in folder
-^call this folder working directory - create on every run, delete at end of every run
+impliment a hash table - screw life
+reimpliment blacklist
+do the html parser
+support mangasee, mangafox and others
 
 comment all methods
 and global variables
@@ -47,11 +39,8 @@ have a --version option and a update option - write and executes a script as sud
 
 where to start load? - at series location, also save at end of normal execution and at exit
 
-also make my own tries or suffix trees for my own searching through website source code
-
 improve error messages
 
 ability to update url of a folder? :/
 
 check and make sure -u with multiple folderss works cuz I didn't specifically impiment that
-

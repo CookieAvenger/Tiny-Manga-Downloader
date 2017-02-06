@@ -99,21 +99,21 @@ char *sort_out_file_extension(char *filePath, char *fileName, char *url) {
 }
 
 void process_and_download_urls(char **pictureUrls, Chapter *current) {
-    unsigned long numberOfUrls = get_string_array_length(pictureUrls);
-    for (unsigned long i = 0; i < numberOfUrls; i++) {
+    size_t numberOfUrls = get_pointer_array_length((void **)pictureUrls);
+    for (size_t i = 0; i < numberOfUrls; i++) {
         if (get_verbose()) {
-            printf("\rDownloading Chapter %lu/%lu, page %lu/%lu",
+            printf("\rDownloading Chapter %zu/%zu, page %zu/%zu",
                     get_current_download_chapter(), get_download_length(),
                     i+1, numberOfUrls);
             fflush(stdout);
         }
-        char *fileNumber = unsigned_long_to_string(i+1);
+        char *fileNumber = size_to_string(i+1);
         char *numberFilePath = concat(temporaryFolder, fileNumber);
         int curlSuccess = download_file(pictureUrls[i], numberFilePath);
         //int curlSuccess = download_file(pictureUrls[i], get_file_name(pictureUrls[i], i));
         if (curlSuccess != 0) {
             //make this better at some point
-            fprintf(stderr, "Error downloading page %lu from %s\n", i+1, current->name);
+            fprintf(stderr, "Error downloading page %zu from %s\n", i+1, current->name);
         }
         char *finalFileName = sort_out_file_extension(numberFilePath, fileNumber, pictureUrls[i]);
         free(fileNumber);
@@ -137,11 +137,11 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
         //child
         if (get_zip_approval()) {
             char *commandToRun = (char *) malloc(sizeof(char) * 
-                    (strlen(toMoveTo) + strlen(contentsToMove) + 11));
+                    (strlen(toMoveTo) + strlen(contentsToMove) + 12));
             if (commandToRun == NULL) {
                 exit(21);
             }
-            sprintf(commandToRun, "zip -jXq %s %s", toMoveTo, contentsToMove);
+            sprintf(commandToRun, " zip -jXq %s %s", toMoveTo, contentsToMove);
             execlp("bash", "bash", "-c", commandToRun, NULL);
         } else {
             execlp("mv", "mv", contentsToMove, toMoveTo, NULL);

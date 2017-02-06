@@ -11,14 +11,14 @@ char *read_all_from_fd (int fd, bool perfectSize);
 char *make_permenent_string (char *string);
 char *get_substring (char *string, char *start, char *end, int error);
 char **continuous_substring (char *string, char *start, char *end);
-unsigned long get_string_array_length (char **stringArray);
+size_t get_pointer_array_length(void **pointerArray);
 void string_array_free (char **stringArray);
 void delete_file (char *path);
 void delete_folder (char *folder, int error);
 void create_folder (char *folder);
 char *rstrstr (char *s1, char *s2);
 char *str_replace (char *original, char *replace, char *alternative);
-char *unsigned_long_to_string (unsigned long value);
+char *size_to_string (unsigned long value);
 char **remove_string_from_array (int originalLength, char **originalArray
         , char *toRemove, bool strict);
 void move_file (char *from, char *to);
