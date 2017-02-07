@@ -4,6 +4,7 @@
 #include "tmdl.h"
 #include <stdlib.h>
 #include <string.h>
+#include "customParser.h"
 
 char **setup_kissmanga_chapter(Chapter *current) {
     char *page = get_kissmanga_chapter(current->link);
@@ -25,8 +26,12 @@ void fill_up_queue(char **unparsedChapters) {
     size_t chaptersNumber = get_pointer_array_length((void **)unparsedChapters);
     for (size_t i = 0; i < chaptersNumber; i++) {
         Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
+        if (toAdd == NULL) {
+            exit(21);
+        }
         char *linkToAdd = get_substring(unparsedChapters[i], "\"", "\"", 26);
         char *nameToAdd = get_substring(unparsedChapters[i], "\n", "\n", 26);
+        decode_html_entities_utf8(nameToAdd, NULL);
         toAdd->name = nameToAdd;
         toAdd->link = linkToAdd;
         add_to_download_list(toAdd);
@@ -73,6 +78,7 @@ void setup_kissmanga_download() {
         free(testString);
         free(testType);
         download_kissmanga_series(chapterLink);
+        free(chapterLink);
     } else {
         //Chapter Page
         //To do

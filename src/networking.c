@@ -11,12 +11,13 @@
 
 //Connect to the domain in the main method and save the connection there
 int connect_to_domain(char *domain) {
-    struct addrinfo* addressInfo;
-    int errorCheck = getaddrinfo(domain, NULL, NULL, &addressInfo);
+    struct addrinfo *addressInformation;
+    int errorCheck = getaddrinfo(domain, "80", NULL, &addressInformation);
     if (errorCheck) {
         exit(5);
     }
-    struct in_addr* ipAddress = &(((struct sockaddr_in*)(addressInfo->ai_addr))->sin_addr);
+    struct in_addr* ipAddress = &(((struct sockaddr_in*)
+            (addressInformation->ai_addr))->sin_addr);
     //Create TCP socket
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
@@ -33,6 +34,7 @@ int connect_to_domain(char *domain) {
             sizeof(socketAddress)) < 0) {
         exit(22);
     }
+    freeaddrinfo(addressInformation);
     return fd;
     //Don't forget to eventually close the socket - close(fd);
 }
@@ -48,24 +50,24 @@ int send_HTTP_request(char *domain, char *file, char *cookie, char *userAgent) {
                 50));
         if (requestString == NULL) {
             exit(21);
-        } else {
-            //Do I need a blank line at the end?
-            sprintf(requestString, 
-                    "GET %s HTTP/1.0\r\nHost: %s\r\nCookie: %s\r\n"
-                    "User-Agent: %s\r\n\r\n", 
-                    file, domain, cookie, userAgent);
         }
+        //Do I need a blank line at the end?
+        sprintf(requestString, 
+                "GET %s HTTP/1.0\r\nHost: %s\r\nCookie: %s\r\n"
+                "User-Agent: %s\r\n\r\n", 
+                file, domain, cookie, userAgent);
+        
     } else {
         //Send without cookie
         requestString = (char *) malloc(sizeof(char) * (strlen(file) +
                 strlen(domain) + 26));
         if (requestString == NULL) {
             exit(21);
-        } else {
-            sprintf(requestString, 
-                    "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", 
-                    file, domain);
-        }
+        } 
+        sprintf(requestString, 
+                "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", 
+                file, domain);
+        
     }
     
     if (write(fd, requestString, strlen(requestString)) < 1) {

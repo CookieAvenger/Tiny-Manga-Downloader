@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include "chaptersToDownload.h"
+#include "customParser.h"
 
 char *cookie = NULL;
 char *userAgent = NULL;
@@ -101,8 +102,7 @@ void bypass_DDOS_protection() {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
-        fputs("Ensure you are connected to the internet and address is correct\n"
-                "If the latest version of cfscrape and a version of python is " 
+        fputs("If the latest version of cfscrape and a version of python is " 
                 "already installed please just rerun your last command.\n"
                 "To install cfscrape please run the following command:\n"
                 "sudo -H pip install cfscrape\n"
@@ -150,7 +150,6 @@ char *get_kissmanga_chapter(char *link) {
     char *path = concat(get_series_path(), "/");
     char *chapter = concat(path, link);
     free(path);
-    free(link);
     char *page = get_kissmanga_page(chapter);
     free(chapter);
     return page;
@@ -181,6 +180,7 @@ void parse_and_set_series_folder(char *chapterPage) {
             get_series_path());
     char *folder = get_substring(chapterPage, testString, 
             "\ninformation</a>", 26);
+    decode_html_entities_utf8(folder, NULL);
     set_series_folder(folder);
     free(testString);
 }

@@ -208,12 +208,8 @@ void download_chapter(Chapter *current, Site source) {
     //download into a folder
     process_and_download_urls(pictureUrls, current);
     //start saving blacklist
-    //need this to be false when everything is fixed
-    threaded_save_blacklist(true);
+    //This is so no progress after a chapter is lost - but it's a bit overkill :/
+    threaded_save_blacklist(false);
     //start zip process here
     move_downloaded(current);
-    //join save thread here
-    join_threaded_blacklist();
-    //hack for now
-    load_blacklist();
 }

@@ -5,6 +5,8 @@
 #include <string.h>
 #include "blacklist.h"
 
+#include <stdio.h>
+
 Site source;
 char *seriesFolder = NULL;
 ChapterQueue *head = NULL;

@@ -44,26 +44,25 @@ void set_to_null(hashQueue **newTable, size_t tableSize) {
     }
 }
 
-void *add_to_queue_number(hashMap *map, void *toAdd, size_t hashedKey) {
-    if (map->table[hashedKey] == NULL) {
+void *add_to_queue_number(hashMap *map, hashQueue **table, 
+        void *toAdd, size_t hashedKey) {
+    if (table[hashedKey] == NULL) {
         hashQueue *firstEntry = (hashQueue *) malloc(sizeof(hashQueue));
         if (firstEntry == NULL) {
             exit(21);
         }
         firstEntry->item = toAdd;
         firstEntry->next = NULL;
-        map->table[hashedKey] = firstEntry;
+        table[hashedKey] = firstEntry;
         map->totalItems++;
         return NULL;
     } else {
-        hashQueue *last = map->table[hashedKey];
+        hashQueue *last = table[hashedKey];
         for(EVER) {
             if (map->comparator(last->item, toAdd) == 0) {
                 return last->item;
             }
-            if (last->next != NULL) {
-                last = last->next;
-            } else {
+            if (last->next == NULL) {
                 hashQueue *nextEntry = (hashQueue *) malloc(sizeof(hashQueue));
                 if (nextEntry == NULL) {
                     exit(21);
@@ -73,6 +72,8 @@ void *add_to_queue_number(hashMap *map, void *toAdd, size_t hashedKey) {
                 last->next = nextEntry;
                 map->totalItems++;
                 return NULL; 
+            } else {
+                last = last->next;
             }
         }
     }
@@ -111,9 +112,17 @@ void remake_hash_function(hashMap *map) {
     map->beta = random_range(0, map->prime);
 }
 
+//This is the original Universal Hash function proposed by Carter and Wegman
+//Made for hashing integers not strings - I should really allow any hash function
+//and allow a void that holds a struct with all relevent hash data
+//and a remake hash function works like that too
+//but... meh.
+//BTW the sha hashed are numbers represented by a hexadecimal string, and I'm
+//just using the first 64 bits as the number, so I am hashing a number
+//not a string in this particular scenerio
 size_t get_hash(hashMap *map, void *toAdd) {
-    return (size_t) (1 + (((map->alpha * map->get_key(toAdd) + map->beta) 
-            % map->prime) % map->meta));
+    return (size_t) (((map->alpha * map->get_key(toAdd) + map->beta) 
+            % map->prime) % map->meta);
 }
 
 void *resize_hash_map(void *voidMap) {
@@ -126,6 +135,7 @@ void *resize_hash_map(void *voidMap) {
         exit(21);
     }
     set_to_null(newTable, map->meta);
+    map->totalItems = 0;
     //go through every element and add to new while freeing from old
     for (int i = 0; i < oldSize; i++) {
         if (map->table[i] == NULL) {
@@ -133,7 +143,8 @@ void *resize_hash_map(void *voidMap) {
         }
         hashQueue *current = map->table[i];
         for (EVER) {
-            add_to_queue_number(map, current->item, get_hash(map, current->item));
+            add_to_queue_number(map, newTable, 
+                    current->item, get_hash(map, current->item));
             if (current->next == NULL) {
                 free(current);
                 break;
@@ -165,7 +176,7 @@ void *insert_item_into_map(hashMap *map, void *toAdd) {
         remake_hash_function(map);
     }
     size_t hashedKey = get_hash(map, toAdd);
-    void *toReturn = add_to_queue_number(map, toAdd, hashedKey);
+    void *toReturn = add_to_queue_number(map, map->table, toAdd, hashedKey);
     //reorganise if needed in a thread here
     if (map->totalItems >= map->meta) {
         pthread_create(&(map->threadId), NULL, resize_hash_map, map);
@@ -179,11 +190,16 @@ hashMap *hash_map_construction(void **items, size_t totalItems,
         long (*get_key) (const void *)) {
     hashMap *map = new_hash_map(comparator, get_key);
     map->meta = totalItems * 2;
+    map->table = (hashQueue **) malloc(sizeof(hashQueue *) * map->meta);
+    if (map->table == NULL) {
+        exit(21);
+    }
+    remake_hash_function(map);
     int i = 0;
     void *current;
     while(items[i] != NULL) {
         current = items[i++];
-        add_to_queue_number(map, current, get_hash(map, current));
+        add_to_queue_number(map, map->table, current, get_hash(map, current));
     }
     return map;
 }
@@ -192,6 +208,9 @@ void **turn_map_into_array(hashMap *map) {
     if (map->threadOn) {
         pthread_join(map->threadId, NULL);
         map->threadOn = false;
+    }
+    if (map->table == NULL || map->totalItems == 0) {
+        return NULL;
     }
     size_t count = 0;
     void **toReturn = (void **) malloc(sizeof(void *) * (map->totalItems + 1));
@@ -221,6 +240,9 @@ void free_map(hashMap *map) {
     if (map->threadOn) {
         pthread_join(map->threadId, NULL);
         map->threadOn = false;
+    }
+    if (map->table == NULL || map->totalItems == 0) {
+        return;
     }
     for (size_t i = 0; i < map->meta; i++) {
         if (map->table[i] == NULL) {

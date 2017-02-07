@@ -17,6 +17,7 @@ struct chapterqueue {
 
 typedef struct chapterqueue ChapterQueue;
 
+void free_chapter(Chapter *toFree);
 void set_series_folder(char *folder);
 void set_source(Site domainUsed);
 size_t get_download_length();

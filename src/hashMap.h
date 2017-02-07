@@ -6,6 +6,8 @@
 #include <pthread.h>
 #define EVER ; ; 
 
+//This hashmap is for hashing integers which have extra data with them
+
 struct hashqueue {
     void *item;
     struct hashqueue *next;

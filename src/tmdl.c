@@ -21,8 +21,6 @@ char *domain;
 char *seriesPath;
 char *currentUrl = NULL;
 int remainingUrls;
-//Weather to save settings and blacklist
-bool save = false;
 //weather we are using the settings file or not 
 bool usingSettings = false;
 
@@ -96,14 +94,11 @@ void save_settings() {
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
     //don't care if wait fails, should fail most of the time in fact
-    if (save) {
-        int status;
-        wait(&status);
-        delete_folder(get_temporary_folder(), -1);
-        save_settings();
-        join_threaded_blacklist();
-    }
-    if (currentUrl != NULL) {
+    int status;
+    wait(&status);
+    delete_folder(get_temporary_folder(), -1);
+    join_threaded_blacklist();
+    if (currentUrl != NULL && err != 0) {
         fprintf(stderr, "Error occured at: %s\n", currentUrl);
     }
     if (usingSettings && verbose && (err == 6 || err == 22 || err == 23 || err == 26)) {
@@ -391,10 +386,8 @@ int main(int argc, char** argv) {
         fprintf(stderr, "This url: %s is from an unsupported domain, skipping\n"
                 , currentUrl);
     } 
-    join_threaded_blacklist();
-    save = true;
-    download_entire_queue();
     save_settings();
+    download_entire_queue();
     threaded_save_blacklist(true);
     //fork and continue is needed
     //return it's status not 0

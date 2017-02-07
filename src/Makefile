@@ -3,7 +3,7 @@ CFLAGS = -Wall -pedantic -std=gnu99 -g
 LIBLINK = -lcurl -lpthread -lm
 all: tmdl
 
-tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o blacklist.o hashMap.o
+tmdl: tmdl.o networking.o generalMethods.o kissMangaRead.o kissMangaDownload.o chaptersToDownload.o currentChapter.o blacklist.o hashMap.o customParser.o
 	${CC} ${CFLAGS} $^ -o $@ ${LIBLINK}
 
 tmdl.o: tmdl.c tmdl.h

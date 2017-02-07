@@ -8,18 +8,22 @@
 #include <pthread.h>
 #include "chaptersToDownload.h"
 #include <sys/wait.h>
-#include "customParser.c"
+#include "customParser.h"
+
+#include <stdio.h>
 
 hashMap *blacklist;
 char *blacklistLocation;
 bool hashFail = false;
 pthread_t threadId;
+bool threadOn = false;
 
 int blacklist_comparator (const void *alpha, 
         const void *beta) {
     blacklistEntry *a = (blacklistEntry *) alpha;
     blacklistEntry *b = (blacklistEntry *) beta;
-    return strcmp(a->hashValue, b->hashValue);
+    int temp =  strcmp(a->hashValue, b->hashValue);
+    return temp;
 }
 
 //make for a hexidecimal hash 64 bits and above
@@ -29,7 +33,8 @@ long blacklist_get_key(const void *alpha) {
     //would be nice to process all the charecters, but honestly :/ no point
     //see we only have 64 bit memory any way, getting a key 256 bits accurate
     //is pointless
-    return parse_hexadecimal_to_one_long(a->hashValue);    
+    long temp = parse_hexadecimal_to_one_long(a->hashValue);    
+    return temp;
 }
 
 //One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line
@@ -125,11 +130,20 @@ void *internal_load_blacklist(void *useless) {
 }
 
 void threaded_load_blacklist() {
+    if (!get_delete()) {
+        return;
+    }
+    join_threaded_blacklist();
     pthread_create(&threadId, NULL, internal_load_blacklist, NULL); 
+    threadOn = true;
 }
 
 void join_threaded_blacklist() {
+    if (!threadOn || !get_delete()) {
+        return;
+    }
     pthread_join(threadId, NULL);
+    threadOn = false;
 }
 
 //if fails say blacklist not being used once and then move on
@@ -234,10 +248,12 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
 
 //needs fixing
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
-    enter_critical_code();
     if (!get_delete()) {
         return;
     }
+    //critical mode entering doesn't really matter any more tbh :/
+    //cuz I save after each chapter, so I'm safe anyway, but meh...
+    enter_critical_code();
     char *hashSum = calculate_hash(filePath);
     if ((hashSum == NULL) || (hashSum[0] == '\0')) {
         return;
@@ -271,6 +287,9 @@ void save_blacklist(bool toFree) {
     }
     blacklistEntry **blacklistToSave = (blacklistEntry **) 
             turn_map_into_array(blacklist);
+    if (blacklistToSave == NULL || blacklistToSave[0] == NULL) {
+        return;
+    }
     int i = 0;
     blacklistEntry *currentEntry;
     while(currentEntry = blacklistToSave[i++], currentEntry != NULL) {
@@ -299,7 +318,12 @@ void *internal_save_blacklist(void *toFree) {
 }
 
 void threaded_save_blacklist(bool toFree) {
+    if (!get_delete()) {
+        return;
+    }
+    join_threaded_blacklist();
     bool *toSend = (bool *) malloc(sizeof(bool));
     *toSend = toFree;
     pthread_create(&threadId, NULL, internal_save_blacklist, (void *) toSend); 
+    threadOn = true;
 }
