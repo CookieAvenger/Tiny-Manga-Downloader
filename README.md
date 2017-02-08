@@ -1,11 +1,30 @@
-# Tiny-Manga-Downloader
+# Tiny-Manga-Downloader  
   
-A tiny manga downloader ;)  
-Basics are now working  
-kissmanga.com supported  
-Supports all posix systems  
+Small C program to download entire series and update already downloaded ones.  
+Can save each chapter as a comic book archive, and can delete duplicate images
+(works for some scanlator images).  
+Experimental image duplication finder coming up to try and remove all possible
+scanlator images  
   
-##License
+kissmanga.com supported, mangasee support coming  
+Should run on all posix systems (untested) - only being tested on Ubuntu  
+  
+###Dependences to run  
+shasum (comes with perl)  
+zip  
+bash (rm, mkdir and mv too)  
+    cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfscrape" should do the trick   
+    findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distrobutions should have it with their respective package managers  
+  
+###Dependences to compile  
+libcurl  
+make  
+gcc  
+  
+Just run "make" in the /src directory and then move the executable to whever you want  
+install.sh script coming soon  
+  
+##License 
   
     Copyright 2016 Krishna Shukla                                           
                                                                         

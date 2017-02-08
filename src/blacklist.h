@@ -18,6 +18,9 @@ void threaded_save_blacklist(bool toFree);
 
 void join_threaded_blacklist();
 
+//mixing threading and multiprocess gave... interesting errors....
+//void threaded_blacklist_handle_file(char *filePath, char *chapter, char *file);
+
 //read blacklist from file or initialised a new one
 //needs to have appropriate read write errors
 //run this as a thread after the folder location is set and have it join before

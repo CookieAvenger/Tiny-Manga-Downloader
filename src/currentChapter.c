@@ -110,16 +110,17 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         char *fileNumber = size_to_string(i+1);
         char *numberFilePath = concat(temporaryFolder, fileNumber);
         int curlSuccess = download_file(pictureUrls[i], numberFilePath);
-        //int curlSuccess = download_file(pictureUrls[i], get_file_name(pictureUrls[i], i));
         if (curlSuccess != 0) {
-            //make this better at some point
-            fprintf(stderr, "Error downloading page %zu from %s\n", i+1, current->name);
+            fprintf(stderr, "Error downloading page %zu from %s\n", 
+                    i+1, current->name);
         }
-        char *finalFileName = sort_out_file_extension(numberFilePath, fileNumber, pictureUrls[i]);
+        char *finalFileName = sort_out_file_extension(numberFilePath, 
+                fileNumber, pictureUrls[i]);
         free(fileNumber);
         free(numberFilePath);
         char *finalFilePath = concat(temporaryFolder, finalFileName);
-        blacklist_handle_file(finalFilePath, current->name, finalFileName);
+        blacklist_handle_file(finalFilePath, current->name, 
+                finalFileName);
         free(finalFileName);
         free(finalFilePath);
         free(pictureUrls[i]);
@@ -209,7 +210,11 @@ void download_chapter(Chapter *current, Site source) {
     process_and_download_urls(pictureUrls, current);
     //start saving blacklist
     //This is so no progress after a chapter is lost - but it's a bit overkill :/
-    threaded_save_blacklist(false);
+    bool toFree = false;
+    if (get_current_download_chapter() >= get_download_length()) {
+        toFree = true;
+    }
+    threaded_save_blacklist(toFree);
     //start zip process here
     move_downloaded(current);
 }

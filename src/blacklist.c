@@ -130,16 +130,16 @@ void *internal_load_blacklist(void *useless) {
 }
 
 void threaded_load_blacklist() {
+    join_threaded_blacklist();
     if (!get_delete()) {
         return;
     }
-    join_threaded_blacklist();
     pthread_create(&threadId, NULL, internal_load_blacklist, NULL); 
     threadOn = true;
 }
 
 void join_threaded_blacklist() {
-    if (!threadOn || !get_delete()) {
+    if (!threadOn) {
         return;
     }
     pthread_join(threadId, NULL);
@@ -248,6 +248,7 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
 
 //needs fixing
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
+    join_threaded_blacklist();
     if (!get_delete()) {
         return;
     }
@@ -276,7 +277,29 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     }
     exit_critical_code();
 }
+/*
+void *internal_blacklist_handle_file(void *sentInfo) {
+    char **fileInfo = (char **) sentInfo;
+    blacklist_handle_file(fileInfo[0], fileInfo[1], fileInfo[2]);
+    free(sentInfo);
+    return NULL; 
+}
 
+void threaded_blacklist_handle_file(char *filePath, char *chapter, char *file) {
+    join_threaded_blacklist();
+    if (!get_delete()) {
+        return;
+    }
+    char **toSend = (char **) malloc(sizeof(char *) * 3);
+    if (toSend == NULL) {
+        exit(21);
+    }
+    toSend[0] = filePath, toSend[1] = chapter, toSend[2] = file;
+    pthread_create(&threadId, NULL, internal_blacklist_handle_file, 
+            (void *) toSend); 
+    threadOn = true;
+}
+*/
 void save_blacklist(bool toFree) {
     if (!get_delete()) {
         return;
@@ -318,11 +341,14 @@ void *internal_save_blacklist(void *toFree) {
 }
 
 void threaded_save_blacklist(bool toFree) {
+    join_threaded_blacklist();
     if (!get_delete()) {
         return;
     }
-    join_threaded_blacklist();
     bool *toSend = (bool *) malloc(sizeof(bool));
+    if (toSend == NULL) {
+        exit(21);
+    }
     *toSend = toFree;
     pthread_create(&threadId, NULL, internal_save_blacklist, (void *) toSend); 
     threadOn = true;

@@ -379,7 +379,7 @@ char *str_replace(char *original, char *replace, char *alternative) {
 
 //For specific use with argv otherwise need to copy each char * individually
 char **remove_string_from_array(int originalLength, char **originalArray
-        , char *toRemove, bool strict) {
+        , char *toRemove) {
     //if works right then just one thing will be removed and need a null so
     //just original length +1 is in case nothing gets removed
     char **finalArray = (char **) malloc(sizeof(char *) * (originalLength + 1));
@@ -389,10 +389,10 @@ char **remove_string_from_array(int originalLength, char **originalArray
     int j = 0;
     for (int i = 0; i < originalLength; i++) {
         char *toCompareTo = originalArray[i];
-        if (!strict) {
-            toCompareTo = rstrstr(toCompareTo, toRemove);
+        if (toCompareTo == NULL) {
+            break;
         }
-        if (toCompareTo == NULL || strcmp(originalArray[i], toRemove) != 0) {
+        if (strcmp(toCompareTo, toRemove) != 0) {
             finalArray[j] = originalArray[i];
             j++;
         }

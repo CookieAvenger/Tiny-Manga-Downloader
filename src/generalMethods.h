@@ -20,7 +20,7 @@ char *rstrstr (char *s1, char *s2);
 char *str_replace (char *original, char *replace, char *alternative);
 char *size_to_string (unsigned long value);
 char **remove_string_from_array (int originalLength, char **originalArray
-        , char *toRemove, bool strict);
+        , char *toRemove);
 void move_file (char *from, char *to);
 void exit_critical_code();
 char *make_bash_ready(char *toChange);

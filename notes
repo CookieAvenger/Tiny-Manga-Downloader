@@ -1,7 +1,17 @@
 make an install.sh
 NEED A SIMILAIRTY CHECK - sadly most scanlators don't just copy and paste their image
 they put the chapter in so it changes ever so slightly
-support mangasee, mangafox and others
+use findimagedupes
+an experimental option -e
+basically at the end unzip everything into folders do a massive findimagedupes check
+read output (ignore lines starting with Warning)
+and delete all those files, then depending of weather zip or folder is set, rezip everything or leave as is
+remeber to put that this is experimental - needs decent time and cpu and is innaccurate, not reccomended
+support mangasee
+
+download multiple links not working rn atm, also look into updating multiple
+
+have some automated testing toold
 
 comment all methods
 and global variables
