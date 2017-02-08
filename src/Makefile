@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -std=gnu99 -g
+CFLAGS = -Wall -pedantic -std=gnu99#-g
 LIBLINK = -lcurl -lpthread -lm
 all: tmdl
 

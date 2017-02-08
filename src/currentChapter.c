@@ -111,6 +111,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         char *numberFilePath = concat(temporaryFolder, fileNumber);
         int curlSuccess = download_file(pictureUrls[i], numberFilePath);
         if (curlSuccess != 0) {
+            //Make this better at some point
             fprintf(stderr, "Error downloading page %zu from %s\n", 
                     i+1, current->name);
         }

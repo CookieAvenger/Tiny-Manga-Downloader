@@ -302,7 +302,7 @@ void set_save_directory(char *lastArg) {
             if ((access(lastArg, F_OK) != -1) && (!is_file(lastArg))) {
                 if (access(lastArg, W_OK|R_OK) != -1) {
                     remainingUrls--;
-                    saveDirectory = realpath(lastArg, NULL);
+                    saveDirectory = make_permenent_string(realpath(lastArg, NULL));
                 } else {
                     exit(3);
                 }

@@ -242,21 +242,23 @@ bool is_file(const char* path) {
 }
 
 char *make_permenent_string(char *string) {
-    char *persistantString = malloc(sizeof(char) * strlen(string));
+    size_t stringLength = strlen(string) + 1;
+    char *persistantString = malloc(sizeof(char) * stringLength);
     if (persistantString == NULL) {
         exit(21);
     }
-    strcpy(persistantString, string);
+    memcpy(persistantString, string, stringLength);
     return persistantString;
 }
 
 char* concat(const char *s1, const char *s2) {
-    char *result = malloc(strlen(s1)+strlen(s2)+1);
+    size_t l1 = strlen(s1), l2 = strlen(s2);
+    char *result = (char *) malloc(sizeof(char) * (l1 + l2 +1));
     if (result == NULL) {
         exit(21);
     }
-    strcpy(result, s1);
-    strcat(result, s2);
+    memcpy(result, s1, l1);
+    memcpy(result + l1, s2, l2 + 1);
     return result;
 }
 
