@@ -14,7 +14,7 @@ Should run on all posix systems (untested) - only being tested on Ubuntu
     findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distrobutions should have it with their respective package managers  
 shasum (comes with perl)  
 zip  
-bash (rm, mkdir and mv too)  
+sh (rm, mkdir and mv too)  
   
 ###Dependences to compile  
 libcurl  

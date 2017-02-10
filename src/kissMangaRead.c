@@ -80,7 +80,7 @@ void bypass_DDOS_protection() {
     char *script = makeCookieScript();
     int fds[2];
     pipe(fds);
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         remove(script);
         exit(21);
@@ -97,7 +97,7 @@ void bypass_DDOS_protection() {
     close(fds[1]);
     int status;
     //put here || WIFEXITED
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         remove(script);
         exit(21);
     }

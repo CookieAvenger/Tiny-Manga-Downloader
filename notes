@@ -1,3 +1,17 @@
+//Unzip all
+sh -c ' ( cd "/home/sora/Programs/Tiny-Manga-Downloader/tests/Gasaraki/" && find -name '\''*.cbz'\'' -exec sh -c '\'' echo unzip -d "${1%.*}" "$1"'\'' _ {} \;)'
+//Delete all zips
+rm -f %s*.cbz)'
+//Rezip all
+sh -c ' ( cd "%s" && for i in */; do zip -r "${i%/}.zip" "$i" | rm -rf "$i"; done)'
+
+//findimage dupes
+findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
+
+
+Would like to not save file after every chapter, but keep like a snapshot after
+each chapter instead, and save that snapshot on exit...
+
 make an install.sh
 NEED A SIMILAIRTY CHECK - sadly most scanlators don't just copy and paste their image
 they put the chapter in so it changes ever so slightly

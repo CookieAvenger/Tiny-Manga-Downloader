@@ -19,6 +19,7 @@ void setup_temporary_folder() {
     temporaryFolder = concat(get_series_folder(), "Downloading/");
 }
 
+//HAVE ZIP TO FOLDER IF NEEDED OR VICE VERSA HERE OR IN MAIN METHOD WHERE IT DOES ALL?
 bool chapterExists(char *toCheck) {
     char *downloadedFileName = concat(toCheck, ".cbz");
     char *fullPath = concat(get_series_folder(), downloadedFileName);
@@ -131,7 +132,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
 }
 
 void copy_contents(char *toMoveTo, char *contentsToMove) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(22);
     } else if (pid == 0) {
@@ -143,8 +144,8 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
             if (commandToRun == NULL) {
                 exit(21);
             }
-            sprintf(commandToRun, " zip -jXq %s %s", toMoveTo, contentsToMove);
-            execlp("bash", "bash", "-c", commandToRun, NULL);
+            sprintf(commandToRun, "' zip -jXq %s %s'", toMoveTo, contentsToMove);
+            execlp("sh", "sh", "-c", commandToRun, NULL);
         } else {
             execlp("mv", "mv", contentsToMove, toMoveTo, NULL);
         }
@@ -152,7 +153,7 @@ void copy_contents(char *toMoveTo, char *contentsToMove) {
     }
     //parent
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {

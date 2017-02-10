@@ -150,7 +150,7 @@ void join_threaded_blacklist() {
 char *calculate_hash(char *filePath) {
     int fds[2];
     pipe(fds);
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(21);
     } else if (pid == 0) {
@@ -164,7 +164,7 @@ char *calculate_hash(char *filePath) {
     close(fds[1]);
     bool errorOccured = false;
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         errorOccured = true;
     }
     if (WEXITSTATUS(status) != 0) {
@@ -201,7 +201,7 @@ bool chapter_is_zip(char *chapterLocation) {
 }
 
 void delete_file_in_zip(char *zipPath, char *fileName) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(22);
     } else if (pid == 0) {
@@ -212,7 +212,7 @@ void delete_file_in_zip(char *zipPath, char *fileName) {
     }
     //parent
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {

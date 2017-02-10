@@ -10,9 +10,11 @@
 #include "generalMethods.h"
 #include "chaptersToDownload.h"
 #include "currentChapter.h"
-#include <sys/wait.h>
 #include "blacklist.h"
+#include "experimental.h"
 
+int dupMatch = 95;
+bool findDupes = false;
 bool delete = true;
 bool verbose = true;
 bool zip = true;
@@ -23,6 +25,14 @@ char *currentUrl = NULL;
 int remainingUrls;
 //weather we are using the settings file or not 
 bool usingSettings = false;
+
+int get_similarity_percentage() {
+    return dupMatch;
+}
+
+bool get_to_find_dupes() {
+    return findDupes;
+}
 
 bool get_using_settings() {
     return usingSettings;
@@ -88,12 +98,23 @@ void save_settings() {
     } else {
         fputs("k", settingsFile);
     }
+    if (findDupes) {
+        fputs("e", settingsFile);
+    }
     fputs("\n", settingsFile);
     fclose(settingsFile);
 }
 
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
+    //this is what happend when a fork of this fails
+    /*
+    int status;
+    while(wait(&status) != -1) {}
+    */
+    if (err == 24) {
+        return;
+    }
     join_threaded_blacklist();
     delete_folder(get_temporary_folder(), -1);
     if (currentUrl != NULL && err != 0) {
@@ -112,8 +133,13 @@ void print_error(int err, void *notUsing) {
             fputs("post command options:\n", stderr);
             fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
             fputs("[-z] for zipped chapters (default) or [-f] for folders\n", stderr);
-            fputs("[-d] to delete duplicates (default) or [-k] to keep\n", stderr);
-            fputs("Warning: behaviour if not strictly followed is unknown\n", stderr);
+            fputs("[-d] delete exact duplicates - not very effective,"
+                    " but safe (default) or [-k] to keep\n", stderr);
+            fputs("[-e] experimental delete similar images after download "
+                    "(take time once download is done) "
+                    "- very effective, not as safe\n", stderr);
+            //Fix this part bro...
+            fputs("Warning: behaviour if usage not strictly followed is unknown\n", stderr);
             break;
         case 2:
             fputs("Directory provided does not exist - ensure one is provided\n"
@@ -218,6 +244,9 @@ Site parse_settings(FILE *settingsFile) {
             case 'k':
                 delete = false;
                 break;
+            case 'e':
+                findDupes = true;
+                break;
             default:
                 exit(31);
         }
@@ -268,6 +297,9 @@ bool process_flag (char *flag) {
             return process_flag(flag+1);
         case 'k':
             delete = false;
+            return process_flag(flag+1);
+        case 'e':
+            findDupes = true;
             return process_flag(flag+1);
         default:
             exit(1);
@@ -373,7 +405,7 @@ int duplicate_and_continue(int argc, char **argv) {
     if(remainingUrls <= 0) {
         return 0;
     }
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(21);
     } else if (pid == 0) {
@@ -381,12 +413,11 @@ int duplicate_and_continue(int argc, char **argv) {
         execvp(argv[0], remove_string_from_array(argc, argv, currentUrl));
         exit(24);
     }
-    close(1), close(2);
+    close(0), close(1), close(2);
     //parent
     signal(SIGINT, SIG_IGN);
-    close(0);
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         exit(21);
     }
     return WEXITSTATUS(status);
@@ -412,6 +443,7 @@ int main(int argc, char** argv) {
     download_entire_queue();
     //join that final blacklist save(true)
     join_threaded_blacklist();
+    experimental_find_dupes();
     //fork and continue is needed
     //return it's status not 0
     return duplicate_and_continue(argc, argv);

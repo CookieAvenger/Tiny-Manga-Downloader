@@ -41,7 +41,7 @@ char *rstrstr(char *s1, char *s2) {
 }
 
 void move_file (char *from, char *to) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(21);
     } else if (pid == 0) {
@@ -52,7 +52,7 @@ void move_file (char *from, char *to) {
     }
     //parent
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {             
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
@@ -63,7 +63,7 @@ void move_file (char *from, char *to) {
 }
 
 void delete_file (char *path) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         exit(21);
     } else if (pid == 0) {
@@ -74,12 +74,12 @@ void delete_file (char *path) {
     }
     //parent
     int status;
-    wait(&status);             
+    waitpid(pid, &status, 0);             
     //should never fail, we have read write permission to that folder
 }
 
 void delete_folder (char *folder, int error) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         if (error != -1) {
             exit(21);
@@ -92,7 +92,7 @@ void delete_folder (char *folder, int error) {
     }
     //parent
     int status;
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {             
         if (error != -1) {
             exit(21);
         }                                                        
@@ -107,7 +107,7 @@ void delete_folder (char *folder, int error) {
 }                                                                        
 
 void create_folder(char *folder) {                                         
-    int pid = fork();                                                    
+    pid_t pid = fork();                                                    
     if (pid == -1) {                                                     
         exit(21);                                                        
     } else if (pid == 0) {                                               
@@ -118,7 +118,7 @@ void create_folder(char *folder) {
     }                                                                    
     //parent                                                             
     int status;                                                          
-    if ((wait(&status) == -1) || (WIFEXITED(status) == 0)) {             
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {             
         exit(21);                                                        
     }                                                                    
     if (WEXITSTATUS(status) != 0) {                                      
@@ -243,7 +243,7 @@ bool is_file(const char* path) {
 
 char *make_permenent_string(char *string) {
     size_t stringLength = strlen(string) + 1;
-    char *persistantString = malloc(sizeof(char) * stringLength);
+    char *persistantString = (char *) malloc(sizeof(char) * stringLength);
     if (persistantString == NULL) {
         exit(21);
     }

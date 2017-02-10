@@ -33,6 +33,10 @@ hashMap *new_hash_map(int (*new_comparator) (const void *, const void *),
         map->prime = 9223372036854775837U; //first prime bigger than signed 64 bit
     }
     //otherwise will automatically work it out. may take some time =|
+    //trade off here - normally this program only uses 5 mb, so if I set meta
+    //at 25000, probs never have to reshuffle, but 25000 will probs use 5mb..
+    //so really, dunno if I should save cpu time or ram, both kinda small in
+    //the big picture
     map->meta = 4;
     map->threadOn = false;
     return map;
@@ -96,7 +100,7 @@ void remake_hash_function(hashMap *map) {
     //dumb and simple prime calculation, should never come to this though
     while (map->prime < LONG_MAX || map->prime < map->meta) {
         incrementing += 2;
-        for (int i = 3; i < incrementing; i += 2) {
+        for (int i = 3; i < incrementing/2; i += 2) {
             if (incrementing % i == 0) {
                 flag = false;
                 break;
@@ -189,7 +193,9 @@ hashMap *hash_map_construction(void **items, size_t totalItems,
         int (*comparator) (const void *, const void *),
         long (*get_key) (const void *)) {
     hashMap *map = new_hash_map(comparator, get_key);
-    map->meta = totalItems * 2;
+    if (totalItems * 2 > map->meta) {
+        map->meta = totalItems * 2;
+    }
     map->table = (hashQueue **) malloc(sizeof(hashQueue *) * map->meta);
     if (map->table == NULL) {
         exit(21);
