@@ -108,13 +108,13 @@ void save_settings() {
 //Prints appropriate error to stderr before exit
 void print_error(int err, void *notUsing) {
     //this is what happend when a fork of this fails
+    if (err == 24 || err == 0) {
+        return;
+    }
     /*
     int status;
     while(wait(&status) != -1) {}
     */
-    if (err == 24) {
-        return;
-    }
     join_threaded_blacklist();
     delete_folder(get_temporary_folder(), -1);
     if (currentUrl != NULL && err != 0) {
@@ -184,9 +184,6 @@ void print_error(int err, void *notUsing) {
         case 27:
             fputs("Zipping failed, try with storing in folders instead\n",
                     stderr);
-            break;
-        case 28:
-            fputs("Failed to copy to new folder\n", stderr);
             break;
         case 31:
             fputs("Settings file is invalid or does not exist\n", stderr);
@@ -322,6 +319,10 @@ Site process_first_url(char *url) {
         }
         strncpy(domain, domainCheck, charectersInDomain);
         domain[charectersInDomain] = '\0';
+        size_t seriesLength = strlen(seriesPath);
+        while (seriesPath[--seriesLength] == '/') {
+            seriesPath[seriesLength] = '\0';
+        }
     } else {
         //put other domain checks here
     }

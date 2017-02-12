@@ -9,6 +9,7 @@ tmdl
 *.png
 *.cbz
 *.tmdl
+*.fid
 *.sha256
 
 #test scripts

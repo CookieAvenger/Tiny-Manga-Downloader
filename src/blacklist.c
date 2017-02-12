@@ -200,7 +200,7 @@ bool chapter_is_zip(char *chapterLocation) {
     return isZip;
 }
 
-void delete_file_in_zip(char *zipPath, char *fileName) {
+void remove_in_zip(char *zipPath, char *fileName) {
     pid_t pid = fork();
     if (pid == -1) {
         exit(22);
@@ -230,12 +230,12 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
     char *chapterPath = concat(get_series_folder(), toDelete->chapterName); 
     if (chapter_is_zip(chapterPath)) {
         char *chapterZipLocation = concat(chapterPath, ".cbz");              
-        delete_file_in_zip(chapterZipLocation, toDelete->fileName);
+        remove_in_zip(chapterZipLocation, toDelete->fileName);
         free(chapterZipLocation);
     } else {
         char *tempPath = concat(chapterPath, "/");
         char *fullFilePath = concat(tempPath, toDelete->fileName);
-        delete_file(fullFilePath);
+        remove(fullFilePath);
         free(fullFilePath);
         free(tempPath);
     }
@@ -269,7 +269,7 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     blacklistEntry *foundEntry = insert_item_into_map(blacklist, (void *)newEntry);
     if (foundEntry != NULL) {
         delete_blacklisted_file(foundEntry);
-        delete_file(filePath);
+        remove(filePath);
         free(newEntry->hashValue);
         free(newEntry->chapterName);
         free(newEntry->fileName);
@@ -277,29 +277,7 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     }
     exit_critical_code();
 }
-/*
-void *internal_blacklist_handle_file(void *sentInfo) {
-    char **fileInfo = (char **) sentInfo;
-    blacklist_handle_file(fileInfo[0], fileInfo[1], fileInfo[2]);
-    free(sentInfo);
-    return NULL; 
-}
 
-void threaded_blacklist_handle_file(char *filePath, char *chapter, char *file) {
-    join_threaded_blacklist();
-    if (!get_delete()) {
-        return;
-    }
-    char **toSend = (char **) malloc(sizeof(char *) * 3);
-    if (toSend == NULL) {
-        exit(21);
-    }
-    toSend[0] = filePath, toSend[1] = chapter, toSend[2] = file;
-    pthread_create(&threadId, NULL, internal_blacklist_handle_file, 
-            (void *) toSend); 
-    threadOn = true;
-}
-*/
 void save_blacklist(bool toFree) {
     if (!get_delete()) {
         return;

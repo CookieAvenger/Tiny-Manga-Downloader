@@ -91,7 +91,6 @@ void download_entire_queue() {
     if (fullLength == 0) {
         return;
     }
-    setup_temporary_folder();
     Chapter *toDownload;
     while (toDownload = pop_from_download(), toDownload != NULL) {
         download_chapter(toDownload, source);

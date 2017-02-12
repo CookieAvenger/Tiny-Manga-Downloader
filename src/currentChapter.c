@@ -9,26 +9,22 @@
 #include <sys/wait.h>
 #include "blacklist.h"
 
+bool folderSet = false;
 char *temporaryFolder;
 
 char *get_temporary_folder() {
     return temporaryFolder;
 }
 
-void setup_temporary_folder() {
-    temporaryFolder = concat(get_series_folder(), "Downloading/");
-}
-
-//HAVE ZIP TO FOLDER IF NEEDED OR VICE VERSA HERE OR IN MAIN METHOD WHERE IT DOES ALL?
-bool chapterExists(char *toCheck) {
-    char *downloadedFileName = concat(toCheck, ".cbz");
-    char *fullPath = concat(get_series_folder(), downloadedFileName);
-    char *alternativePath = concat(get_series_folder(), toCheck);
-    free(downloadedFileName);
-    bool existance = ((access(fullPath, F_OK) != -1) || 
-            (access(alternativePath, F_OK) != -1));
-    free(fullPath), free(alternativePath);
-    return existance;
+void setup_temporary_folder(char *folderName) {
+    if (folderSet) {
+        free(temporaryFolder);
+    } else {
+        folderSet = true;
+    }
+    char *veryTemporary = concat(folderName, "/");
+    temporaryFolder = concat(get_series_folder(), veryTemporary);
+    free(veryTemporary);
 }
 
 char *back_up_file_extension_finder(char *url) {
@@ -131,69 +127,83 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
     free(pictureUrls);
 }
 
-void copy_contents(char *toMoveTo, char *contentsToMove) {
+void zip_contents(char *name, bool unzip) {
+    if (get_verbose()) {
+        printf("Moving chapter %s\n", name);
+        fflush(stdout);
+    } 
+    char *zipConstructor = concat(get_series_folder(), name);
+    char *tempZip = concat(zipConstructor, ".cbz");
     pid_t pid = fork();
     if (pid == -1) {
         exit(22);
     } else if (pid == 0) {
-        close(1), close(2);
         //child
-        if (get_zip_approval()) {
-            char *commandToRun = (char *) malloc(sizeof(char) * 
-                    (strlen(toMoveTo) + strlen(contentsToMove) + 12));
-            if (commandToRun == NULL) {
-                exit(21);
-            }
-            sprintf(commandToRun, "' zip -jXq %s %s'", toMoveTo, contentsToMove);
-            execlp("sh", "sh", "-c", commandToRun, NULL);
-        } else {
-            execlp("mv", "mv", contentsToMove, toMoveTo, NULL);
+        close(1), close(2);
+        //No point freeing anything, all gonna vanish at exec or exit anyway
+        char *zipName = make_bash_ready(tempZip);
+        char *folderName = make_bash_ready(get_temporary_folder());
+        char *zipCommand = "zip -jXrq";
+        char *unzipCommand = "unzip -qqo";
+        char *optionalCommand = " ";
+        if (unzip) {
+            optionalCommand = " -d ";
         }
+        char *commandToUse = zipCommand;
+        if (unzip) {
+            commandToUse = unzipCommand;
+        }
+        char *commandToRun = (char *) malloc(sizeof(char) * 
+                (strlen(zipName) + strlen(folderName) + 
+                strlen(commandToUse) + strlen(optionalCommand) + 2));
+        if (commandToRun == NULL) {
+            exit(21);
+        }
+        sprintf(commandToRun, "%s %s%s%s",
+                commandToUse, zipName, optionalCommand, folderName);
+        execlp("bash", "bash", "-c", commandToRun, NULL);
         exit(24);
     }
     //parent
+    free(zipConstructor);
     int status;
     if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
-        if (get_zip_approval()) {
-            exit(27);
-        } else {
-            exit(28);
-        }
+        exit(27);
     }
+    if (!unzip) {
+        delete_folder(temporaryFolder, 1);
+    } else {
+        remove(tempZip);
+    }
+    free(tempZip);
 }
 
-void move_downloaded(Chapter *current) {
-    if (get_verbose()) {
-        printf("Moving chapter %s\n", current->name);
-        fflush(stdout);
-    } 
-    char *finalMoveTo, *contents;
-    char *moveToConstructor = concat(get_series_folder(), current->name);
-    if (get_zip_approval()) {
-        //zip
-        char *tempFinalMoveTo = concat(moveToConstructor, ".cbz");
-        char *tempContents = make_bash_ready(get_temporary_folder());
-        finalMoveTo = make_bash_ready(tempFinalMoveTo);
-        contents = concat(tempContents, "*");
-        free(tempFinalMoveTo), free(tempContents);
-    } else {
-        //move
-        finalMoveTo = concat(moveToConstructor, "/");
-        contents = get_temporary_folder();
+bool chapterExists(char *toCheck) {
+    char *downloadedFileName = concat(toCheck, ".cbz");
+    char *fullPath = concat(get_series_folder(), downloadedFileName);
+    char *alternativePath = concat(get_series_folder(), toCheck);
+    free(downloadedFileName);
+    bool existance = false;
+    if (access(fullPath, F_OK) != -1) {
+        existance = true;
+        if (!get_zip_approval()) {
+            zip_contents(toCheck, true);
+        }
+    } else if (access(alternativePath, F_OK) != -1) {
+        existance = true;
+        if (get_zip_approval()) {
+            zip_contents(toCheck, false);
+        }
     }
-    free(moveToConstructor);;
-    copy_contents(finalMoveTo, contents);
-    free(finalMoveTo);
-    if (get_zip_approval()) {
-        free(contents);
-        delete_folder(temporaryFolder, 1);
-    }
+    free(fullPath), free(alternativePath);
+    return existance;
 }
 
 void download_chapter(Chapter *current, Site source) {
+    setup_temporary_folder(current->name);
     if (chapterExists(current->name)) {
         if (get_verbose()) {
             printf("Skipping %s - already downloaded\n", current->name);
@@ -210,13 +220,19 @@ void download_chapter(Chapter *current, Site source) {
     create_folder(temporaryFolder);
     //download into a folder
     process_and_download_urls(pictureUrls, current);
+    //start zip process here
+    if (get_zip_approval()) {
+        zip_contents(current->name, false);
+    }
     //start saving blacklist
     //This is so no progress after a chapter is lost - but it's a bit overkill :/
     bool toFree = false;
     if (get_current_download_chapter() >= get_download_length()) {
         toFree = true;
+        if (folderSet) {
+            free(temporaryFolder);
+            folderSet = false;
+        }
     }
     threaded_save_blacklist(toFree);
-    //start zip process here
-    move_downloaded(current);
 }

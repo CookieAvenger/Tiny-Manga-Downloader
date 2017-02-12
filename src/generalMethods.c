@@ -62,22 +62,6 @@ void move_file (char *from, char *to) {
     //should never fail, we have read write permission to that folder
 }
 
-void delete_file (char *path) {
-    pid_t pid = fork();
-    if (pid == -1) {
-        exit(21);
-    } else if (pid == 0) {
-        //child
-        close(1), close(2);
-        execlp("rm", "rm", "-f", path, NULL);
-        exit(24); 
-    }
-    //parent
-    int status;
-    waitpid(pid, &status, 0);             
-    //should never fail, we have read write permission to that folder
-}
-
 void delete_folder (char *folder, int error) {
     pid_t pid = fork();
     if (pid == -1) {

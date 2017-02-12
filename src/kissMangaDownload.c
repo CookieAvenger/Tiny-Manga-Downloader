@@ -85,5 +85,6 @@ void setup_kissmanga_download() {
         printf("%s\n", testType);
         free(testString);
         free(testType);
+        exit(100);
     }
 }
