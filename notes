@@ -1,26 +1,11 @@
-//Unzip all
-sh -c ' ( cd "/home/sora/Programs/Tiny-Manga-Downloader/tests/Gasaraki/" && find -name '\''*.cbz'\'' -exec sh -c '\'' echo unzip -d "${1%.*}" "$1"'\'' _ {} \;)'
-//Delete all zips
-rm -f %s*.cbz)'
-//Rezip all
-sh -c ' ( cd "%s" && for i in */; do zip -r "${i%/}.zip" "$i" | rm -rf "$i"; done)'
-
-//findimage dupes
 findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
 
+Be able to set percentage of similarity needed
 
 Would like to not save file after every chapter, but keep like a snapshot after
 each chapter instead, and save that snapshot on exit...
 
 make an install.sh
-NEED A SIMILAIRTY CHECK - sadly most scanlators don't just copy and paste their image
-they put the chapter in so it changes ever so slightly
-use findimagedupes
-an experimental option -e
-basically at the end unzip everything into folders do a massive findimagedupes check
-read output (ignore lines starting with Warning)
-and delete all those files, then depending of weather zip or folder is set, rezip everything or leave as is
-remeber to put that this is experimental - needs decent time and cpu and is innaccurate, not reccomended
 support mangasee
 
 have some automated testing toold
@@ -40,29 +25,12 @@ quick fail downloading chapters - and move on don't exit
 keep auto-updating desired mangas - just run the url every day automatically or whatever
 store somewhere where to update from and so if you just run tmdl in that folder it'll just work on updating it
 
--hashmap of md5-hashes of pictures and location
--at first duplicate, unzip folder delete file, rezip, remove location data from hashmap, and delete the just downloaded file, if duplicate found and location is null, only delete new one
-when deleting a file allow file name to be incremented so if the user finds a missing page they can go online and find what page is missing
--hashmap stores a struct with the key, chapter and file name
--comparator is a strcmp wrapper
--change the way save file is read and all
-- if new url run in the folder - update the .settings file given the name of the magnga ends up the same
-
 improve the verbose print
 
 impliment download of a single chapter kissMangaDownload.c:78
 
 make a massive defines file for all the places I search for in source code to get stuff so if the site changes its easier to update
 
-the .settings file - if it's read then that means that do not set folder name from website
-also change argument error, only is a valid settings file is found you can run tmdl with no arguments
-
 have a --version option and a update option - write and executes a script as sudo that checks github for version change
 
-where to start load? - at series location, also save at end of normal execution and at exit
-
 improve error messages
-
-ability to update url of a folder? :/
-
-check and make sure -u with multiple folderss works cuz I didn't specifically impiment that

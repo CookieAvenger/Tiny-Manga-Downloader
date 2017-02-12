@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include "tmdl.h"
+#include <sys/types.h>
+#include <dirent.h>
 
 int sigintEvent = 0;
 
@@ -18,10 +20,10 @@ void enter_critical_code() {
 }
 
 void exit_critical_code() {
-    signal(SIGINT, terminate_handler);
     if (sigintEvent > 0) {
         terminate_handler(2);
     }
+    signal(SIGINT, terminate_handler);
 }
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
@@ -46,7 +48,7 @@ void move_file (char *from, char *to) {
         exit(21);
     } else if (pid == 0) {
         //child
-        close(1), close(2);
+        close(0), close(1), close(2);
         execlp("mv", "mv", "-f",from, to, NULL);
         exit(24);
     }
@@ -63,6 +65,9 @@ void move_file (char *from, char *to) {
 }
 
 void delete_folder (char *folder, int error) {
+    if (folder == NULL) {
+        return;
+    }
     pid_t pid = fork();
     if (pid == -1) {
         if (error != -1) {
@@ -70,7 +75,7 @@ void delete_folder (char *folder, int error) {
         }
     } else if (pid == 0) {
         //child
-        close(1), close(2);
+        close(0), close(1), close(2);
         execlp("rm", "rm", "-rf", folder, NULL);
         exit(24); 
     }
@@ -96,7 +101,7 @@ void create_folder(char *folder) {
         exit(21);                                                        
     } else if (pid == 0) {                                               
         //child                                                          
-        close(1), close(2);
+        close(0), close(1), close(2);
         execlp("mkdir", "mkdir", "-p", folder, NULL);           
         exit(24);                                                        
     }                                                                    
@@ -399,4 +404,25 @@ char *make_bash_ready(char *toChange) {
     char *final = concat(start, "\"");
     free(start);
     return final;
+}
+
+bool is_directory_empty(char *directoryPath) {
+    int fileCount = 0;
+    struct dirent *aFile;
+    DIR *directory = opendir(directoryPath);
+    if (directory == NULL) {
+        return true;
+    }
+    while ((aFile = readdir(directory)) != NULL) {
+        if(++fileCount > 2) {
+            break;
+        }
+    }
+    closedir(directory);
+    if (fileCount <= 2) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }

@@ -83,6 +83,7 @@ void setup_kissmanga_download() {
         //Chapter Page
         //To do
         printf("%s\n", testType);
+        fflush(stdout);
         free(testString);
         free(testType);
         exit(100);

@@ -3,7 +3,7 @@
 Small C program to download entire series and update already downloaded ones.  
 Can save each chapter as a comic book archive, and can delete duplicate images
 (works for some scanlator images).  
-Experimental image duplication finder coming up to try and remove all possible
+Experimental image duplication finder to try and remove all possible
 scanlator images  
   
 kissmanga.com supported, mangasee support coming  

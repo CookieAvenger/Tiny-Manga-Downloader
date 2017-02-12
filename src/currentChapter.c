@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "blacklist.h"
+#include "experimental.h"
 
 bool folderSet = false;
 char *temporaryFolder;
@@ -21,6 +22,11 @@ void setup_temporary_folder(char *folderName) {
         free(temporaryFolder);
     } else {
         folderSet = true;
+    }
+    if (folderName == NULL) {
+        temporaryFolder = NULL;
+        folderSet = false;
+        return;
     }
     char *veryTemporary = concat(folderName, "/");
     temporaryFolder = concat(get_series_folder(), veryTemporary);
@@ -124,12 +130,20 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         free(pictureUrls[i]);
     }
     puts("");
+    fflush(stdout);
     free(pictureUrls);
 }
 
 void zip_contents(char *name, bool unzip) {
+    if (!unzip && is_directory_empty(temporaryFolder)) {
+        return;
+    }
     if (get_verbose()) {
-        printf("Moving chapter %s\n", name);
+        char *action = "Zipping";
+        if (unzip) {
+            action = "Unzipping";
+        }
+        printf("%s chapter %s\n", action, name);
         fflush(stdout);
     } 
     char *zipConstructor = concat(get_series_folder(), name);
@@ -139,10 +153,10 @@ void zip_contents(char *name, bool unzip) {
         exit(22);
     } else if (pid == 0) {
         //child
-        close(1), close(2);
+        close(0), close(1), close(2);
         //No point freeing anything, all gonna vanish at exec or exit anyway
         char *zipName = make_bash_ready(tempZip);
-        char *folderName = make_bash_ready(get_temporary_folder());
+        char *folderName = make_bash_ready(temporaryFolder);
         char *zipCommand = "zip -jXrq";
         char *unzipCommand = "unzip -qqo";
         char *optionalCommand = " ";
@@ -171,6 +185,9 @@ void zip_contents(char *name, bool unzip) {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
+        if (unzip) {
+            exit(28);
+        }
         exit(27);
     }
     if (!unzip) {
@@ -187,15 +204,18 @@ bool chapterExists(char *toCheck) {
     char *alternativePath = concat(get_series_folder(), toCheck);
     free(downloadedFileName);
     bool existance = false;
-    if (access(fullPath, F_OK) != -1) {
+    if (access(alternativePath, F_OK) != -1) {
+        existance = true;
+        if (access(fullPath, F_OK) != -1) {
+            remove(fullPath);
+        }
+        if (get_zip_approval()) {
+            zip_contents(toCheck, false);
+        }
+    } else if (access(fullPath, F_OK) != -1) {
         existance = true;
         if (!get_zip_approval()) {
             zip_contents(toCheck, true);
-        }
-    } else if (access(alternativePath, F_OK) != -1) {
-        existance = true;
-        if (get_zip_approval()) {
-            zip_contents(toCheck, false);
         }
     }
     free(fullPath), free(alternativePath);
@@ -207,7 +227,9 @@ void download_chapter(Chapter *current, Site source) {
     if (chapterExists(current->name)) {
         if (get_verbose()) {
             printf("Skipping %s - already downloaded\n", current->name);
+            fflush(stdout);
         }
+        setup_temporary_folder(NULL);
         return;
     }
     char **pictureUrls;
@@ -224,15 +246,13 @@ void download_chapter(Chapter *current, Site source) {
     if (get_zip_approval()) {
         zip_contents(current->name, false);
     }
+    setup_temporary_folder(NULL);
     //start saving blacklist
     //This is so no progress after a chapter is lost - but it's a bit overkill :/
     bool toFree = false;
     if (get_current_download_chapter() >= get_download_length()) {
         toFree = true;
-        if (folderSet) {
-            free(temporaryFolder);
-            folderSet = false;
-        }
     }
     threaded_save_blacklist(toFree);
+    set_files_changed();
 }

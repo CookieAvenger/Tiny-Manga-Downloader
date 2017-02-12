@@ -23,3 +23,4 @@ char **remove_string_from_array (int originalLength, char **originalArray
 void move_file (char *from, char *to);
 void exit_critical_code();
 char *make_bash_ready(char *toChange);
+bool is_directory_empty(char *directoryPath);

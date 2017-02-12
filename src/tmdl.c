@@ -7,12 +7,14 @@
 #include <sys/wait.h>
 #include "tmdl.h"
 #include "kissMangaDownload.h"
+#include "kissMangaRead.h"
 #include "generalMethods.h"
 #include "chaptersToDownload.h"
 #include "currentChapter.h"
 #include "blacklist.h"
 #include "experimental.h"
 
+//make this settable
 int dupMatch = 95;
 bool findDupes = false;
 bool delete = true;
@@ -68,6 +70,13 @@ char *get_domain() {
 
 void terminate_handler(int signalSent) {
     signal(SIGINT, SIG_IGN);
+    fputs("Stopping prematurely\n", stderr);
+    fputs("Please wait patiently as we wind down\n", stderr);
+    if (get_dupe_started() && zip) {
+        int status;
+        while(wait(&status) != -1) {}
+        rezip_all_folders();    
+    }
     exit(11);
 }
 
@@ -102,6 +111,7 @@ void save_settings() {
         fputs("e", settingsFile);
     }
     fputs("\n", settingsFile);
+    fflush(settingsFile);
     fclose(settingsFile);
 }
 
@@ -111,10 +121,12 @@ void print_error(int err, void *notUsing) {
     if (err == 24 || err == 0) {
         return;
     }
-    /*
+    //in case we are zipping, want to wait for zip to finish before delete temp
+    //folder
     int status;
     while(wait(&status) != -1) {}
-    */
+    remove(get_python_script_location());
+    remove(get_bash_script_location());
     join_threaded_blacklist();
     delete_folder(get_temporary_folder(), -1);
     if (currentUrl != NULL && err != 0) {
@@ -160,9 +172,6 @@ void print_error(int err, void *notUsing) {
         case 7:
             fputs("No save location given\n", stderr);
             break;
-        case 11:
-            fputs("Stopping prematurely\n", stderr);
-            break;
         case 21:
             fputs("System error\n", stderr);
             break;
@@ -184,6 +193,11 @@ void print_error(int err, void *notUsing) {
         case 27:
             fputs("Zipping failed, try with storing in folders instead\n",
                     stderr);
+        case 28:
+            fputs("Unzipping failed... okay... maybe try all over again in "
+                    "a new directory and keep zipping off, that should work "
+                    "for now - and let mw know and I'll try to come up with a"
+                    " more permenenat work around :P\n", stderr);
             break;
         case 31:
             fputs("Settings file is invalid or does not exist\n", stderr);

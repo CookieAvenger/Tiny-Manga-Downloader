@@ -122,6 +122,7 @@ void load_blacklist() {
             puts("Loaded saved blacklist");
         }
     }
+    fflush(stdout);
 }
 
 void *internal_load_blacklist(void *useless) {
@@ -156,7 +157,7 @@ char *calculate_hash(char *filePath) {
     } else if (pid == 0) {
         //child
         dup2(fds[1], 1);
-        close(fds[0]), close(2);
+        close(0), close(fds[0]), close(2);
         execlp("shasum", "shasum", "-U" , "-a", "256", filePath, NULL);
         exit(24);
     }
@@ -206,7 +207,7 @@ void remove_in_zip(char *zipPath, char *fileName) {
         exit(22);
     } else if (pid == 0) {
         //child
-        close(1), close(2);
+        close(0), close(1), close(2);
         execlp("zip", "zip", "-dq", zipPath, fileName, NULL);
         exit(24);
     }
@@ -297,6 +298,7 @@ void save_blacklist(bool toFree) {
         fprintf(saveFile, "%s\n", currentEntry->hashValue);    
         fprintf(saveFile, "%s\n", currentEntry->chapterName);    
         fprintf(saveFile, "%s\n", currentEntry->fileName);    
+        fflush(saveFile);
         if (toFree) {
             free(currentEntry->hashValue);
             free(currentEntry->chapterName);

@@ -11,6 +11,11 @@
 
 char *cookie = NULL;
 char *userAgent = NULL;
+char *script = NULL;
+
+char *get_python_script_location() {
+    return script;
+}
 
 //Some repitition here - tried to solve with get_substring method but couldn't
 //as second substring requred end of first - will tackle again later
@@ -58,7 +63,7 @@ int update_cookie(char *cookieInfo) {
 //Could alternatively just pipe in the commands and exit when done - but...
 //already implimented this way :p
 char *makeCookieScript() {
-    char *scriptName = concat(get_save_directory(), "/cookiegrabber.py");
+    char *scriptName = concat(get_save_directory(), "/.cookiegrabber.py");
     FILE *cookieScript = fopen(scriptName, "w");
     if (cookieScript == NULL) {
         exit(3);
@@ -67,6 +72,7 @@ char *makeCookieScript() {
     fprintf(cookieScript,
             "print(cfscrape.get_cookie_string(\"http://%s\"))", 
             get_domain());
+    fflush(cookieScript);
     fclose(cookieScript);
     return scriptName;
 }
@@ -76,13 +82,13 @@ char *makeCookieScript() {
 void bypass_DDOS_protection() {
     if (get_verbose()) {
         puts("Attempting to bypass cloudflares DDOS protection");
+        fflush(stdout);
     }
-    char *script = makeCookieScript();
+    script = makeCookieScript();
     int fds[2];
     pipe(fds);
     pid_t pid = fork();
     if (pid == -1) {
-        remove(script);
         exit(21);
     } else if (pid == 0) {
         //child
@@ -98,7 +104,6 @@ void bypass_DDOS_protection() {
     int status;
     //put here || WIFEXITED
     if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
-        remove(script);
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
@@ -108,18 +113,20 @@ void bypass_DDOS_protection() {
                 "sudo -H pip install cfscrape\n"
                 "Some systems may require to install with both \"pip2\" "
                 "and \"pip3\" instead of just \"pip\".\n", stderr);
-        remove(script);
         exit(25);
     } 
     int error = update_cookie(read_all_from_fd(fds[0], false)); 
     close(fds[0]);
-    remove(script);
     if (error != 0) {
         exit(error);
     }
-    free(script);
+    remove(script);
+    char *toFree = script;
+    script = NULL;
+    free(toFree);
     if (get_verbose()) {
         puts("Bypassed cloudflares DDOS protection");
+        fflush(stdout);
     }
 }
 
