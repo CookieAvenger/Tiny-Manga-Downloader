@@ -93,7 +93,7 @@ char *sort_out_file_extension(char *filePath, char *fileName, char *url) {
     }
     if (extension[0] != '\0') {
         char *finalPath = concat(filePath, extension);
-        move_file(filePath, finalPath);
+        rename(filePath, finalPath);
         free(finalPath);
     }
     char *finalName = concat(fileName, extension);
@@ -117,17 +117,16 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
             //Make this better at some point
             fprintf(stderr, "Error downloading page %zu from %s\n", 
                     i+1, current->name);
+            free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
+            continue;
         }
         char *finalFileName = sort_out_file_extension(numberFilePath, 
                 fileNumber, pictureUrls[i]);
-        free(fileNumber);
-        free(numberFilePath);
+        free(fileNumber), free(numberFilePath);
         char *finalFilePath = concat(temporaryFolder, finalFileName);
         blacklist_handle_file(finalFilePath, current->name, 
                 finalFileName);
-        free(finalFileName);
-        free(finalFilePath);
-        free(pictureUrls[i]);
+        free(finalFileName), free(finalFilePath), free(pictureUrls[i]);
     }
     puts("");
     fflush(stdout);

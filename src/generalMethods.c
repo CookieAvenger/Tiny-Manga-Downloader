@@ -8,6 +8,7 @@
 #include "tmdl.h"
 #include <sys/types.h>
 #include <dirent.h>
+#include "customParser.h"
 
 int sigintEvent = 0;
 
@@ -40,28 +41,6 @@ char *rstrstr(char *s1, char *s2) {
         }
     }
     return NULL;
-}
-
-void move_file (char *from, char *to) {
-    pid_t pid = fork();
-    if (pid == -1) {
-        exit(21);
-    } else if (pid == 0) {
-        //child
-        close(0), close(1), close(2);
-        execlp("mv", "mv", "-f",from, to, NULL);
-        exit(24);
-    }
-    //parent
-    int status;
-    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {             
-        exit(21);
-    }
-    if (WEXITSTATUS(status) != 0) {
-        //is this the right error :/
-        exit(3);
-    }                 
-    //should never fail, we have read write permission to that folder
 }
 
 void delete_folder (char *folder, int error) {
@@ -205,6 +184,35 @@ char **continuous_substring(char *string, char *start, char *end) {
     return substringsFound;
 }
 
+void write_string_array_to_file (char *initial, char **strings, 
+        char *betweenArray, char *end, FILE *toWriteTo) {
+    if (initial != NULL) {
+        fprintf(toWriteTo, "%s", initial);
+    }
+    size_t count = 0;
+    char *toCheck = strings[count];
+    while (toCheck != NULL) {
+        fprintf(toWriteTo, "%s", toCheck);
+        toCheck = strings[++count];
+        if (toCheck != NULL && betweenArray != NULL) {
+            fprintf(toWriteTo, "%s", betweenArray);
+        }
+    }
+    if (end != NULL) {
+        fprintf(toWriteTo, "%s", end);
+    }
+}
+
+//also returns size
+size_t run_html_decode_on_strings(char **strings) {
+    size_t count = 0;
+    while(strings[count] != NULL) {
+        decode_html_entities_utf8(strings[count], NULL);
+        count++;
+    }
+    return count;
+}
+
 size_t get_pointer_array_length(void **pointerArray) {
     size_t count = 0;
     while(pointerArray[count] != NULL) {
@@ -213,12 +221,13 @@ size_t get_pointer_array_length(void **pointerArray) {
     return count;
 }
 
-void string_array_free(char **stringArray) {
-    int length = get_pointer_array_length((void **) stringArray);
-    for (int i = 0; i < length; i ++) {
-        free(stringArray[i]);
+void pointer_array_free (void **pointerArray) {
+    size_t count = 0;
+    while (pointerArray[count] != NULL) {
+        free(pointerArray[count]);
+        count++;
     }
-    free(stringArray);
+    free(pointerArray);
 }
 
 
@@ -399,14 +408,14 @@ char *size_to_string (size_t value) {
     return toReturn; 
 }
 
-char *make_bash_ready(char *toChange) {
+char *make_bash_ready (char *toChange) {
     char *start = concat("\"", toChange);
     char *final = concat(start, "\"");
     free(start);
     return final;
 }
 
-bool is_directory_empty(char *directoryPath) {
+bool is_directory_empty (char *directoryPath) {
     int fileCount = 0;
     struct dirent *aFile;
     DIR *directory = opendir(directoryPath);

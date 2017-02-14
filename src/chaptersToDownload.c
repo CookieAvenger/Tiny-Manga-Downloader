@@ -13,12 +13,18 @@ ChapterQueue *head = NULL;
 ChapterQueue *tail = NULL;
 size_t fullLength = 0;
 size_t overallPointer = 0;
+char *mangaName = NULL;
+
+char *get_manga_name() {
+    return mangaName;
+}
 
 char *get_series_folder() {
     return seriesFolder;
 }
 
 void set_series_folder(char *folder) {
+    mangaName = folder;
     if (seriesFolder != NULL) {
         return;
     }

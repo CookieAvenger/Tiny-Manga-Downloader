@@ -140,7 +140,7 @@ void print_error(int err, void *notUsing) {
     switch(err) {
         case 1:
             fputs("Usage: tmdl\n", stderr);
-            fputs("   or: tmdl <url> [<urls>] <savelocation>|-c\n", stderr);
+            fputs("   or: tmdl <url> [<urls>] <savelocation>\n", stderr);
             fputs("   or: tmdl -u <savelocation> [<savelocations>]\n", stderr);
             fputs("post command options:\n", stderr);
             fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
@@ -296,9 +296,6 @@ bool process_flag (char *flag) {
             return process_flag(flag+1);
         case 'f':
             zip = false;
-            return process_flag(flag+1);
-        case 'c':
-            set_save_directory_as_current();
             return process_flag(flag+1);
         case 'u':        
             process_flag(flag+1);

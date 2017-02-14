@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "customParser.h"
+#include "currentChapter.h"
+#include "networking.h"
 
 char **setup_kissmanga_chapter(Chapter *current) {
     char *page = get_kissmanga_chapter(current->link);
@@ -56,6 +58,184 @@ void download_kissmanga_series(char *randomChapterLink) {
     fill_up_queue(chaptersUnparsed);
 }
 
+void download_kissmanga_thumbnail(char *seriesPage) {
+    char *fileName = "thumbnail"; // = get_manga_name();
+    char *thumbnailLink = get_substring(seriesPage, 
+            "<link rel=\"image_src\" href=\"", "\"/>", -1);
+    if (thumbnailLink == NULL) {
+        return;
+        //don't really care if it fails tbh
+    }
+    char *isKissMangaFile = strstr(thumbnailLink, get_domain());
+    char *thumbnailPath = concat(get_series_folder(), fileName);
+    if (isKissMangaFile != NULL) {
+        char *fileLink = isKissMangaFile + strlen(get_domain());
+        if (fileLink[0] == '\0') {
+            free(thumbnailPath), free(thumbnailLink);
+            return;
+        }
+        FILE *imageFile = fopen(thumbnailPath, "w");
+        if (imageFile == NULL) {
+            free(thumbnailPath), free(thumbnailLink);
+            return;
+        }
+        //this is a bit of hack and only is okay cuz we don't care it it fails
+        int fd = send_HTTP_request(get_domain(), fileLink,
+                get_kissmanga_cookie(), get_kissmanga_useragent());
+        save_url_as_file(fd, imageFile); 
+        fflush(imageFile);
+        fclose(imageFile);
+    } else {
+        int curlSuccess = download_file(thumbnailLink, thumbnailPath);
+        if (curlSuccess != 0) {
+            free(thumbnailPath), free(thumbnailLink);
+            //don't really care if it fails :3
+            return;
+        }
+    }
+    sort_out_file_extension(thumbnailPath, fileName, thumbnailLink);
+    free(thumbnailPath), free(thumbnailLink);
+}
+
+void workout_plurality_of_info(char *informationToParse, char *topic,
+        FILE *infoFile) {
+    char *informationToFind = informationToParse;
+    char *foundInfo = get_substring(informationToFind, "\">", "</a>", -1);
+    char *tempSkip;
+    if (foundInfo == NULL) {
+        return;
+    }
+    tempSkip = strstr(informationToFind, "\">");
+    if (tempSkip == NULL) {
+        return;
+    }
+    tempSkip = strstr(&tempSkip[2], "\">");
+    if (tempSkip == NULL) {
+        fprintf(infoFile, "%s: ", topic);
+    } else {
+        char *testFind = get_substring(&tempSkip[2], "\">", "</a>", -1);
+        if (testFind == NULL) {
+            fprintf(infoFile, "%s: ", topic);
+        } else {
+            fprintf(infoFile, "%ss: ", topic);
+            free(testFind);
+        }
+    }
+    free(foundInfo);
+}
+
+//This method is weird but gotta live with it!
+void kissmanga_info_search_and_write(char *informationToParse, char *topic,
+        FILE *infoFile) {
+    workout_plurality_of_info(informationToParse, topic, infoFile);
+    bool firstLoop = true;
+    while (1 == 1) {
+        char *foundInfo = get_substring(informationToParse, "\">", "</a>", -1);
+        if (foundInfo == NULL) {
+            if (!firstLoop) {
+                fputs("\n", infoFile);
+            }
+            return;
+        }
+        if (firstLoop) {
+            firstLoop = false;
+        } else {
+            fputs(", ", infoFile);
+        }
+        fprintf(infoFile, "%s", foundInfo);
+        free(foundInfo);
+        char *movingAlong = strstr(informationToParse, "\">") + 2;
+        char *toSkip = strstr(movingAlong, "\">");
+        if (toSkip != NULL) {
+            informationToParse = toSkip + 2;
+        } else {
+            fputs("\n", infoFile);
+            return;
+        }
+    }
+}
+
+//info to be in this order
+//Name
+//Other Names
+//Author (maintain support for multiple authors)
+//Release Date (mangasee)
+//Status (ongoing or not)
+//Genres
+//Type (mangasee)
+//Description
+void download_kissmanga_information(char *seriesPage) {
+    char *fileName = "information.txt"; //= concat(get_manga_name(), ".info");
+    char *filePath = concat(get_series_folder(), fileName);
+    FILE *infoFile = fopen(filePath, "w");
+    if (infoFile == NULL) {
+        free(filePath);
+        return; //don't actually care
+    }
+    fprintf(infoFile, "Name: %s\n", get_manga_name());
+
+    char *otherNamePart = get_substring(seriesPage, "Other name:", "</p>", -1);
+    if (otherNamePart != NULL) {
+        char **otherNames = continuous_substring(otherNamePart,
+                "\">", "</a>");
+        size_t numberOfNames = run_html_decode_on_strings(otherNames);
+        char *initialOtherNames = "Alternate Names: ";
+        if (numberOfNames == 1) {
+            initialOtherNames = "Alternate Name: ";
+        }
+        if (numberOfNames > 0) {
+            write_string_array_to_file(initialOtherNames, otherNames, ", ", "\n",
+                    infoFile);
+        }
+        pointer_array_free((void **) otherNames);
+        free(otherNamePart);
+    }
+    
+    char *authorPart = get_substring(seriesPage, "Author:", "</p>", -1);
+    if (authorPart != NULL) {
+        kissmanga_info_search_and_write(authorPart, "Author", infoFile);
+        free(authorPart);
+    }
+
+    char *statusPart = get_substring(seriesPage, "Status:", "Veiws:", -1);
+    if (statusPart != NULL) {
+        char *statusToSave = get_substring(statusPart, "&nbsp;", "\n", -1);
+        free(statusPart);
+        if (statusToSave != NULL) {
+            decode_html_entities_utf8(statusToSave, NULL);
+            fprintf(infoFile, "Status: %s\n", statusToSave);
+            free(statusToSave);
+        }
+    }
+
+    char *genresPart = get_substring(seriesPage, "Genres:", "</p>", -1);
+    if (genresPart != NULL) {
+        kissmanga_info_search_and_write(genresPart, "Genre", infoFile);
+        free(genresPart);
+    }
+    
+    char *summaryPart = get_substring(seriesPage, "Summary:", "\n</p>", -1);
+    if (summaryPart != NULL) {
+        char *skipFirst = strstr(summaryPart, ">");
+        if (skipFirst == NULL) {
+            free(summaryPart);
+        } else {
+            skipFirst += 1;
+            char **summaryLines = continuous_substring(skipFirst,
+                    ">", "</p>");
+            run_html_decode_on_strings(summaryLines);
+            write_string_array_to_file("Description:\n", summaryLines, "\n", "\n",
+                    infoFile);
+            pointer_array_free((void **) summaryLines);
+            free(summaryPart);
+        }
+    }
+
+    fflush(infoFile);
+    fclose(infoFile);
+    free(filePath);
+}
+
 void setup_kissmanga_download() {
     bypass_DDOS_protection();
     char *testType = get_kissmanga_page(get_series_path());
@@ -76,8 +256,10 @@ void setup_kissmanga_download() {
         //Series Page
         char *chapterLink = get_substring(testType, testString, "\"", 26);
         free(testString);
-        free(testType);
         download_kissmanga_series(chapterLink);
+        download_kissmanga_thumbnail(testType);
+        download_kissmanga_information(testType);
+        free(testType);
         free(chapterLink);
     } else {
         //Chapter Page

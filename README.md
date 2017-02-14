@@ -10,8 +10,8 @@ kissmanga.com supported, mangasee support coming
 Should run on all posix systems (untested) - only being tested on Ubuntu  
   
 ###Dependences to run  
-    cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfscrape" should do the trick   
-    findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distrobutions should have it with their respective package managers  
+cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfscrape" should do the trick   
+findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distrobutions should have it with their respective package managers  
 shasum (comes with perl)  
 zip  
 bash (rm and mkdir too)  

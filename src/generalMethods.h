@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-void move_file (char *from, char *to);
-void enter_critical_code();
 void enter_critical_code();
 bool is_file(const char* path);
 char *concat (const char *s1, const char *s2);
@@ -12,7 +10,7 @@ char *make_permenent_string (char *string);
 char *get_substring (char *string, char *start, char *end, int error);
 char **continuous_substring (char *string, char *start, char *end);
 size_t get_pointer_array_length(void **pointerArray);
-void string_array_free (char **stringArray);
+void pointer_array_free (void **pointerArray);
 void delete_folder (char *folder, int error);
 void create_folder (char *folder);
 char *rstrstr (char *s1, char *s2);
@@ -20,7 +18,9 @@ char *str_replace (char *original, char *replace, char *alternative);
 char *size_to_string (unsigned long value);
 char **remove_string_from_array (int originalLength, char **originalArray
         , char *toRemove);
-void move_file (char *from, char *to);
 void exit_critical_code();
-char *make_bash_ready(char *toChange);
-bool is_directory_empty(char *directoryPath);
+char *make_bash_ready (char *toChange);
+bool is_directory_empty (char *directoryPath);
+void write_string_array_to_file (char *initial, char **strings,
+        char *betweenArray, char *end, FILE *toWriteTo);
+size_t run_html_decode_on_strings(char **strings);

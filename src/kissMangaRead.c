@@ -13,6 +13,14 @@ char *cookie = NULL;
 char *userAgent = NULL;
 char *script = NULL;
 
+char *get_kissmanga_cookie() {
+    return cookie;
+}
+
+char *get_kissmanga_useragent() {
+    return userAgent;
+}
+
 char *get_python_script_location() {
     return script;
 }
@@ -172,6 +180,7 @@ char *handle_codes(char *page) {
         return page;
     //4XX error codes are issues like page doesnt exist ect.
     } else if (strncmp(page + 9, "4", 1) == 0) {
+        free(page);
         return NULL;
     }
     return page;
