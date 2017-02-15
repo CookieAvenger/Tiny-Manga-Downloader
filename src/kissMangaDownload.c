@@ -20,7 +20,9 @@ char **setup_kissmanga_chapter(Chapter *current) {
         fprintf(stderr, "Couldn't parse chapter: %s\n", current->name);
         return NULL;
     }
-    return continuous_substring(unparsedImageList, "\"", "\"");
+    char **toReturn = continuous_substring(unparsedImageList, "\"", "\"");
+    free(unparsedImageList);
+    return toReturn;
 }
 
 //to get link just substring " and ", for chapter name > and \n
@@ -47,8 +49,13 @@ void download_kissmanga_series(char *randomChapterLink) {
     if (initialPage == NULL) {
         exit(26);
     }
-    parse_and_set_series_folder(initialPage); 
-    char *skipFirst = strstr(initialPage, "</select>") + 9;
+    parse_and_set_kissmanga_series_folder(initialPage); 
+    char *skipFirst = strstr(initialPage, "</select>");
+    if (skipFirst == NULL) {
+        free(initialPage);
+        exit(26);
+    }
+    skipFirst = skipFirst + 9;
     char * chaptersSection = get_substring(skipFirst, "</select>", 
             "</select>", 26);
     free(initialPage);
@@ -125,6 +132,7 @@ void workout_plurality_of_info(char *informationToParse, char *topic,
 }
 
 //This method is weird but gotta live with it!
+//Also not the most efficient, but honestly don't use it much so meh
 void kissmanga_info_search_and_write(char *informationToParse, char *topic,
         FILE *infoFile) {
     workout_plurality_of_info(informationToParse, topic, infoFile);
@@ -216,7 +224,7 @@ void download_kissmanga_information(char *seriesPage) {
     
     char *summaryPart = get_substring(seriesPage, "Summary:", "\n</p>", -1);
     if (summaryPart != NULL) {
-        char *skipFirst = strstr(summaryPart, ">");
+        char *skipFirst = strchr(summaryPart, '>');
         if (skipFirst == NULL) {
             free(summaryPart);
         } else {

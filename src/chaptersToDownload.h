@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-typedef enum site { kissmanga, other } Site;
+typedef enum site { kissmanga, mangasee, other } Site;
                                             
 typedef struct chapter {                    
     char *name;                             

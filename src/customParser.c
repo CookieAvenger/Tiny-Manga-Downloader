@@ -326,6 +326,9 @@ static bool parse_entity(
     const char *current, char **to, const char **from)
 {
     const char *end = strchr(current, ';');
+    if (!end) {
+        end = strchr(current, ' ');
+    }
     if(!end) return 0;
 
     if(current[1] == '#')

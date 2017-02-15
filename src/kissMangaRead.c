@@ -32,11 +32,11 @@ int update_cookie(char *cookieInfo) {
         free(cookie);
         free(userAgent);
     }
-    char *startOfCookie = strstr(cookieInfo, "'");
+    char *startOfCookie = strchr(cookieInfo, '\'');
     if (startOfCookie++ == NULL) {
         return 23;
     }
-    char *endOfCookie = strstr((startOfCookie), "'");
+    char *endOfCookie = strchr(startOfCookie, '\'');
     if (endOfCookie == NULL) {
         return 23;
     }
@@ -48,11 +48,11 @@ int update_cookie(char *cookieInfo) {
     strncpy(cookie, startOfCookie, charectersInCookie);
     cookie[charectersInCookie] = '\0';
     
-    char *startOfAgent = strstr((endOfCookie + 1), "'");
+    char *startOfAgent = strchr((endOfCookie + 1), '\'');
     if (startOfAgent++ == NULL) {
         return 23;
     } 
-    char *endOfAgent = strstr(startOfAgent, "'");
+    char *endOfAgent = strchr(startOfAgent, '\'');
     if (endOfAgent == NULL) {
         return 23;
     }
@@ -186,7 +186,9 @@ char *handle_codes(char *page) {
     return page;
 }
 
-void parse_and_set_series_folder(char *chapterPage) {
+//May seem weird cuz I can do it better for kissmanga series page
+//But this is for support of just a chapter page given
+void parse_and_set_kissmanga_series_folder(char *chapterPage) {
     char *testString = (char *) malloc(sizeof(char) * (strlen(get_domain())
             + strlen(get_series_path()) + 25));
     if (testString == NULL) {

@@ -13,6 +13,7 @@
 #include "currentChapter.h"
 #include "blacklist.h"
 #include "experimental.h"
+#include "mangaSeeSupport.h"
 
 //make this settable
 int dupMatch = 95;
@@ -146,7 +147,8 @@ void print_error(int err, void *notUsing) {
             fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
             fputs("[-z] for zipped chapters (default) or [-f] for folders\n", stderr);
             fputs("[-d] delete exact duplicates - not very effective,"
-                    " but safe (default) or [-k] to keep\n", stderr);
+                    " but safe (default for kissmanga) or [-k] to keep "
+                    "(default for mangasee)\n", stderr);
             fputs("[-e] experimental delete similar images after download "
                     "(take time once download is done) "
                     "- very effective, not as safe\n", stderr);
@@ -225,6 +227,9 @@ Site parse_settings(FILE *settingsFile) {
     }
     if (strncmp(domain, "kissmanga", 9) == 0) {
         domainUsed = kissmanga;
+    } else if (strncmp(domain, "mangasee", 8) == 0) {
+        domainUsed = mangasee;
+        delete = false;
     } else {
         //need other checks here
         exit(31);
@@ -314,30 +319,37 @@ bool process_flag (char *flag) {
     }
 }
 
+void domain_and_series_set(char *domainCheck) {
+    seriesPath = strchr(domainCheck, '/');
+    if (seriesPath == NULL) {
+        exit(6);
+    }
+    size_t charectersInDomain = seriesPath - domainCheck;
+    domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
+    if (domain == NULL) {
+        exit(21);
+    }
+    strncpy(domain, domainCheck, charectersInDomain);
+    domain[charectersInDomain] = '\0';
+    size_t seriesLength = strlen(seriesPath);
+    while (seriesPath[--seriesLength] == '/') {
+        seriesPath[seriesLength] = '\0';
+    }
+}
+
 Site process_first_url(char *url) {
-    Site domainUsed = other; 
     char *domainCheck = strstr(url, "kissmanga");
     if (domainCheck != NULL) {
-        domainUsed = kissmanga;
-        seriesPath = strstr(domainCheck, "/");
-        if (seriesPath == NULL) {
-            exit(6);
-        }
-        size_t charectersInDomain = seriesPath - domainCheck;
-        domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
-        if (domain == NULL) {
-            exit(21);
-        }
-        strncpy(domain, domainCheck, charectersInDomain);
-        domain[charectersInDomain] = '\0';
-        size_t seriesLength = strlen(seriesPath);
-        while (seriesPath[--seriesLength] == '/') {
-            seriesPath[seriesLength] = '\0';
-        }
-    } else {
-        //put other domain checks here
+        domain_and_series_set(domainCheck);
+        return kissmanga;
     }
-    return domainUsed;
+    domainCheck = strstr(url, "mangasee");
+    if (domainCheck != NULL) {
+        domain_and_series_set(domainCheck);
+        delete = false;
+        return mangasee;
+    }
+    return other;
 }
 
 void set_save_directory(char *lastArg) {
@@ -447,6 +459,8 @@ int main(int argc, char** argv) {
     if (domainUsed == kissmanga) {
         //if initial page is invalid just skip it
         setup_kissmanga_download();
+    } else if (domainUsed == mangasee) {
+        setup_mangasee_download();
     } else if (domainUsed == other) {
         fprintf(stderr, "This url: %s is from an unsupported domain, skipping\n"
                 , currentUrl);

@@ -1,4 +1,5 @@
 #include "kissMangaDownload.h"
+#include "mangaSeeSupport.h"
 #include "tmdl.h"
 #include "generalMethods.h"
 #include <stdlib.h>
@@ -234,6 +235,8 @@ void download_chapter(Chapter *current, Site source) {
     char **pictureUrls;
     if (source == kissmanga) {
         pictureUrls = setup_kissmanga_chapter(current);
+    } else if (source == mangasee) {
+        pictureUrls = setup_mangasee_chapter(current);
     }
     if ((pictureUrls == NULL) || (pictureUrls[0] == NULL)) {
         return;
