@@ -42,6 +42,7 @@ void set_series_folder(char *folder) {
             free(fullFolder);
         }
     }
+    create_folder(seriesFolder);
     if (!get_using_settings()) {
         threaded_load_blacklist();
     }

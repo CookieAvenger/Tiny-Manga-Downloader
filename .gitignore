@@ -6,7 +6,9 @@ tmdl
 
 #test downlaods
 *.jpg
+*.jpeg
 *.png
+*.gif
 *.cbz
 *.tmdl
 *.fid

@@ -5,13 +5,14 @@ Can save each chapter as a comic book archive, and can delete duplicate images
 (works for some scanlator images).  
 Experimental image duplication finder to try and remove all possible
 scanlator images  
+Some sort of chapter selection option to come  
   
-kissmanga.com supported, mangasee support coming  
+kissmanga.com and mangasee supported (can request other sites, not too hard to impliment)  
 Should run on all posix systems (untested) - only being tested on Ubuntu  
   
 ###Dependences to run  
 cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfscrape" should do the trick   
-findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distrobutions should have it with their respective package managers  
+findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distributions should have it with their respective package managers  
 shasum (comes with perl)  
 zip  
 bash (rm and mkdir too)  

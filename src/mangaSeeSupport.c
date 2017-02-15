@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "chaptersToDownload.h"
 #include "customParser.h"
+#include "currentChapter.h"
 
 char *get_mangasee_page(char *file);
 
@@ -99,6 +100,134 @@ void setup_mangasee_chapters_download(char *seriesPage) {
     free(chaptersUnparse);
 }
 
+void download_mangasee_thumbnail(char *seriesPage) {
+    char *skipOne = strstr(seriesPage, "img src=");
+    if (skipOne == NULL) {
+        return;
+    }
+    skipOne = skipOne + 8;
+    char *imageLocation = get_substring(skipOne, "img src=\"", "\"", -1);
+    if (imageLocation == NULL) {
+        return;
+    }
+    char *fileName = "thumbnail";
+    char *thumbnailPath = concat(get_series_folder(), fileName);
+    int curlSuccess = download_file(imageLocation, thumbnailPath);
+    if (curlSuccess != 0) {
+        free(thumbnailPath), free(imageLocation);
+        return;
+    }
+    sort_out_file_extension(thumbnailPath, fileName, imageLocation);
+    free(thumbnailPath), free(imageLocation);
+}
+
+void mangasee_info_search_and_write(char *infoToParse, char *substringStart,
+        char *substringEnd, char *single, char *plural, FILE *saveTo) {
+    char **allInfo = continuous_substring(infoToParse,
+            substringStart, substringEnd);
+    size_t amountOfInfo = run_html_decode_on_strings(allInfo);
+    char *initial = plural;
+    if (amountOfInfo == 1) {
+        initial = single;
+    }
+    if (amountOfInfo > 0) {
+        write_string_array_to_file(initial, allInfo, ", ", "\n", saveTo);
+    }
+    pointer_array_free((void **) allInfo); 
+}
+
+void download_mangasee_information(char *seriesPage) {
+    char *fileName = "information.txt";
+    char *filePath = concat(get_series_folder(), fileName);
+    FILE *infoFile = fopen(filePath, "w");
+    if (infoFile == NULL) {
+        free(filePath);
+        return;
+    }
+    fprintf(infoFile, "Name: %s\n", get_manga_name());
+
+    //Could pin point in one substring, but it has spaces where they don't need
+    //to be, so in case it changes, I'm making it a bit more complex
+    char *alternativeNamesPart = get_substring(seriesPage,
+            "Alternate Name", "</div>", -1);
+    if (alternativeNamesPart != NULL) {
+        char *alternativeNames = get_substring(alternativeNamesPart,
+                "</b>", "\n", -1);
+        free(alternativeNamesPart);
+        if (alternativeNames != NULL) {
+            decode_html_entities_utf8(alternativeNames, NULL);
+            char *plural = "s";
+            if (strchr(alternativeNames, ',') == NULL) {
+                plural = "";
+            }
+            if (alternativeNames[0] != ' ') {
+                char *toFree = alternativeNames;
+                alternativeNames = concat(" ", alternativeNames);
+                free(toFree);
+            }
+            fprintf(infoFile, "Alternative Name%s:%s\n",
+                    plural, alternativeNames);
+            free(alternativeNames);
+        }
+    }
+
+    char *authorPart = get_substring(seriesPage, "Author", "</div>", -1);
+    if (authorPart != NULL) {
+        mangasee_info_search_and_write(authorPart, "'>", "<",
+                "Author: ", "Authors: ", infoFile);
+        free(authorPart);
+    }
+
+    char *genrePart = get_substring(seriesPage, "Genre", "</div>", -1);
+    if (genrePart != NULL) {
+        mangasee_info_search_and_write(genrePart, "'>", "<",
+                "Genre: ", "Genres: ", infoFile);
+        free(genrePart);
+    }
+
+    char *typePart = get_substring(seriesPage, "Type:", "</div>", -1);
+    if (typePart != NULL) {
+        char *comicType = get_substring(typePart, "\">:", "</a>", -1);
+        free(typePart);
+        if (comicType != NULL) {
+            decode_html_entities_utf8(comicType, NULL);
+            fprintf(infoFile, "Type: %s\n", comicType);
+            free(comicType);
+        }
+    }
+
+    char *releasePart = get_substring(seriesPage, "Released", "</div>", -1);
+    if (releasePart != NULL) {
+        char *yearReleased = get_substring(releasePart, "\">", "</a>", -1);
+        free(releasePart);
+        if (yearReleased != NULL) {
+            decode_html_entities_utf8(yearReleased, NULL);
+            fprintf(infoFile, "Released: %s\n", yearReleased);
+            free(yearReleased);
+        } 
+    }
+
+    char *statusPart = get_substring(seriesPage, "Status", "</div>", -1);
+    if (statusPart != NULL) {
+        mangasee_info_search_and_write(statusPart, "\">", "</a>",
+                "Status: ", "Status: ", infoFile);
+        free(statusPart);
+    }
+
+    //No nonsense straight to the info
+    char *description = get_substring(seriesPage,
+            "description\">", "</div>", -1);
+    if (description != NULL) {
+        decode_html_entities_utf8(description, NULL);
+        fprintf(infoFile, "Description:\n%s\n", description);
+        free(description);
+    }
+
+    fflush(infoFile);
+    fclose(infoFile);
+    free(filePath);
+}
+
 void setup_mangasee_download() {
     char *seriesPage = get_mangasee_page(get_series_path());
     if (seriesPage == NULL) {
@@ -112,6 +241,8 @@ void setup_mangasee_download() {
         //SeriesPage
         parse_and_set_mangasee_series_folder(seriesPage, false);
         setup_mangasee_chapters_download(seriesPage);
+        download_mangasee_thumbnail(seriesPage);
+        download_mangasee_information(seriesPage);
         //download thumbail and information here!!
         free(seriesPage);
     } else {

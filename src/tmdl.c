@@ -147,8 +147,7 @@ void print_error(int err, void *notUsing) {
             fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
             fputs("[-z] for zipped chapters (default) or [-f] for folders\n", stderr);
             fputs("[-d] delete exact duplicates - not very effective,"
-                    " but safe (default for kissmanga) or [-k] to keep "
-                    "(default for mangasee)\n", stderr);
+                    " but safe (default) or [-k] to keep\n", stderr);
             fputs("[-e] experimental delete similar images after download "
                     "(take time once download is done) "
                     "- very effective, not as safe\n", stderr);
@@ -229,7 +228,6 @@ Site parse_settings(FILE *settingsFile) {
         domainUsed = kissmanga;
     } else if (strncmp(domain, "mangasee", 8) == 0) {
         domainUsed = mangasee;
-        delete = false;
     } else {
         //need other checks here
         exit(31);
@@ -346,7 +344,6 @@ Site process_first_url(char *url) {
     domainCheck = strstr(url, "mangasee");
     if (domainCheck != NULL) {
         domain_and_series_set(domainCheck);
-        delete = false;
         return mangasee;
     }
     return other;

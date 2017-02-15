@@ -2,16 +2,12 @@ findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | x
 
 Be able to set percentage of similarity needed
 
+give a guide to be able to setup daily auto update
+
 Would like to not save file after every chapter, but keep like a snapshot after
 each chapter instead, and save that snapshot on exit...
 
 make an install.sh
-support mangasee
-also make default for mangasee not to check for duplicates
-mangasee - chapter label - name of chapter
-seires page has array of page one of all chapters in reverse order
-series page also has seriesName 
-page one of each chapter contains link to every page and the page number it is too
 
 have some automated testing toold
 

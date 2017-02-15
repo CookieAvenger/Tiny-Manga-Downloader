@@ -7,6 +7,7 @@
 #include "customParser.h"
 #include "currentChapter.h"
 #include "networking.h"
+#include "mangaSeeSupport.h"
 
 char **setup_kissmanga_chapter(Chapter *current) {
     char *page = get_kissmanga_chapter(current->link);
@@ -167,10 +168,10 @@ void kissmanga_info_search_and_write(char *informationToParse, char *topic,
 //Name
 //Other Names
 //Author (maintain support for multiple authors)
-//Release Date (mangasee)
-//Status (ongoing or not)
 //Genres
 //Type (mangasee)
+//Release Date (mangasee)
+//Status (ongoing or not)
 //Description
 void download_kissmanga_information(char *seriesPage) {
     char *fileName = "information.txt"; //= concat(get_manga_name(), ".info");
@@ -184,18 +185,8 @@ void download_kissmanga_information(char *seriesPage) {
 
     char *otherNamePart = get_substring(seriesPage, "Other name:", "</p>", -1);
     if (otherNamePart != NULL) {
-        char **otherNames = continuous_substring(otherNamePart,
-                "\">", "</a>");
-        size_t numberOfNames = run_html_decode_on_strings(otherNames);
-        char *initialOtherNames = "Alternate Names: ";
-        if (numberOfNames == 1) {
-            initialOtherNames = "Alternate Name: ";
-        }
-        if (numberOfNames > 0) {
-            write_string_array_to_file(initialOtherNames, otherNames, ", ", "\n",
-                    infoFile);
-        }
-        pointer_array_free((void **) otherNames);
+        mangasee_info_search_and_write(otherNamePart, "\">", "</a>",
+                "Alternate Name: ", "Alternate Names: ", infoFile);
         free(otherNamePart);
     }
     
@@ -205,6 +196,12 @@ void download_kissmanga_information(char *seriesPage) {
         free(authorPart);
     }
 
+    char *genresPart = get_substring(seriesPage, "Genres:", "</p>", -1);
+    if (genresPart != NULL) {
+        kissmanga_info_search_and_write(genresPart, "Genre", infoFile);
+        free(genresPart);
+    }
+    
     char *statusPart = get_substring(seriesPage, "Status:", "Veiws:", -1);
     if (statusPart != NULL) {
         char *statusToSave = get_substring(statusPart, "&nbsp;", "\n", -1);
@@ -216,12 +213,6 @@ void download_kissmanga_information(char *seriesPage) {
         }
     }
 
-    char *genresPart = get_substring(seriesPage, "Genres:", "</p>", -1);
-    if (genresPart != NULL) {
-        kissmanga_info_search_and_write(genresPart, "Genre", infoFile);
-        free(genresPart);
-    }
-    
     char *summaryPart = get_substring(seriesPage, "Summary:", "\n</p>", -1);
     if (summaryPart != NULL) {
         char *skipFirst = strchr(summaryPart, '>');
@@ -231,9 +222,11 @@ void download_kissmanga_information(char *seriesPage) {
             skipFirst += 1;
             char **summaryLines = continuous_substring(skipFirst,
                     ">", "</p>");
-            run_html_decode_on_strings(summaryLines);
-            write_string_array_to_file("Description:\n", summaryLines, "\n", "\n",
-                    infoFile);
+            size_t numberOfLines = run_html_decode_on_strings(summaryLines);
+            if (numberOfLines > 0) {
+                write_string_array_to_file("Description:\n", summaryLines,
+                        "\n", "\n", infoFile);
+            }
             pointer_array_free((void **) summaryLines);
             free(summaryPart);
         }
