@@ -82,6 +82,9 @@ void terminate_handler(int signalSent) {
 }
 
 void save_settings() {
+    if (get_series_folder() == NULL) {
+        return;
+    }
     create_folder(get_series_folder());
     char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
     FILE *settingsFile = fopen(settingsPath, "w");

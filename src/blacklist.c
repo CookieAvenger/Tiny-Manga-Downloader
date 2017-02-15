@@ -9,6 +9,7 @@
 #include "chaptersToDownload.h"
 #include <sys/wait.h>
 #include "customParser.h"
+#include <limits.h>
 
 #include <stdio.h>
 
@@ -33,8 +34,9 @@ long blacklist_get_key(const void *alpha) {
     //would be nice to process all the charecters, but honestly :/ no point
     //see we only have 64 bit memory any way, getting a key 256 bits accurate
     //is pointless
-    long temp = parse_hexadecimal_to_one_long(a->hashValue);    
-    return temp;
+    unsigned long temp = parse_hexadecimal_to_one_long(a->hashValue);
+    signed long final = temp - LONG_MAX;
+    return final;
 }
 
 //One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line

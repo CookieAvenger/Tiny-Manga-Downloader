@@ -243,7 +243,6 @@ void setup_mangasee_download() {
         setup_mangasee_chapters_download(seriesPage);
         download_mangasee_thumbnail(seriesPage);
         download_mangasee_information(seriesPage);
-        //download thumbail and information here!!
         free(seriesPage);
     } else {
         //Chapter Page

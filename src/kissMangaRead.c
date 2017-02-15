@@ -189,13 +189,15 @@ char *handle_codes(char *page) {
 //May seem weird cuz I can do it better for kissmanga series page
 //But this is for support of just a chapter page given
 void parse_and_set_kissmanga_series_folder(char *chapterPage) {
+    char *decodedPath = url_decode(get_series_path());
     char *testString = (char *) malloc(sizeof(char) * (strlen(get_domain())
-            + strlen(get_series_path()) + 25));
+            + strlen(decodedPath) + 26));
     if (testString == NULL) {
         exit(21);
     }
     sprintf(testString, "<a href=\"http://%s%s\">\nManga\n", get_domain(),
-            get_series_path());
+            decodedPath);
+    free(decodedPath);
     char *folder = get_substring(chapterPage, testString, 
             "\ninformation</a>", 26);
     decode_html_entities_utf8(folder, NULL);

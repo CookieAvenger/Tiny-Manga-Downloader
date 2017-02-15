@@ -245,12 +245,14 @@ void setup_kissmanga_download() {
                 , get_current_url());
         return;
     }
+    char *decodedPath = url_decode(get_series_path());
     char *testString = (char *) malloc(sizeof(char) * 
-            (strlen(get_series_path()) + 7));
+            (strlen(decodedPath) + 7));
     if (testString == NULL) {
         exit(21);
     }
-    sprintf(testString, "href=\"%s/", get_series_path());
+    sprintf(testString, "href=\"%s/", decodedPath);
+    free(decodedPath);
     char *result = strstr(testType, testString);
     //Need a better way of testing
     if (result != NULL) {
@@ -258,10 +260,10 @@ void setup_kissmanga_download() {
         char *chapterLink = get_substring(testType, testString, "\"", 26);
         free(testString);
         download_kissmanga_series(chapterLink);
+        free(chapterLink);
         download_kissmanga_thumbnail(testType);
         download_kissmanga_information(testType);
         free(testType);
-        free(chapterLink);
     } else {
         //Chapter Page
         //To do

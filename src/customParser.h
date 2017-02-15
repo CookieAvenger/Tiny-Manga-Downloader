@@ -19,6 +19,9 @@ extern size_t decode_html_entities_utf8(char *dest, const char *src);
 
 //parse html entities
 
-long parse_hexadecimal_to_one_long(char *hexadecimal);
+unsigned long parse_hexadecimal_to_one_long(char *hexadecimal);
+char *url_encode(char *str);
+char *url_decode(char *str);
+char *my_url_encode(char *url);
 
 #endif
