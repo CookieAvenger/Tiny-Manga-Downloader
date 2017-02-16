@@ -405,7 +405,7 @@ size_t decode_html_entities_utf8(char *dest, const char *src)
 
 //NOTE: I know this looks wrong. It's meant to be.
 unsigned long parse_hexadecimal_to_one_long(char *hexadecimal) {
-    unsigned long decimal;
+    unsigned long decimal = 0;
     int value, i = 0, length = strlen(hexadecimal);
     if (--length > 15) {
         length = 15;

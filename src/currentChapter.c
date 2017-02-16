@@ -115,19 +115,19 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         char *numberFilePath = concat(temporaryFolder, fileNumber);
         int curlSuccess = download_file(pictureUrls[i], numberFilePath);
         if (curlSuccess != 0) {
+            free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
             //Make this better at some point
             fprintf(stderr, "Error downloading page %zu from %s\n", 
                     i+1, current->name);
-            free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
             continue;
         }
         char *finalFileName = sort_out_file_extension(numberFilePath, 
                 fileNumber, pictureUrls[i]);
-        free(fileNumber), free(numberFilePath);
+        free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
         char *finalFilePath = concat(temporaryFolder, finalFileName);
         blacklist_handle_file(finalFilePath, current->name, 
                 finalFileName);
-        free(finalFileName), free(finalFilePath), free(pictureUrls[i]);
+        free(finalFileName), free(finalFilePath);
     }
     puts("");
     fflush(stdout);
@@ -255,6 +255,6 @@ void download_chapter(Chapter *current, Site source) {
     if (get_current_download_chapter() >= get_download_length()) {
         toFree = true;
     }
-    threaded_save_blacklist(toFree);
+    threaded_save_blacklist(toFree, true);
     set_files_changed();
 }

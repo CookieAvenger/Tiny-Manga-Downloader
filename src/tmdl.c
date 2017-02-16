@@ -14,6 +14,7 @@
 #include "blacklist.h"
 #include "experimental.h"
 #include "mangaSeeSupport.h"
+#include <curl/curl.h>
 
 //make this settable
 int dupMatch = 95;
@@ -128,10 +129,17 @@ void print_error(int err, void *notUsing) {
     }
     //in case we are zipping, want to wait for zip to finish before delete temp
     //folder
+    curl_global_cleanup();
     int status;
     while(wait(&status) != -1) {}
-    remove(get_python_script_location());
-    remove(get_bash_script_location());
+    char *pythonScript = get_python_script_location();
+    if (pythonScript != NULL) {
+        remove(pythonScript);
+    }
+    char *bashScript = get_bash_script_location();
+    if (bashScript != NULL) {
+        remove(get_bash_script_location());
+    }
     join_threaded_blacklist();
     delete_folder(get_temporary_folder(), -1);
     if (currentUrl != NULL && err != 0) {
@@ -460,6 +468,7 @@ int main(int argc, char** argv) {
     if (usingSettings) {
         threaded_load_blacklist();
     }
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     if (domainUsed == kissmanga) {
         //if initial page is invalid just skip it
         setup_kissmanga_download();
@@ -471,6 +480,7 @@ int main(int argc, char** argv) {
     } 
     save_settings();
     download_entire_queue();
+    curl_global_cleanup();
     //join that final blacklist save(true)
     join_threaded_blacklist();
     experimental_find_dupes();

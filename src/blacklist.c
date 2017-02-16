@@ -281,13 +281,16 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     exit_critical_code();
 }
 
-void save_blacklist(bool toFree) {
+void save_blacklist(bool toFree, bool toSave) {
     if (!get_delete()) {
         return;
     }
-    FILE *saveFile = fopen(blacklistLocation, "w");
-    if (saveFile == NULL) {
-        exit(3); 
+    FILE *saveFile;
+    if (toSave) {
+        saveFile = fopen(blacklistLocation, "w");
+        if (saveFile == NULL) {
+            exit(3);
+        }
     }
     blacklistEntry **blacklistToSave = (blacklistEntry **) 
             turn_map_into_array(blacklist);
@@ -297,10 +300,11 @@ void save_blacklist(bool toFree) {
     int i = 0;
     blacklistEntry *currentEntry;
     while(currentEntry = blacklistToSave[i++], currentEntry != NULL) {
-        fprintf(saveFile, "%s\n", currentEntry->hashValue);    
-        fprintf(saveFile, "%s\n", currentEntry->chapterName);    
-        fprintf(saveFile, "%s\n", currentEntry->fileName);    
-        fflush(saveFile);
+        if (toSave) {
+            fprintf(saveFile, "%s\n", currentEntry->hashValue);
+            fprintf(saveFile, "%s\n", currentEntry->chapterName);
+            fprintf(saveFile, "%s\n", currentEntry->fileName);
+        }
         if (toFree) {
             free(currentEntry->hashValue);
             free(currentEntry->chapterName);
@@ -309,29 +313,33 @@ void save_blacklist(bool toFree) {
         }
     }
     free(blacklistToSave);
-    fclose(saveFile);
+    if (toSave) {
+        fflush(saveFile);
+        fclose(saveFile);
+    }
     if (toFree) {
         free_map(blacklist);
     }
 }
 
-void *internal_save_blacklist(void *toFree) {
-    bool toSend = *(bool *) toFree;
-    save_blacklist(toSend);
-    free(toFree);
+void *internal_save_blacklist(void *toSend) {
+    bool *infoSent = (bool *) toSend;
+    bool toFree = infoSent[0], toSave = infoSent[1];
+    free(toSend);
+    save_blacklist(toFree, toSave);
     return NULL;
 }
 
-void threaded_save_blacklist(bool toFree) {
+void threaded_save_blacklist(bool toFree, bool toSave) {
     join_threaded_blacklist();
     if (!get_delete()) {
         return;
     }
-    bool *toSend = (bool *) malloc(sizeof(bool));
+    bool *toSend = (bool *) malloc(sizeof(bool) * 2);
     if (toSend == NULL) {
         exit(21);
     }
-    *toSend = toFree;
+    toSend[0] = toFree, toSend[1] = toSave;
     pthread_create(&threadId, NULL, internal_save_blacklist, (void *) toSend); 
     threadOn = true;
 }

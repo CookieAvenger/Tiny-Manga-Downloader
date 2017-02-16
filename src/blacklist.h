@@ -14,7 +14,7 @@ typedef struct blacklistentry {
 
 void threaded_load_blacklist();
 
-void threaded_save_blacklist(bool toFree);
+void threaded_save_blacklist(bool toFree, bool toSave);
 
 void join_threaded_blacklist();
 

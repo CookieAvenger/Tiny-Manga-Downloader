@@ -96,6 +96,7 @@ Chapter *pop_from_download() {
 
 void download_entire_queue() {
     if (fullLength == 0) {
+        threaded_save_blacklist(true, false);
         return;
     }
     Chapter *toDownload;

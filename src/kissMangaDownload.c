@@ -247,7 +247,7 @@ void setup_kissmanga_download() {
     }
     char *decodedPath = url_decode(get_series_path());
     char *testString = (char *) malloc(sizeof(char) * 
-            (strlen(decodedPath) + 7));
+            (strlen(decodedPath) + 8));
     if (testString == NULL) {
         exit(21);
     }
