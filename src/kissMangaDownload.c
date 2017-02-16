@@ -101,8 +101,8 @@ void download_kissmanga_thumbnail(char *seriesPage) {
             return;
         }
     }
-    sort_out_file_extension(thumbnailPath, fileName, thumbnailLink);
-    free(thumbnailPath), free(thumbnailLink);
+    char *useless = sort_out_file_extension(thumbnailPath, fileName, thumbnailLink);
+    free(useless), free(thumbnailPath), free(thumbnailLink);
 }
 
 void workout_plurality_of_info(char *informationToParse, char *topic,

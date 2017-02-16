@@ -117,8 +117,8 @@ void download_mangasee_thumbnail(char *seriesPage) {
         free(thumbnailPath), free(imageLocation);
         return;
     }
-    sort_out_file_extension(thumbnailPath, fileName, imageLocation);
-    free(thumbnailPath), free(imageLocation);
+    char *useless = sort_out_file_extension(thumbnailPath, fileName, imageLocation);
+    free(useless), free(thumbnailPath), free(imageLocation);
 }
 
 void mangasee_info_search_and_write(char *infoToParse, char *substringStart,
@@ -238,6 +238,7 @@ void setup_mangasee_download() {
     char *isSeriesPage = get_substring(seriesPage, "startReading\">",
              "</div>", -1);
     if (isSeriesPage != NULL) {
+        free(isSeriesPage);
         //SeriesPage
         parse_and_set_mangasee_series_folder(seriesPage, false);
         setup_mangasee_chapters_download(seriesPage);

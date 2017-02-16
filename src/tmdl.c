@@ -88,6 +88,7 @@ void save_settings() {
     create_folder(get_series_folder());
     char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
     FILE *settingsFile = fopen(settingsPath, "w");
+    free(settingsPath);
     if (settingsFile == NULL) {
         if (verbose == true) {
             fputs("Cannot save settings... how have you "
@@ -275,6 +276,7 @@ Site parse_settings(FILE *settingsFile) {
 Site read_settings() {
     char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
     FILE *settingsFile = fopen(settingsPath, "r");
+    free(settingsPath);
     if (settingsFile == NULL) {
         exit(31);
     }
@@ -358,7 +360,9 @@ void set_save_directory(char *lastArg) {
             if ((access(lastArg, F_OK) != -1) && (!is_file(lastArg))) {
                 if (access(lastArg, W_OK|R_OK) != -1) {
                     remainingUrls--;
-                    saveDirectory = make_permenent_string(realpath(lastArg, NULL));
+                    char *tempToFree = realpath(lastArg, NULL);
+                    saveDirectory = make_permenent_string(tempToFree);
+                    free(tempToFree);
                 } else {
                     exit(3);
                 }

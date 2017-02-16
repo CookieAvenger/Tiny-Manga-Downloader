@@ -325,9 +325,14 @@ static size_t putc_utf8(unsigned long cp, char *buffer)
 static bool parse_entity(
     const char *current, char **to, const char **from)
 {
+    bool endPlus = false;
     const char *end = strchr(current, ';');
-    if (!end) {
+    if (!end && current[1] == '#') {
         end = strchr(current, ' ');
+        if (end) {
+            end = end - 1;
+            endPlus = true;
+        }
     }
     if(!end) return 0;
 
@@ -341,7 +346,12 @@ static bool parse_entity(
         unsigned long cp = strtoul(
             current + (hex ? 3 : 2), &tail, hex ? 16 : 10);
 
-        bool fail = errno || tail != end || cp > UNICODE_MAX;
+        const char *toEnd = end;
+        if (endPlus) {
+           toEnd = end + 1; 
+        }
+
+        bool fail = errno || tail != toEnd || cp > UNICODE_MAX;
         errno = errno_save;
         if(fail) return 0;
 
