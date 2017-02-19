@@ -7,22 +7,29 @@
 #include <stdio.h>
 #include <string.h>
 
+//Weather or not any files were actually changed this run
 bool filesChanged = false;
+//Weather or not duplication checking started
 bool processStarted = false;
+//Location of last used script
 char *scriptLocation = NULL;
 
+//Get last script location
 char *get_bash_script_location() {
     return scriptLocation;
 }
 
+//Return if duplication has started or not
 bool get_dupe_started() {
     return processStarted;
 }
 
+//Allow dupe check to occur
 void set_files_changed() {
     filesChanged = true;
 }
 
+//write a bash script to file
 void* write_script(char *name, char *script) {
     char *scriptLocation = concat(get_series_folder(), name);
     FILE *newScript = fopen(scriptLocation, "w");
@@ -35,6 +42,7 @@ void* write_script(char *name, char *script) {
     return scriptLocation;
 }
 
+//Unzip all comic book archives
 void unzip_all_comic_book_archives() {
     char *folderToSend = make_bash_ready(get_series_folder());
     size_t folderLength = strlen(folderToSend);
@@ -75,6 +83,7 @@ void unzip_all_comic_book_archives() {
     free(toFree);
 }
 
+//Find and delete similar images
 void delete_similar_images() {
     pid_t pid = fork();
     if (pid == -1) {
@@ -105,6 +114,7 @@ void delete_similar_images() {
     }
 }
 
+//Zip all non empty folders
 void rezip_all_folders() {
     char *folderToSend = make_bash_ready(get_series_folder());
     char *scriptToRun = (char *) malloc(sizeof(char) *
@@ -143,6 +153,7 @@ void rezip_all_folders() {
     free(toFree);
 }
 
+//Run the duplication check program if allowed
 void experimental_find_dupes() {
     if (!get_to_find_dupes() || !filesChanged) {
         return;

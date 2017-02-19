@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-void enter_critical_code();
 bool is_file(const char* path);
 char *concat (const char *s1, const char *s2);
 char *read_from_file (FILE *source, int end, bool perfectSize);
@@ -18,7 +17,6 @@ char *str_replace (char *original, char *replace, char *alternative);
 char *size_to_string (unsigned long value);
 char **remove_string_from_array (int originalLength, char **originalArray
         , char *toRemove);
-void exit_critical_code();
 char *make_bash_ready (char *toChange);
 bool is_directory_empty (char *directoryPath);
 void write_string_array_to_file (char *initial, char **strings,

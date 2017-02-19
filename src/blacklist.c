@@ -10,15 +10,20 @@
 #include <sys/wait.h>
 #include "customParser.h"
 #include <limits.h>
-
 #include <stdio.h>
 
+//Data structure containing all blacklisted files
 hashMap *blacklist;
+//File path of saved blacklist
 char *blacklistLocation;
+//Weather attempt at hashing has failed before
 bool hashFail = false;
+//Currently running blacklist thread id
 pthread_t threadId;
+//Weather a thread is currently running at all
 bool threadOn = false;
 
+//Returns comparasion of hash values stored in blacklist structs
 int blacklist_comparator (const void *alpha, 
         const void *beta) {
     blacklistEntry *a = (blacklistEntry *) alpha;
@@ -27,42 +32,27 @@ int blacklist_comparator (const void *alpha,
     return temp;
 }
 
-//make for a hexidecimal hash 64 bits and above
+//Returns a key for a blacklist based on the first 64 bits of the hash value
 long blacklist_get_key(const void *alpha) {
     blacklistEntry *a = (blacklistEntry *) alpha;
-    //make a key!
-    //would be nice to process all the charecters, but honestly :/ no point
-    //see we only have 64 bit memory any way, getting a key 256 bits accurate
-    //is pointless
-    unsigned long temp = parse_hexadecimal_to_one_long(a->hashValue);
-    signed long final = temp - LONG_MAX;
-    return final;
+    unsigned long unsignedKey = parse_hexadecimal_to_one_long(a->hashValue);
+    signed long signedKey = unsignedKey - LONG_MAX;
+    return signedKey;
 }
 
-//One blacklist entry is 3 lines, 1 value line, 1 chapter line and one file name line
-//each entry can be new line seperated but in between lines it cannot
-//Should we keep exact file name? or just the number and rm with [number].*
+//Parse a single blacklist entry from file
 blacklistEntry *read_single_entry(FILE *blacklistFile) {
     char *readHashValue = read_from_file(blacklistFile, '\n', true);
     if (readHashValue == NULL) {
         return NULL;
-    } else if (readHashValue[0] == '\0') {
+    } else if (readHashValue[0] == '#' || readHashValue[0] == '\0') {
+        //Skips blank lines and comment lines after a single entry
         free(readHashValue);
         return read_single_entry(blacklistFile);
     }
     char *readChapterName = read_from_file(blacklistFile, '\n', true);
-    if (readChapterName == NULL || readChapterName[0] == '\0') {
-        free(readHashValue);
-        free(readChapterName);
-        return NULL;
-    }
+    //Can get readChapterName[0] == '\0', means file has been deleted
     char *readFileName = read_from_file(blacklistFile, '\n', true);
-    if (readFileName == NULL || readFileName[0] == '\0') {
-        free(readHashValue);
-        free(readChapterName);
-        free(readFileName);
-        return NULL;
-    }
     blacklistEntry *newEntry = (blacklistEntry *) malloc(sizeof(blacklistEntry)); 
     if (newEntry == NULL) {
         exit(21);
@@ -73,6 +63,7 @@ blacklistEntry *read_single_entry(FILE *blacklistFile) {
     return newEntry;
 }
 
+//Parses entire blacklist file
 blacklistEntry **read_blacklist(FILE *blacklistFile) {
     blacklistEntry *next;
     size_t dynamic = 4, count = 0;
@@ -97,6 +88,7 @@ blacklistEntry **read_blacklist(FILE *blacklistFile) {
     return loadedList;
 }
 
+//Attemp to load a blacklist from file
 void load_blacklist() {
     if (!get_delete()) {
         return;
@@ -104,34 +96,44 @@ void load_blacklist() {
     blacklistLocation = concat(get_series_folder(), ".blacklist.sha256");
     bool existance = (access(blacklistLocation, F_OK) != -1) 
             && is_file(blacklistLocation);
-    if (!existance) {
-        blacklist = new_hash_map(blacklist_comparator, blacklist_get_key);
-        if (get_verbose()) {
-            puts("New blacklist being created");
-        }
-    } else {
+    if (existance) {
+        //Loading blacklist
         FILE *blacklistFile = fopen(blacklistLocation, "r");
         if (blacklistFile == NULL) {
             exit(3);
         }
         blacklistEntry **loadedList = read_blacklist(blacklistFile);
-        blacklist = hash_map_construction((void **) loadedList, 
-                get_pointer_array_length((void **) loadedList), 
-                blacklist_comparator, blacklist_get_key);
-        free(loadedList);
-        fclose(blacklistFile);
-        if (get_verbose()) {
-            puts("Loaded saved blacklist");
+        //loadedList can never == NULL
+        if (loadedList[0] != NULL) {
+            blacklist = hash_map_construction((void **) loadedList, 
+                    get_pointer_array_length((void **) loadedList), 
+                    blacklist_comparator, blacklist_get_key);
+            free(loadedList);
+            fclose(blacklistFile);
+            if (get_verbose()) {
+                puts("Loaded saved blacklist");
+                fflush(stdout);
+            }
+            return;
+        } else {
+            free(loadedList);
         }
     }
-    fflush(stdout);
+    //No blacklist available
+    blacklist = new_hash_map(blacklist_comparator, blacklist_get_key);
+    if (get_verbose()) {
+        puts("New blacklist being created");
+        fflush(stdout);
+    }
 }
 
+//Wrapper on load_blacklist() for thread creation
 void *internal_load_blacklist(void *useless) {
     load_blacklist();
     return NULL;
 }
 
+//Start a thread to load the blacklist
 void threaded_load_blacklist() {
     join_threaded_blacklist();
     if (!get_delete()) {
@@ -141,6 +143,7 @@ void threaded_load_blacklist() {
     threadOn = true;
 }
 
+//Join any running blacklist thread
 void join_threaded_blacklist() {
     if (!threadOn) {
         return;
@@ -149,7 +152,7 @@ void join_threaded_blacklist() {
     threadOn = false;
 }
 
-//if fails say blacklist not being used once and then move on
+//Calculate sha256 hash of a particular file
 char *calculate_hash(char *filePath) {
     int fds[2];
     pipe(fds);
@@ -193,16 +196,17 @@ char *calculate_hash(char *filePath) {
     }
 }
 
+//Check if file path is a comic book archive
 bool chapter_is_zip(char *chapterLocation) {
     char *downloadedFileName = concat(chapterLocation, ".cbz");              
     char *fullPath = concat(get_series_folder(), downloadedFileName);
-    //need some kind of check this isn't a directory
     bool isZip = ((access(fullPath, F_OK) != -1) && is_file(fullPath));
     free(fullPath);
     free(downloadedFileName);
     return isZip;
 }
 
+//Tries to delete a file from a zip
 void remove_in_zip(char *zipPath, char *fileName) {
     pid_t pid = fork();
     if (pid == -1) {
@@ -225,9 +229,12 @@ void remove_in_zip(char *zipPath, char *fileName) {
     }
 }
 
+//Deletes a file described in a blacklist entry struct
 void delete_blacklisted_file(blacklistEntry *toDelete) {
-    if ((strcmp(toDelete->chapterName, "Deleted") == 0) || 
-            (strcmp(toDelete->fileName, "Deleted") == 0)) {
+    //Any of these conditions can mean deleted
+    if ((toDelete->chapterName[0] == '\0') || (toDelete->fileName[0] == '\0')
+        || (strncmp(toDelete->fileName, "Deleted", 7) == 0)
+        || (strncmp(toDelete->chapterName, "Deleted", 7) == 0)) {
         return;
     }
     char *chapterPath = concat(get_series_folder(), toDelete->chapterName); 
@@ -242,22 +249,26 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
         free(fullFilePath);
         free(tempPath);
     }
-    free(chapterPath);
-    free(toDelete->chapterName);
-    free(toDelete->fileName);
-    toDelete->chapterName = make_permenent_string("Deleted");
-    toDelete->fileName = make_permenent_string("Deleted");
+    free(chapterPath); 
+    if (get_verbose()) {
+        char *deletedFileName = (char *) malloc(sizeof(char) *
+                (9 + strlen(toDelete->fileName)));
+        sprintf(deletedFileName, "Deleted %s", toDelete->fileName);
+        free(toDelete->fileName);
+        toDelete->fileName = deletedFileName;
+    } else {
+        free(toDelete->fileName), free(toDelete->chapterName);
+        toDelete->chapterName = make_permenent_string("");
+        toDelete->fileName = make_permenent_string("");
+    }
 }
 
-//needs fixing
+//Turn file information into a blacklist entry and delete if duplicate
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     join_threaded_blacklist();
     if (!get_delete()) {
         return;
     }
-    //critical mode entering doesn't really matter any more tbh :/
-    //cuz I save after each chapter, so I'm safe anyway, but meh...
-    enter_critical_code();
     char *hashSum = calculate_hash(filePath);
     if ((hashSum == NULL) || (hashSum[0] == '\0')) {
         return;
@@ -278,9 +289,9 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
         free(newEntry->fileName);
         free(newEntry);
     }
-    exit_critical_code();
 }
 
+//Saves backlist information to file and/or free blacklist data
 void save_blacklist(bool toFree, bool toSave) {
     if (!get_delete()) {
         return;
@@ -291,6 +302,7 @@ void save_blacklist(bool toFree, bool toSave) {
         if (saveFile == NULL) {
             exit(3);
         }
+        fputs("#DO NOT MANUALLY EDIT THIS FILE\n", saveFile);
     }
     blacklistEntry **blacklistToSave = (blacklistEntry **) 
             turn_map_into_array(blacklist);
@@ -322,6 +334,7 @@ void save_blacklist(bool toFree, bool toSave) {
     }
 }
 
+//Wrapper for save_blacklist for thread creation
 void *internal_save_blacklist(void *toSend) {
     bool *infoSent = (bool *) toSend;
     bool toFree = infoSent[0], toSave = infoSent[1];
@@ -330,6 +343,7 @@ void *internal_save_blacklist(void *toSend) {
     return NULL;
 }
 
+//Create a threaded blacklist
 void threaded_save_blacklist(bool toFree, bool toSave) {
     join_threaded_blacklist();
     if (!get_delete()) {

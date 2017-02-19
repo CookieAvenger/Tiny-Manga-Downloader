@@ -1,0 +1,65 @@
+.TH TMDL 1
+.SH NAME
+tmdl \- download manga from kissmanga or mangasee
+.SH SYNOPSIS
+.B tmdl
+[options]
+.PP
+.B tmdl
+<url> [<urls>] <savelocation> [options]
+.PP
+.B tmdl
+-u <savelocation> [<savelocations>] [options]
+.PP
+.B Warning:
+behaviour is unknown if not strictly followed
+.SH DESCIPTION
+.B tmdl
+is a tiny command-line program to download manga from kissmanga or mangasee. It requires the python and the python module "cfscrape" to download from kissmanga and requires the program "findimagedupes" to use the experimental feature. It should compile and run on any POSIX compliant platform.
+.PP
+If tmdl is run with only options it attempts to update the manga series in the current directory. When it is givel url(s) and a save location it attemts to save the manga series or chapters at the urls into the dirctories at the save location. If tmdl is given -u and only save locations it will attemp to update all the save locations given.
+.PP
+tmdl updates from save location by reading a .settings.tmdl file, this file also remember and loads you options, if you set any options after the save location in the arguments then those options will be set and saved instead. If update stops working try changing the domain saved in the settinsg file as that may have changed.
+.RS
+e.g. from kissmanga.com to kissmanga.net
+.RE
+.SH OPTIONS
+.TP
+.B -v
+Verbose output, ideal when running manually from command line - Default mode.
+.TP
+.B -s
+Silent output, only outputs what chapters succesfully downloaded. Useful for scripts.
+.TP
+.B -z
+Zip chapters into comic book archives (*.cbz) - Default mode.
+.TP
+.B -f
+Keep downloaded chapters in folders.
+.TP
+.B -d
+Delete exact duplicate files - Default mode. This is useful to try to remove some scanlation images, it is not very effective, but it is perfectly save
+.TP
+.B -k
+Keep duplicate files. Running it in this mode is slightly lighter.
+.TP
+.B -e
+Experimental option to delete similar images using "findimagedupes" once main program is finished. This is an intensive process and requires quite a lot of time and resources after download is complete. It is nonetheless very effective in removing scanlator images but not nearly as safe at it. This will only run if something new was downloaded that run, use -e twice to force tmdl to do a similarity check regardless.
+.SH AUTO UPDATE MANGA
+For automatic manga updation keep a directory with \fInothing\fR but all your manga series downloaded with tmdl. Then you can use a cron job to run tmdl (copy and paste below after running "crontab -e" to run an update at 10am every day)
+.PP
+.nf
+.RS
+    0 10 * * * tmdl -u /path/to/manga/directories/* -s >> /path/to/file 2>&1
+.RE
+.fi
+.PP
+The file (which should not be in the parent directory of the manga series) will contain a list of all the automatically downloaded manga chapters chronologically (as well as errors), feel free to delete whichever lines of the file you are done with.
+.SH HOMEPAGE
+.TP
+Please submit reports bugs here:
+https://github.com/CookieAvenger/Tiny-Manga-Downloader
+.SH AUTHOR
+.TP
+Krishna Shukla
+<krishna@pparth.net>

@@ -11,29 +11,38 @@
 #include "blacklist.h"
 #include "experimental.h"
 
+//Weather incompleteChapterFolder is set or not
 bool folderSet = false;
-char *temporaryFolder;
+//Folder current chapter images are being downloaded into
+char *incompleteChapterFolder = NULL;
 
-char *get_temporary_folder() {
-    return temporaryFolder;
+//Return last folder being downloaded into
+char *get_incomplete_chapter_folder() {
+    return incompleteChapterFolder;
 }
 
-void setup_temporary_folder(char *folderName) {
+//Set incompleteChapterFolder
+void setup_incomplete_chapter_folder(char *folderName) {
+    char *toFree = NULL;
     if (folderSet) {
-        free(temporaryFolder);
+        toFree = incompleteChapterFolder;
     } else {
         folderSet = true;
     }
     if (folderName == NULL) {
-        temporaryFolder = NULL;
+        incompleteChapterFolder = NULL;
         folderSet = false;
         return;
     }
+    if (toFree != NULL) {
+        free(toFree);
+    }
     char *veryTemporary = concat(folderName, "/");
-    temporaryFolder = concat(get_series_folder(), veryTemporary);
+    incompleteChapterFolder = concat(get_series_folder(), veryTemporary);
     free(veryTemporary);
 }
 
+//Work out file extension from url name
 char *back_up_file_extension_finder(char *url) {
     char *fileExtension = rstrstr(url, ".");
     if (fileExtension == NULL || fileExtension[1] == '\0' ||
@@ -46,6 +55,7 @@ char *back_up_file_extension_finder(char *url) {
     return make_permenent_string(fileExtensionBuffer);
 }
 
+//Figure out the image extenstion from parseing header
 char *work_out_file_extension(unsigned char *header) {
     char *extension = NULL;
     //kudos to https://github.com/inorichi/tachiyomi for this method
@@ -73,6 +83,7 @@ char *work_out_file_extension(unsigned char *header) {
     return extension;
 }
 
+//Figures out file extension and renames the file
 char *sort_out_file_extension(char *filePath, char *fileName, char *url) {
     FILE *image = fopen(filePath, "r");
     if (image == NULL) {
@@ -102,6 +113,7 @@ char *sort_out_file_extension(char *filePath, char *fileName, char *url) {
     return finalName;
 }
 
+//Download every url in order and name it in that order
 void process_and_download_urls(char **pictureUrls, Chapter *current) {
     size_t numberOfUrls = get_pointer_array_length((void **)pictureUrls);
     for (size_t i = 0; i < numberOfUrls; i++) {
@@ -112,7 +124,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
             fflush(stdout);
         }
         char *fileNumber = size_to_string(i+1);
-        char *numberFilePath = concat(temporaryFolder, fileNumber);
+        char *numberFilePath = concat(incompleteChapterFolder, fileNumber);
         int curlSuccess = download_file(pictureUrls[i], numberFilePath);
         if (curlSuccess != 0) {
             free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
@@ -124,7 +136,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         char *finalFileName = sort_out_file_extension(numberFilePath, 
                 fileNumber, pictureUrls[i]);
         free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
-        char *finalFilePath = concat(temporaryFolder, finalFileName);
+        char *finalFilePath = concat(incompleteChapterFolder, finalFileName);
         blacklist_handle_file(finalFilePath, current->name, 
                 finalFileName);
         free(finalFileName), free(finalFilePath);
@@ -134,8 +146,9 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
     free(pictureUrls);
 }
 
+//Zip folder to comic book archive, or unzip comic book archive to folder
 void zip_contents(char *name, bool unzip) {
-    if (!unzip && is_directory_empty(temporaryFolder)) {
+    if (!unzip && is_directory_empty(incompleteChapterFolder)) {
         return;
     }
     if (get_verbose()) {
@@ -156,7 +169,7 @@ void zip_contents(char *name, bool unzip) {
         close(0), close(1), close(2);
         //No point freeing anything, all gonna vanish at exec or exit anyway
         char *zipName = make_bash_ready(tempZip);
-        char *folderName = make_bash_ready(temporaryFolder);
+        char *folderName = make_bash_ready(incompleteChapterFolder);
         char *zipCommand = "zip -jXrq";
         char *unzipCommand = "unzip -qqo";
         char *optionalCommand = " ";
@@ -191,13 +204,14 @@ void zip_contents(char *name, bool unzip) {
         exit(27);
     }
     if (!unzip) {
-        delete_folder(temporaryFolder, 1);
+        delete_folder(incompleteChapterFolder, 1);
     } else {
         remove(tempZip);
     }
     free(tempZip);
 }
 
+//Check if a chapter exists and zip or unzip if necassary
 bool chapterExists(char *toCheck) {
     char *downloadedFileName = concat(toCheck, ".cbz");
     char *fullPath = concat(get_series_folder(), downloadedFileName);
@@ -222,17 +236,18 @@ bool chapterExists(char *toCheck) {
     return existance;
 }
 
+//Start downloading a chapter
 void download_chapter(Chapter *current, Site source) {
-    setup_temporary_folder(current->name);
+    setup_incomplete_chapter_folder(current->name);
     if (chapterExists(current->name)) {
         if (get_verbose()) {
             printf("Skipping %s - already downloaded\n", current->name);
             fflush(stdout);
         }
-        setup_temporary_folder(NULL);
+        setup_incomplete_chapter_folder(NULL);
         return;
     }
-    char **pictureUrls;
+    char **pictureUrls = NULL;
     if (source == kissmanga) {
         pictureUrls = setup_kissmanga_chapter(current);
     } else if (source == mangasee) {
@@ -241,14 +256,14 @@ void download_chapter(Chapter *current, Site source) {
     if ((pictureUrls == NULL) || (pictureUrls[0] == NULL)) {
         return;
     }
-    create_folder(temporaryFolder);
+    create_folder(incompleteChapterFolder);
     //download into a folder
     process_and_download_urls(pictureUrls, current);
     //start zip process here
     if (get_zip_approval()) {
         zip_contents(current->name, false);
     }
-    setup_temporary_folder(NULL);
+    setup_incomplete_chapter_folder(NULL);
     //start saving blacklist
     //This is so no progress after a chapter is lost - but it's a bit overkill :/
     bool toFree = false;
@@ -256,5 +271,9 @@ void download_chapter(Chapter *current, Site source) {
         toFree = true;
     }
     threaded_save_blacklist(toFree, true);
+    if (!get_verbose()) {
+        printf("Downloaded %s: %s", get_manga_name(), current->name);
+        //expect to write to file, so don't flush let system handle that
+    }
     set_files_changed();
 }

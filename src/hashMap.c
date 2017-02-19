@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include "hashMap.h"
 
+//Weather of not random seed is set
 bool seedDone = false;
 
 //range being [min, max)

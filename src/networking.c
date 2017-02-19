@@ -9,6 +9,9 @@
 #include "generalMethods.h"
 #include <curl/curl.h>
 #include <stdio.h>
+#include "kissMangaRead.h"
+#include "chaptersToDownload.h"
+#include "networking.h"
 
 //Connect to the domain in the main method and save the connection there
 int connect_to_domain(char *domain) {
@@ -79,6 +82,7 @@ int send_HTTP_request(char *domain, char *file, char *cookie, char *userAgent) {
     return fd;
 }
 
+//Download a file with curl
 int download_file(char *url, char *fileName) {                 
     CURLcode toReturn;                                         
     CURL *handle;                                              
@@ -192,4 +196,35 @@ void save_url_as_file(int s, FILE *fp) {
       };
    };
    return;
+}
+
+//Read standard manga page
+char *get_standard_manga_page(char *file) {
+    char *page = NULL;
+    int fd = send_HTTP_request(get_domain(), file, NULL, NULL);
+    page = read_all_from_fd(fd, false);
+    page = handle_error_codes(page);
+    return page;
+}
+
+//Handles html error codes
+char *handle_error_codes(char *page) {
+    //3XX error codes are redirects
+    if (strncmp(page + 9, "3", 1) == 0) {
+        char *redirectTo = get_substring(page, "Location: ", "\n", 6);
+        free(page);
+        Site source = get_source();
+        if (source == kissmanga) {
+            page = get_kissmanga_page(redirectTo);
+        } else {
+            page = get_standard_manga_page(redirectTo);
+        }
+        free(redirectTo);
+        return page;
+    //4XX error codes are issues like page doesnt exist ect.
+    } else if (strncmp(page + 9, "4", 1) == 0) {
+        free(page);
+        return NULL;
+    }
+    return page;
 }

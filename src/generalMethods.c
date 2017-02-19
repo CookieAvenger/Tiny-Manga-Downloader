@@ -10,23 +10,6 @@
 #include <dirent.h>
 #include "customParser.h"
 
-int sigintEvent = 0;
-
-void sigint_enumerate(int signalSent) {
-    sigintEvent++;
-}
-
-void enter_critical_code() {
-    signal(SIGINT, sigint_enumerate);
-}
-
-void exit_critical_code() {
-    if (sigintEvent > 0) {
-        terminate_handler(2);
-    }
-    signal(SIGINT, terminate_handler);
-}
-
 //Kudos to http://stackoverflow.com/users/140740/digitalross
 //DOES NOT RETURN NEW MALLOC STRING
 char *rstrstr(char *s1, char *s2) {
@@ -43,6 +26,7 @@ char *rstrstr(char *s1, char *s2) {
     return NULL;
 }
 
+//Delets a folder and it's contents
 void delete_folder (char *folder, int error) {
     if (folder == NULL) {
         return;
@@ -74,28 +58,30 @@ void delete_folder (char *folder, int error) {
     //should never fail, we have read write permission to that folder
 }                                                                        
 
-void create_folder(char *folder) {                                         
-    pid_t pid = fork();                                                    
-    if (pid == -1) {                                                     
-        exit(21);                                                        
-    } else if (pid == 0) {                                               
-        //child                                                          
+//Makes a folder and it's parents if needed
+void create_folder(char *folder) {
+    pid_t pid = fork();
+    if (pid == -1) {
+        exit(21);
+    } else if (pid == 0) {
+        //child
         close(0), close(1), close(2);
-        execlp("mkdir", "mkdir", "-p", folder, NULL);           
-        exit(24);                                                        
-    }                                                                    
-    //parent                                                             
-    int status;                                                          
-    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {             
-        exit(21);                                                        
-    }                                                                    
-    if (WEXITSTATUS(status) != 0) {                                      
+        execlp("mkdir", "mkdir", "-p", folder, NULL);
+        exit(24);
+    }
+    //parent
+    int status;
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
+        exit(21);
+    }
+    if (WEXITSTATUS(status) != 0) {
         //This can only happen if something is a file instead of a folder
-        //as we already know the file exists and we can write to it      
-        exit(6);                                                         
-    }                                                                    
-}                                                                        
+        //as we already know the file exists and we can write to it
+        exit(6);
+    }
+}
 
+//Searched searched a string and return substring between two searches
 char *get_substring(char *string, char *start, char *end, int error) {
     char *startOfSubstring = strstr(string, start);
     if (startOfSubstring == NULL) {
@@ -123,6 +109,7 @@ char *get_substring(char *string, char *start, char *end, int error) {
     return substring;
 }
 
+//Searches a string continously for substrings
 char **continuous_substring(char *string, char *start, char *end) {
     int count = 0;
     int dynamic = 4;
@@ -184,6 +171,7 @@ char **continuous_substring(char *string, char *start, char *end) {
     return substringsFound;
 }
 
+//Writes an array to file with something before, after and inbetween array
 void write_string_array_to_file (char *initial, char **strings, 
         char *betweenArray, char *end, FILE *toWriteTo) {
     if (initial != NULL) {
@@ -203,7 +191,7 @@ void write_string_array_to_file (char *initial, char **strings,
     }
 }
 
-//also returns size
+//decodes html entities in array and returns the size of the array
 size_t run_html_decode_on_strings(char **strings) {
     size_t count = 0;
     while(strings[count] != NULL) {
@@ -213,6 +201,7 @@ size_t run_html_decode_on_strings(char **strings) {
     return count;
 }
 
+//length of a pointer array
 size_t get_pointer_array_length(void **pointerArray) {
     size_t count = 0;
     while(pointerArray[count] != NULL) {
@@ -220,7 +209,8 @@ size_t get_pointer_array_length(void **pointerArray) {
     }
     return count;
 }
-
+ 
+//Frees pointer array
 void pointer_array_free (void **pointerArray) {
     size_t count = 0;
     while (pointerArray[count] != NULL) {
@@ -230,7 +220,7 @@ void pointer_array_free (void **pointerArray) {
     free(pointerArray);
 }
 
-
+//Checks if path is a file
 bool is_file(const char* path) {
     struct stat test;
     if (stat(path, &test) == 0 && S_ISDIR(test.st_mode)) {
@@ -239,6 +229,7 @@ bool is_file(const char* path) {
     return true;
 }
 
+//Mallocs argument as a new string
 char *make_permenent_string(char *string) {
     size_t stringLength = strlen(string) + 1;
     char *persistantString = (char *) malloc(sizeof(char) * stringLength);
@@ -249,6 +240,7 @@ char *make_permenent_string(char *string) {
     return persistantString;
 }
 
+//Concatinates two strings
 char* concat(const char *s1, const char *s2) {
     size_t l1 = strlen(s1), l2 = strlen(s2);
     char *result = (char *) malloc(sizeof(char) * (l1 + l2 +1));
@@ -260,7 +252,7 @@ char* concat(const char *s1, const char *s2) {
     return result;
 }
 
-//for use with hash reading cuz gives perfect sized array back
+//Reads from file untill EOF or char end
 char *read_from_file(FILE *source, int end, bool perfectSize) {
     int next;
     size_t dynamic = 4, count = 0;
@@ -293,6 +285,7 @@ char *read_from_file(FILE *source, int end, bool perfectSize) {
     return text;
 }
 
+//Read everything from an fd
 char *read_all_from_fd(int fd, bool perfectSize) {
     FILE *source = fdopen(fd, "r");
     if (source == NULL) {
@@ -401,6 +394,7 @@ char **remove_string_from_array(int originalLength, char **originalArray
     return finalArray;
 }
 
+//Parses a size_t into a string
 char *size_to_string (size_t value) {
     int charectersRequired = snprintf(NULL, 0, "%zu", value);
     char *toReturn = (char *) malloc (sizeof(char) * (++charectersRequired));
@@ -408,6 +402,7 @@ char *size_to_string (size_t value) {
     return toReturn; 
 }
 
+//Makes a command bash ready - atm just sounds with ""
 char *make_bash_ready (char *toChange) {
     char *start = concat("\"", toChange);
     char *final = concat(start, "\"");
@@ -415,11 +410,13 @@ char *make_bash_ready (char *toChange) {
     return final;
 }
 
+//Checks if a directory is empty
 bool is_directory_empty (char *directoryPath) {
     int fileCount = 0;
     struct dirent *aFile;
     DIR *directory = opendir(directoryPath);
     if (directory == NULL) {
+        //not a directory
         return true;
     }
     while ((aFile = readdir(directory)) != NULL) {

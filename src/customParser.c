@@ -1,11 +1,13 @@
+//This file is badly named things, I get that, but I am just using as a library
+//Not my code
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-/*  Copyright 2012, 2016 Christoph Gärtner
-    This file is under the Boost Software License, Version 1.0
-*/
+//Copyright 2012, 2016 Christoph Gärtner
+//This file is under the Boost Software License, Version 1.0
 
 #include "customParser.h"
 
@@ -270,14 +272,12 @@ static const char *const NAMED_ENTITIES[][2] = {
     { "zwnj;", "\xE2\x80\x8C" }
 };
 
-static int cmp(const void *key, const void *value)
-{
+static int cmp(const void *key, const void *value) {
     return strncmp((const char *)key, *(const char *const *)value,
         strlen(*(const char *const *)value));
 }
 
-static const char *get_named_entity(const char *name)
-{
+static const char *get_named_entity(const char *name) {
     const char *const *entity = (const char *const *)bsearch(name,
         NAMED_ENTITIES, sizeof NAMED_ENTITIES / sizeof *NAMED_ENTITIES,
         sizeof *NAMED_ENTITIES, cmp);
@@ -285,33 +285,28 @@ static const char *get_named_entity(const char *name)
     return entity ? entity[1] : NULL;
 }
 
-static size_t putc_utf8(unsigned long cp, char *buffer)
-{
+static size_t putc_utf8(unsigned long cp, char *buffer) {
     unsigned char *bytes = (unsigned char *)buffer;
 
-    if(cp <= 0x007Ful)
-    {
+    if(cp <= 0x007Ful) {
         bytes[0] = (unsigned char)cp;
         return 1;
     }
 
-    if(cp <= 0x07FFul)
-    {
+    if(cp <= 0x07FFul) {
         bytes[1] = (unsigned char)((2 << 6) | (cp & 0x3F));
         bytes[0] = (unsigned char)((6 << 5) | (cp >> 6));
         return 2;
     }
 
-    if(cp <= 0xFFFFul)
-    {
+    if(cp <= 0xFFFFul) {
         bytes[2] = (unsigned char)(( 2 << 6) | ( cp       & 0x3F));
         bytes[1] = (unsigned char)(( 2 << 6) | ((cp >> 6) & 0x3F));
         bytes[0] = (unsigned char)((14 << 4) |  (cp >> 12));
         return 3;
     }
 
-    if(cp <= 0x10FFFFul)
-    {
+    if(cp <= 0x10FFFFul) {
         bytes[3] = (unsigned char)(( 2 << 6) | ( cp        & 0x3F));
         bytes[2] = (unsigned char)(( 2 << 6) | ((cp >>  6) & 0x3F));
         bytes[1] = (unsigned char)(( 2 << 6) | ((cp >> 12) & 0x3F));
@@ -323,21 +318,21 @@ static size_t putc_utf8(unsigned long cp, char *buffer)
 }
 
 static bool parse_entity(
-    const char *current, char **to, const char **from)
-{
+    const char *current, char **to, const char **from) {
     bool endPlus = false;
     const char *end = strchr(current, ';');
-    if (!end && current[1] == '#') {
+    if (end == NULL && current[1] == '#') {
         end = strchr(current, ' ');
         if (end) {
             end = end - 1;
             endPlus = true;
         }
     }
-    if(!end) return 0;
+    if(end == NULL) {
+        return 0;
+    }
 
-    if(current[1] == '#')
-    {
+    if(current[1] == '#') {
         char *tail = NULL;
         int errno_save = errno;
         bool hex = current[2] == 'x' || current[2] == 'X';
@@ -359,9 +354,7 @@ static bool parse_entity(
         *from = end + 1;
 
         return 1;
-    }
-    else
-    {
+    } else {
         const char *entity = get_named_entity(&current[1]);
         if(!entity) return 0;
 
@@ -375,20 +368,20 @@ static bool parse_entity(
     }
 }
 
-size_t decode_html_entities_utf8(char *dest, const char *src)
-{
-    if(!src) src = dest;
-
+size_t decode_html_entities_utf8(char *dest, const char *src) {
+    if(src == NULL) {
+        src = dest;
+    }
     char *to = dest;
     const char *from = src;
 
-    for(const char *current; (current = strchr(from, '&'));)
-    {
+    for(const char *current; (current = strchr(from, '&'));) {
         memmove(to, from, (size_t)(current - from));
         to += current - from;
 
-        if(parse_entity(current, &to, &from))
+        if(parse_entity(current, &to, &from)) {
             continue;
+        }
 
         from = current;
         *to++ = *from++;

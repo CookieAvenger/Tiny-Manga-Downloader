@@ -9,8 +9,9 @@
 #include "networking.h"
 #include "mangaSeeSupport.h"
 
+//Get every image to download in a kissmanga chapter
 char **setup_kissmanga_chapter(Chapter *current) {
-    char *page = get_kissmanga_chapter(current->link);
+    char *page = get_kissmanga_page(current->link);
     if (page == NULL) {
         fprintf(stderr, "Failed to access: %s\n", current->name);
         return NULL;
@@ -26,8 +27,9 @@ char **setup_kissmanga_chapter(Chapter *current) {
     return toReturn;
 }
 
-//to get link just substring " and ", for chapter name > and \n
+//Parse chapters section and push onto chaptersQueue
 void fill_up_queue(char **unparsedChapters) {
+    char *seriesPath = concat(get_series_path(), "/");
     size_t chaptersNumber = get_pointer_array_length((void **)unparsedChapters);
     for (size_t i = 0; i < chaptersNumber; i++) {
         Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
@@ -35,18 +37,26 @@ void fill_up_queue(char **unparsedChapters) {
             exit(21);
         }
         char *linkToAdd = get_substring(unparsedChapters[i], "\"", "\"", 26);
+        char *concatedLinkToAdd = concat(seriesPath, linkToAdd);
+        free(linkToAdd);
         char *nameToAdd = get_substring(unparsedChapters[i], "\n", "\n", 26);
         decode_html_entities_utf8(nameToAdd, NULL);
         toAdd->name = nameToAdd;
-        toAdd->link = linkToAdd;
+        toAdd->link = concatedLinkToAdd;
         add_to_download_list(toAdd);
         free(unparsedChapters[i]);
     } 
     free(unparsedChapters);
+    free(seriesPath);
 }
 
+//Setup to download the entire seties
 void download_kissmanga_series(char *randomChapterLink) {
-    char *initialPage = get_kissmanga_chapter(randomChapterLink);
+    char *seriesPath = concat(get_series_path(), "/");
+    char *concatedRandomLink = concat(seriesPath, randomChapterLink);
+    free(seriesPath);
+    char *initialPage = get_kissmanga_page(concatedRandomLink);
+    free(concatedRandomLink);
     if (initialPage == NULL) {
         exit(26);
     }
@@ -66,6 +76,7 @@ void download_kissmanga_series(char *randomChapterLink) {
     fill_up_queue(chaptersUnparsed);
 }
 
+//Download a thumbnail
 void download_kissmanga_thumbnail(char *seriesPage) {
     char *fileName = "thumbnail"; // = get_manga_name();
     char *thumbnailLink = get_substring(seriesPage, 
@@ -105,6 +116,7 @@ void download_kissmanga_thumbnail(char *seriesPage) {
     free(useless), free(thumbnailPath), free(thumbnailLink);
 }
 
+//Figure out if the information is 1 or more
 void workout_plurality_of_info(char *informationToParse, char *topic,
         FILE *infoFile) {
     char *informationToFind = informationToParse;
@@ -173,6 +185,7 @@ void kissmanga_info_search_and_write(char *informationToParse, char *topic,
 //Release Date (mangasee)
 //Status (ongoing or not)
 //Description
+//Write kissmanga manga information
 void download_kissmanga_information(char *seriesPage) {
     char *fileName = "information.txt"; //= concat(get_manga_name(), ".info");
     char *filePath = concat(get_series_folder(), fileName);
@@ -237,6 +250,7 @@ void download_kissmanga_information(char *seriesPage) {
     free(filePath);
 }
 
+//Setup a kissmanga link for download
 void setup_kissmanga_download() {
     bypass_DDOS_protection();
     char *testType = get_kissmanga_page(get_series_path());
@@ -265,12 +279,22 @@ void setup_kissmanga_download() {
         download_kissmanga_information(testType);
         free(testType);
     } else {
-        //Chapter Page
-        //To do
-        printf("%s\n", testType);
-        fflush(stdout);
         free(testString);
+        parse_and_set_kissmanga_series_folder(testType);
+        char *chapterName = get_substring(testType, "selected>\n", "\n<", 26);
+        char *seriesLink = get_substring(testType, 
+                "<p>\n<a href=\"", "\">", 26);
         free(testType);
-        exit(100);
+        decode_html_entities_utf8(chapterName, NULL);
+        Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
+        if (toAdd == NULL) {
+            exit(21);
+        }
+        char *linkToAdd = make_permenent_string(get_series_path());
+        toAdd->name = chapterName;
+        toAdd->link = linkToAdd;
+        add_to_download_list(toAdd);
+        process_first_url(seriesLink);
+        free(seriesLink);
     }
 }

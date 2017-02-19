@@ -16,60 +16,87 @@
 #include "mangaSeeSupport.h"
 #include <curl/curl.h>
 
-//make this settable
+//make this settable, percentage match required for dupe check
 int dupMatch = 95;
+//Weather or not to try to find fupes
 bool findDupes = false;
+//Weather or not to delete identical
 bool delete = true;
+//Say whats going on or be silent
 bool verbose = true;
+//Zip chapters or leav in folders
 bool zip = true;
+//Where initial save directory is set as
 char *saveDirectory = NULL;
-char *domain;
-char *seriesPath;
+//Domain
+char *domain = NULL;
+//file entered
+char *seriesPath = NULL;
+//What this instance is dealing with
 char *currentUrl = NULL;
+//Number of urls or folders left to deal with
 int remainingUrls;
 //weather we are using the settings file or not 
 bool usingSettings = false;
 
+//get how similar dupes need to be
 int get_similarity_percentage() {
     return dupMatch;
 }
 
+//If it gets to try to find dupes or not
 bool get_to_find_dupes() {
     return findDupes;
 }
 
+//Weather settings file has been read or not
 bool get_using_settings() {
     return usingSettings;
 }
 
+//To delete exact dupes or not
 bool get_delete() {
     return delete;
 }
 
+//Current url or folder we are handling
 char *get_current_url() {
     return currentUrl;
 }
 
+//Permission to zip
 bool get_zip_approval() {
     return zip;
 }
 
+//File location on domain
 char *get_series_path() {
     return seriesPath;
 }
 
+void set_series_path(char *newPath) {
+    if (seriesPath != NULL) {
+        free(seriesPath);
+    }
+    seriesPath = newPath;
+}
+
+//To speak or not to speak
 bool get_verbose() {
     return verbose;
 }
 
+//get folder we are working inside
 char *get_save_directory() {
     return saveDirectory;
 }
 
+//Get manga domain
 char *get_domain() {
     return domain;
 }
 
+//sig int handler
 void terminate_handler(int signalSent) {
     signal(SIGINT, SIG_IGN);
     fputs("Stopping prematurely\n", stderr);
@@ -82,6 +109,7 @@ void terminate_handler(int signalSent) {
     exit(11);
 }
 
+//Save settings in a settings filder in the series folder
 void save_settings() {
     if (get_series_folder() == NULL) {
         return;
@@ -121,7 +149,7 @@ void save_settings() {
     fclose(settingsFile);
 }
 
-//Prints appropriate error to stderr before exit
+//Prints appropriate error to stderr before exit and removes temporary files
 void print_error(int err, void *notUsing) {
     //this is what happend when a fork of this fails
     if (err == 24 || err == 0) {
@@ -141,30 +169,25 @@ void print_error(int err, void *notUsing) {
         remove(get_bash_script_location());
     }
     join_threaded_blacklist();
-    delete_folder(get_temporary_folder(), -1);
+    delete_folder(get_incomplete_chapter_folder(), -1);
     if (currentUrl != NULL && err != 0) {
         fprintf(stderr, "\nError occured at: %s\n", currentUrl);
     }
-    if (usingSettings && verbose && (err == 6 || err == 22 || err == 23 || err == 26)) {
+    if (usingSettings && verbose && (err == 6 || err == 22 || err == 23 
+            || err == 26)) {
         fputs("Try updating the domain in the first line of .settings "
-                "or the series location (part after domain) if this keeps occuring"
-                " the site location may be old now\n", stderr);
+                "or the series location (part after domain) if this keeps "
+                "occuring the site location may be old now\n", stderr);
     }
     switch(err) {
         case 1:
-            fputs("Usage: tmdl\n", stderr);
-            fputs("   or: tmdl <url> [<urls>] <savelocation>\n", stderr);
-            fputs("   or: tmdl -u <savelocation> [<savelocations>]\n", stderr);
-            fputs("post command options:\n", stderr);
-            fputs("[-v] for verbose (default) or [-s] for silent\n", stderr);
-            fputs("[-z] for zipped chapters (default) or [-f] for folders\n", stderr);
-            fputs("[-d] delete exact duplicates - not very effective,"
-                    " but safe (default) or [-k] to keep\n", stderr);
-            fputs("[-e] experimental delete similar images after download "
-                    "(take time once download is done) "
-                    "- very effective, not as safe\n", stderr);
+            fputs("Usage: tmdl [options]\n", stderr);
+            fputs("   or: tmdl <url> [<urls>] <savelocation> [options]\n", stderr);
+            fputs("   or: tmdl -u <savelocation> [<savelocations>] [options]\n", stderr);
             //Fix this part bro...
-            fputs("Warning: behaviour if usage not strictly followed is unknown\n", stderr);
+            fputs("Warning: behaviour if usage not strictly "
+                    "followed is unknown\n", stderr);
+            fputs("Try \"man tmdl\" for more info.\n", stderr);
             break;
         case 2:
             fputs("Directory provided does not exist - ensure one is provided\n"
@@ -206,6 +229,7 @@ void print_error(int err, void *notUsing) {
         case 27:
             fputs("Zipping failed, try with storing in folders instead\n",
                     stderr);
+            break;
         case 28:
             fputs("Unzipping failed... okay... maybe try all over again in "
                     "a new directory and keep zipping off, that should work "
@@ -214,9 +238,11 @@ void print_error(int err, void *notUsing) {
             break;
         case 31:
             fputs("Settings file is invalid or does not exist\n", stderr);
+            break;
     }
 }
 
+//sets initial save directory as current working directory
 void set_save_directory_as_current() {
     //reimpliment getcwd so you don't have to use a buffer
     char cwd[4096];
@@ -230,7 +256,14 @@ void set_save_directory_as_current() {
     }
 }
 
-Site parse_settings(FILE *settingsFile) {
+//Read and parse the settings file
+Site read_settings() {
+    char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
+    FILE *settingsFile = fopen(settingsPath, "r");
+    free(settingsPath);
+    if (settingsFile == NULL) {
+        exit(31);
+    }
     Site domainUsed = other;
     domain = read_from_file(settingsFile, '\n', true);
     if (domain == NULL || domain[0] == '\0') {
@@ -249,9 +282,9 @@ Site parse_settings(FILE *settingsFile) {
         exit(31);
     }
     char *parse = read_from_file(settingsFile, '\n', true);
-    int i = -1;
-    while(parse[++i] != '\0') {
-        switch(parse[i]) {
+    size_t i = 0;
+    while(parse[i] != '\0') {
+        switch(parse[i++]) {
             case 's':
                 verbose = false;
                 break;
@@ -278,22 +311,11 @@ Site parse_settings(FILE *settingsFile) {
         }
     }
     free(parse);
-    return domainUsed;
-}
-
-Site read_settings() {
-    char *settingsPath = concat(get_series_folder(), ".settings.tmdl");
-    FILE *settingsFile = fopen(settingsPath, "r");
-    free(settingsPath);
-    if (settingsFile == NULL) {
-        exit(31);
-    }
-    Site domainUsed = parse_settings(settingsFile);
     fclose(settingsFile);
-    //remainingUrls = 0;
     return domainUsed;
 }
 
+//Set settings based on flags
 bool process_flag (char *flag) {
     if (flag == NULL) {
         exit(1);
@@ -323,19 +345,31 @@ bool process_flag (char *flag) {
             delete = false;
             return process_flag(flag+1);
         case 'e':
-            findDupes = true;
+            if (!findDupes) {
+                findDupes = true;
+            } else {
+                set_files_changed();
+            }
             return process_flag(flag+1);
         default:
             exit(1);
     }
 }
 
+//Set domain and series based on url
 void domain_and_series_set(char *domainCheck) {
-    seriesPath = strchr(domainCheck, '/');
-    if (seriesPath == NULL) {
+    char *tempSeriesPath = strchr(domainCheck, '/');
+    if (tempSeriesPath == NULL) {
         exit(6);
     }
+    if (seriesPath != NULL) {
+        free(seriesPath);
+    }
+    seriesPath = make_permenent_string(tempSeriesPath);
     size_t charectersInDomain = seriesPath - domainCheck;
+    if (domain != NULL) {
+        free(domain);
+    }
     domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
     if (domain == NULL) {
         exit(21);
@@ -348,6 +382,7 @@ void domain_and_series_set(char *domainCheck) {
     }
 }
 
+//process and setup the first url
 Site process_first_url(char *url) {
     char *domainCheck = strstr(url, "kissmanga");
     if (domainCheck != NULL) {
@@ -362,6 +397,7 @@ Site process_first_url(char *url) {
     return other;
 }
 
+//Set the initial save directory
 void set_save_directory(char *lastArg) {
     if (saveDirectory == NULL) {
         if (lastArg != NULL) {
@@ -383,6 +419,7 @@ void set_save_directory(char *lastArg) {
     }
 }
 
+//check if we are in current folder update mode
 bool current_folder_update_mode (int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] != '-') {
@@ -392,6 +429,7 @@ bool current_folder_update_mode (int argc, char **argv) {
     return true;
 }
 
+//Check arguments sent from cmd line
 Site argument_check(int argc, char** argv) {
     Site domainUsed = other;
     if (current_folder_update_mode(argc, argv)) {
@@ -437,6 +475,7 @@ Site argument_check(int argc, char** argv) {
     return domainUsed;
 }
 
+//Fork exec tmdl to continue doing other urls or folders
 int duplicate_and_continue(int argc, char **argv) {
     if(remainingUrls <= 0) {
         return 0;
@@ -459,6 +498,7 @@ int duplicate_and_continue(int argc, char **argv) {
     return WEXITSTATUS(status);
 }
 
+//Where it all happens :)
 int main(int argc, char** argv) {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, terminate_handler);
@@ -488,7 +528,3 @@ int main(int argc, char** argv) {
     //return it's status not 0
     return duplicate_and_continue(argc, argv);
 }
-
-/*
-get a better asci version of picture hide UENO in it and paste here
-*/

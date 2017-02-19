@@ -1,4 +1,13 @@
+Should I have a tar ball?
+
 findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
+
+update based on github releases
+check for update at start of every run
+if one exists say please run sudo tmdl update
+and then ask if you would like to continue anyway (y continue without update,
+n - break now) also have flags -y for always skip update and -n always exit if update available
+do not save -y and -n in settings file
 
 Be able to set percentage of similarity needed
 
@@ -7,12 +16,7 @@ give a guide to be able to setup daily auto update
 Would like to not save file after every chapter, but keep like a snapshot after
 each chapter instead, and save that snapshot on exit...
 
-make an install.sh
-
 have some automated testing toold
-
-comment all methods
-and global variables
 
 also allow options like download from 000 ect.
 and if they put in a chapter download from that chapter onwards ect.

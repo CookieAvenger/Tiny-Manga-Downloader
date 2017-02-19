@@ -9,32 +9,9 @@
 #include "customParser.h"
 #include "currentChapter.h"
 
-char *get_mangasee_page(char *file);
-
-char *handle_error_codes(char *page) {
-    if (strncmp(page + 9, "3", 1) == 0) {
-        char *redirectTo = get_substring(page, "Location: ", "\n", 6);
-        free(page);
-        page = get_mangasee_page(redirectTo);
-        free(redirectTo);
-        return page;
-    } else if (strncmp(page + 9, "4", 1) == 0) {
-        free(page);
-        return NULL;
-    }
-    return page;
-}
-
-char *get_mangasee_page(char *file) {
-    char *page = NULL;
-    int fd = send_HTTP_request(get_domain(), file, NULL, NULL);
-    page = read_all_from_fd(fd, false);
-    page = handle_error_codes(page);
-    return page;
-}
-
+//Get all images from a mangasee chapter
 char **setup_mangasee_chapter(Chapter *current) {
-    char *page = get_mangasee_page(current->link);
+    char *page = get_standard_manga_page(current->link);
     if (page == NULL) {
         fprintf(stderr, "Failed to access: %s\n", current->name);
         return NULL;
@@ -63,6 +40,7 @@ char **setup_mangasee_chapter(Chapter *current) {
     return toReturn;
 }
 
+//set series folder from page depending on if its a chapter or series page
 void parse_and_set_mangasee_series_folder(char *page, bool chapterPage) {
     char *seriesLocation = get_substring(page, "\"SeriesName\"",
              "\n", 26);
@@ -77,6 +55,7 @@ void parse_and_set_mangasee_series_folder(char *page, bool chapterPage) {
     free(seriesLocation);
 }
 
+//setup download of all chapters
 void setup_mangasee_chapters_download(char *seriesPage) {
     char *chaptersPart = get_substring(seriesPage, "list chapter", "</div>", 26);
     char **chaptersUnparse = continuous_substring(chaptersPart, "Chapter=",
@@ -100,6 +79,7 @@ void setup_mangasee_chapters_download(char *seriesPage) {
     free(chaptersUnparse);
 }
 
+//download series thumbnail
 void download_mangasee_thumbnail(char *seriesPage) {
     char *skipOne = strstr(seriesPage, "img src=");
     if (skipOne == NULL) {
@@ -121,6 +101,7 @@ void download_mangasee_thumbnail(char *seriesPage) {
     free(useless), free(thumbnailPath), free(imageLocation);
 }
 
+//search and save info
 void mangasee_info_search_and_write(char *infoToParse, char *substringStart,
         char *substringEnd, char *single, char *plural, FILE *saveTo) {
     char **allInfo = continuous_substring(infoToParse,
@@ -136,6 +117,7 @@ void mangasee_info_search_and_write(char *infoToParse, char *substringStart,
     pointer_array_free((void **) allInfo); 
 }
 
+//Get info
 void download_mangasee_information(char *seriesPage) {
     char *fileName = "information.txt";
     char *filePath = concat(get_series_folder(), fileName);
@@ -228,8 +210,9 @@ void download_mangasee_information(char *seriesPage) {
     free(filePath);
 }
 
+//Setup a mangasee page for download
 void setup_mangasee_download() {
-    char *seriesPage = get_mangasee_page(get_series_path());
+    char *seriesPage = get_standard_manga_page(get_series_path());
     if (seriesPage == NULL) {
         fprintf(stderr, "This url: %s, is an invalid series location, skipping\n"
                 , get_current_url());
@@ -246,11 +229,26 @@ void setup_mangasee_download() {
         download_mangasee_information(seriesPage);
         free(seriesPage);
     } else {
-        //Chapter Page
-        //To do
-        printf("%s\n", seriesPage);
-        fflush(stdout);
+        parse_and_set_mangasee_series_folder(seriesPage, true);
+        char *nameAndSpace = concat(get_manga_name(), " ");
+        char *chapterName = get_substring(seriesPage,
+                nameAndSpace, " Page", 26);
+        char *realSeriesPath = get_substring(seriesPage,
+                "<a href=\"", "\">", 26);
+        free(nameAndSpace);
+        if (chapterName[0] == '\0'|| chapterName[1] == '\0') {
+            exit(26);
+        }
         free(seriesPage);
-        exit(100);
+        decode_html_entities_utf8(chapterName, NULL);
+        Chapter *toAdd = (Chapter *) malloc(sizeof(Chapter));
+        if (toAdd == NULL) {
+            exit(21);
+        }
+        char *linkToAdd = make_permenent_string(get_series_path());
+        toAdd->name = chapterName; //to skip a space
+        toAdd->link = linkToAdd;
+        add_to_download_list(toAdd);
+        set_series_path(realSeriesPath);
     }
 }

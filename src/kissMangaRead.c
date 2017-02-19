@@ -9,24 +9,29 @@
 #include "chaptersToDownload.h"
 #include "customParser.h"
 
+//kissmanga cookie
 char *cookie = NULL;
+//agent set with cookie
 char *userAgent = NULL;
+//location of cookie grabbing script
 char *script = NULL;
 
+//Return kissmanga cookie
 char *get_kissmanga_cookie() {
     return cookie;
 }
 
+//return kissmanga agent
 char *get_kissmanga_useragent() {
     return userAgent;
 }
 
+//return saved script path
 char *get_python_script_location() {
     return script;
 }
 
-//Some repitition here - tried to solve with get_substring method but couldn't
-//as second substring requred end of first - will tackle again later
+//Parse and set cookie information
 int update_cookie(char *cookieInfo) {
     if (cookie != NULL && userAgent != NULL) {
         free(cookie);
@@ -68,8 +73,6 @@ int update_cookie(char *cookieInfo) {
 }
 
 //Create python script - temporary solution
-//Could alternatively just pipe in the commands and exit when done - but...
-//already implimented this way :p
 char *makeCookieScript() {
     char *scriptName = concat(get_save_directory(), "/.cookiegrabber.py");
     FILE *cookieScript = fopen(scriptName, "w");
@@ -85,8 +88,9 @@ char *makeCookieScript() {
     return scriptName;
 }
 
-//Currently makes and runs a python script, intend to make in house at some
-//point - current implementation needs cfscrape installed
+//Currently to get past kissmanga's DDOS protection makes and runs a python 
+//script, intend to make in house at somepoint 
+//- current implementation needs cfscrape installed
 void bypass_DDOS_protection() {
     if (get_verbose()) {
         puts("Attempting to bypass cloudflares DDOS protection");
@@ -138,8 +142,7 @@ void bypass_DDOS_protection() {
     }
 }
 
-char *handle_codes(char *page);
-
+//Read a kissmanga page
 char *get_kissmanga_page(char *file) {
     char *page = NULL;
     do {
@@ -152,7 +155,7 @@ char *get_kissmanga_page(char *file) {
         }
         int fd = send_HTTP_request(get_domain(), file, cookie, userAgent);
         page = read_all_from_fd(fd, false);
-        page = handle_codes(page);
+        page = handle_error_codes(page);
         if (page == NULL) {
             return NULL;
         }
@@ -161,46 +164,11 @@ char *get_kissmanga_page(char *file) {
     return page;
 }
 
-char *get_kissmanga_chapter(char *link) {
-    char *path = concat(get_series_path(), "/");
-    char *chapter = concat(path, link);
-    free(path);
-    char *page = get_kissmanga_page(chapter);
-    free(chapter);
-    return page;
-}
-
-char *handle_codes(char *page) {
-    //3XX error codes are redirects
-    if (strncmp(page + 9, "3", 1) == 0) {
-        char *redirectTo = get_substring(page, "Location: ", "\n", 6);
-        free(page);
-        page = get_kissmanga_page(redirectTo);
-        free(redirectTo);
-        return page;
-    //4XX error codes are issues like page doesnt exist ect.
-    } else if (strncmp(page + 9, "4", 1) == 0) {
-        free(page);
-        return NULL;
-    }
-    return page;
-}
-
 //May seem weird cuz I can do it better for kissmanga series page
 //But this is for support of just a chapter page given
 void parse_and_set_kissmanga_series_folder(char *chapterPage) {
-    char *decodedPath = url_decode(get_series_path());
-    char *testString = (char *) malloc(sizeof(char) * (strlen(get_domain())
-            + strlen(decodedPath) + 26));
-    if (testString == NULL) {
-        exit(21);
-    }
-    sprintf(testString, "<a href=\"http://%s%s\">\nManga\n", get_domain(),
-            decodedPath);
-    free(decodedPath);
-    char *folder = get_substring(chapterPage, testString, 
-            "\ninformation</a>", 26);
+    char *folder = get_substring(chapterPage, "Read manga\n", 
+            "\n", 26);
     decode_html_entities_utf8(folder, NULL);
     set_series_folder(folder);
-    free(testString);
 }

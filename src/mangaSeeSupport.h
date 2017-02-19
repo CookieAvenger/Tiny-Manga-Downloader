@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "chaptersToDownload.h"
 
 void mangasee_info_search_and_write(char *infoToParse, char *substringStart,
         char *substringEnd, char *single, char *plural, FILE *saveTo);
