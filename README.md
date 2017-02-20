@@ -1,6 +1,6 @@
 # Tiny-Manga-Downloader  
   
-Tiny C program to download manga and update already downloaded ones.  
+Tiny C program to download manga seires and update already downloaded ones.  
 Can save each chapter as a comic book archive, and can delete duplicate images
 (works for some scanlator images).  
 Experimental image duplication finder to try and remove all possible
@@ -21,11 +21,17 @@ bash (rm and mkdir too)
 libcurl  
 make  
 a C compiler  
-
-Download and navagate to directory and run these commands:
-./configure
-make
+  
+Download and navagate to directory and run these commands:  
+./configure  
+make  
 sudo make install 
+
+Once install run with  
+manga-dl  
+  
+Also check out the man page with  
+man manga-dl  
   
 ##License 
   

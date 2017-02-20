@@ -181,13 +181,15 @@ void print_error(int err, void *notUsing) {
     }
     switch(err) {
         case 1:
-            fputs("Usage: tmdl [options]\n", stderr);
-            fputs("   or: tmdl <url> [<urls>] <savelocation> [options]\n", stderr);
-            fputs("   or: tmdl -u <savelocation> [<savelocations>] [options]\n", stderr);
+            fputs("Usage: manga-dl [options]\n", stderr);
+            fputs("   or: manga-dl <url> [<urls>] <savelocation> [options]\n",
+                     stderr);
+            fputs("   or: manga-dl -u <savelocation> [<savelocations>] "
+                    "[options]\n", stderr);
             //Fix this part bro...
             fputs("Warning: behaviour if usage not strictly "
                     "followed is unknown\n", stderr);
-            fputs("Try \"man tmdl\" for more info.\n", stderr);
+            fputs("Try \"man manga-dl\" for more info.\n", stderr);
             break;
         case 2:
             fputs("Directory provided does not exist - ensure one is provided\n"

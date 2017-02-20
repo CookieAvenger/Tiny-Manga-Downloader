@@ -1,1 +1,1 @@
-man_MANS = tmdl.1
+man_MANS = manga-dl.1

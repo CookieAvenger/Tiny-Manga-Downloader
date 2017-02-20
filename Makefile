@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=gnu99#-g
 LIBLINK = -lcurl -lpthread -lm
-all: tmdl
+all: manga-dl
 
-tmdl: src/tmdl.o src/networking.o src/generalMethods.o src/kissMangaRead.o src/kissMangaDownload.o src/chaptersToDownload.o src/currentChapter.o src/blacklist.o src/hashMap.o src/customParser.o src/experimental.o src/mangaSeeSupport.o
+manga-dl: src/tmdl.o src/networking.o src/generalMethods.o src/kissMangaRead.o src/kissMangaDownload.o src/chaptersToDownload.o src/currentChapter.o src/blacklist.o src/hashMap.o src/customParser.o src/experimental.o src/mangaSeeSupport.o
 	${CC} ${CFLAGS} $^ -o $@ ${LIBLINK}
 
 tmdl.o: src/tmdl.c src/tmdl.h
