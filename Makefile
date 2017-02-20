@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -pedantic -std=gnu99#-g
+CFLAGS = -Wall -pedantic -std=gnu99 -g
 LIBLINK = -lcurl -lpthread -lm
 all: manga-dl
 
@@ -46,4 +46,4 @@ clean:
 	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete
 
 install:
-	mv tmdl /usr/bin
+	mv tmdl /usr/bin && cp /man/manga-dl.1 /usr/local/share/man/man1/

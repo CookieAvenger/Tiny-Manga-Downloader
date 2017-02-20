@@ -1,4 +1,4 @@
-.TH MANGA-DL 1
+.TH MANGA-DL 1 "20 February 2017" "Version 0.1.0" "Tiny Manga Downloader"
 .SH NAME
 manga-dl \- download manga from kissmanga or mangasee
 .SH SYNOPSIS
@@ -17,7 +17,7 @@ behaviour is unknown if not strictly followed
 .B manga-dl
 is a tiny command-line program to download manga from kissmanga or mangasee. It requires the python and the python module "cfscrape" to download from kissmanga and requires the program "findimagedupes" to use the experimental feature. It should compile and run on any POSIX compliant platform.
 .PP
-If manga-dl is run with only options it attempts to update the manga series in the current directory. When it is givel url(s) and a save location it attemts to save the manga series or chapters at the urls into the dirctories at the save location. If manga-dl is given -u and only save locations it will attemp to update all the save locations given.
+If manga-dl is run with only options it attempts to update the manga series in the current directory. When it is givel url(s) and a save location it attemts to save the manga series or chapters at the urls into the directories at the save location. If manga-dl is given -u and only save locations it will attempt to update all the save locations given.
 .PP
 manga-dl updates from save location by reading a .settings.manga-dl file, this file also remember and loads you options, if you set any options after the save location in the arguments then those options will be set and saved instead. If update stops working try changing the domain saved in the settinsg file as that may have changed.
 .RS
@@ -45,7 +45,8 @@ Keep duplicate files. Running it in this mode is slightly lighter.
 .TP
 .B -e
 Experimental option to delete similar images using "findimagedupes" once main program is finished. This is an intensive process and requires quite a lot of time and resources after download is complete. It is nonetheless very effective in removing scanlator images but not nearly as safe at it. This will only run if something new was downloaded that run, use -e twice to force manga-dl to do a similarity check regardless.
-.SH AUTO UPDATE MANGA
+.SH AUTO MANGA UPDATION
+.PP
 For automatic manga updation keep a directory with \fInothing\fR but all your manga series downloaded with manga-dl. Then you can use a cron job to run manga-dl (copy and paste below after running "crontab -e" to run an update at 10am every day)
 .PP
 .nf
@@ -55,11 +56,27 @@ For automatic manga updation keep a directory with \fInothing\fR but all your ma
 .fi
 .PP
 The file (which should not be in the parent directory of the manga series) will contain a list of all the automatically downloaded manga chapters chronologically (as well as errors), feel free to delete whichever lines of the file you are done with.
-.SH HOMEPAGE
+.SH REPORTING BUGS
 .TP
-Please submit reports bugs here:
+Please submit bug reports to hompage:
 https://github.com/CookieAvenger/Tiny-Manga-Downloader
 .SH AUTHOR
 .TP
-Krishna Shukla
+Written by Krishna Shukla
 <krishna@pparth.net>
+.SH COPYRIGHT
+.sp
+Copyright 2016 Krishna Shukla
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+.sp
+.RS
+http://www.apache.org/licenses/LICENSE-2.0
+.RE
+.sp
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

@@ -360,18 +360,18 @@ bool process_flag (char *flag) {
 
 //Set domain and series based on url
 void domain_and_series_set(char *domainCheck) {
-    char *tempSeriesPath = strchr(domainCheck, '/');
-    if (tempSeriesPath == NULL) {
-        exit(6);
+    if (domain != NULL) {
+        free(domain);
     }
     if (seriesPath != NULL) {
         free(seriesPath);
     }
-    seriesPath = make_permenent_string(tempSeriesPath);
-    size_t charectersInDomain = seriesPath - domainCheck;
-    if (domain != NULL) {
-        free(domain);
+    char *tempSeriesPath = strchr(domainCheck, '/');
+    if (tempSeriesPath == NULL) {
+        exit(6);
     }
+    seriesPath = make_permenent_string(tempSeriesPath);
+    size_t charectersInDomain = tempSeriesPath - domainCheck;
     domain = (char *) malloc(sizeof(char) * (charectersInDomain + 1));
     if (domain == NULL) {
         exit(21);

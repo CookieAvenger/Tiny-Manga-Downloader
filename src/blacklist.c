@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 //Data structure containing all blacklisted files
-hashMap *blacklist;
+hashMap *blacklist = NULL;
 //File path of saved blacklist
 char *blacklistLocation;
 //Weather attempt at hashing has failed before
@@ -155,7 +155,10 @@ void join_threaded_blacklist() {
 //Calculate sha256 hash of a particular file
 char *calculate_hash(char *filePath) {
     int fds[2];
-    pipe(fds);
+    int errCheck = pipe(fds);
+    if (errCheck == -1) {
+        exit(21);
+    }
     pid_t pid = fork();
     if (pid == -1) {
         exit(21);
@@ -266,7 +269,7 @@ void delete_blacklisted_file(blacklistEntry *toDelete) {
 //Turn file information into a blacklist entry and delete if duplicate
 void blacklist_handle_file(char *filePath, char *chapter, char *file) {
     join_threaded_blacklist();
-    if (!get_delete()) {
+    if (!get_delete() || blacklist == NULL) {
         return;
     }
     char *hashSum = calculate_hash(filePath);
@@ -293,7 +296,7 @@ void blacklist_handle_file(char *filePath, char *chapter, char *file) {
 
 //Saves backlist information to file and/or free blacklist data
 void save_blacklist(bool toFree, bool toSave) {
-    if (!get_delete()) {
+    if (!get_delete() || blacklist == NULL) {
         return;
     }
     FILE *saveFile;
@@ -346,7 +349,7 @@ void *internal_save_blacklist(void *toSend) {
 //Create a threaded blacklist
 void threaded_save_blacklist(bool toFree, bool toSave) {
     join_threaded_blacklist();
-    if (!get_delete()) {
+    if (!get_delete() || blacklist == NULL) {
         return;
     }
     bool *toSend = (bool *) malloc(sizeof(bool) * 2);

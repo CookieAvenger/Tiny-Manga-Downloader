@@ -98,7 +98,10 @@ void bypass_DDOS_protection() {
     }
     script = makeCookieScript();
     int fds[2];
-    pipe(fds);
+    int errCheck = pipe(fds);
+    if (errCheck == -1) {
+        exit(21);
+    }
     pid_t pid = fork();
     if (pid == -1) {
         exit(21);
