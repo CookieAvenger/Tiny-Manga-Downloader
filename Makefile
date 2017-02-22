@@ -43,7 +43,9 @@ mangaSeeSupport.o: src/mangaSeeSupport.c src/mangaSeeSupport.h
 	${CC} ${CFLAGS} -c src/$<
 
 clean:
-	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete
+	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete && rm manga-dl
 
 install:
-	mv tmdl /usr/bin && cp /man/manga-dl.1 /usr/local/share/man/man1/
+	cp manga-dl /usr/bin && cp ./man/manga-dl.1 /usr/local/share/man/man1/
+uninstall:
+	rm /usr/bin/manga-dl && rm /usr/local/share/man/man1/manga-dl.1

@@ -23,9 +23,8 @@ char *get_incomplete_chapter_folder() {
 
 //Set incompleteChapterFolder
 void setup_incomplete_chapter_folder(char *folderName) {
-    char *toFree = NULL;
     if (folderSet) {
-        toFree = incompleteChapterFolder;
+        free(incompleteChapterFolder);
     } else {
         folderSet = true;
     }
@@ -33,9 +32,6 @@ void setup_incomplete_chapter_folder(char *folderName) {
         incompleteChapterFolder = NULL;
         folderSet = false;
         return;
-    }
-    if (toFree != NULL) {
-        free(toFree);
     }
     char *veryTemporary = concat(folderName, "/");
     incompleteChapterFolder = concat(get_series_folder(), veryTemporary);

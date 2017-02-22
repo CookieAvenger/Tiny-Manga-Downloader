@@ -32,44 +32,24 @@ char *get_python_script_location() {
 }
 
 //Parse and set cookie information
-int update_cookie(char *cookieInfo) {
+void update_cookie(int fd) {
     if (cookie != NULL && userAgent != NULL) {
         free(cookie);
         free(userAgent);
     }
-    char *startOfCookie = strchr(cookieInfo, '\'');
-    if (startOfCookie++ == NULL) {
-        return 23;
+    FILE *cookieInfo = fdopen(fd, "r");
+    if (cookieInfo == NULL) {
+        exit(21);
     }
-    char *endOfCookie = strchr(startOfCookie, '\'');
-    if (endOfCookie == NULL) {
-        return 23;
+    cookie = read_from_file(cookieInfo, '\n', true);
+    if (cookie == NULL || cookie[0] == '\0') {
+        exit(23);
     }
-    size_t charectersInCookie = endOfCookie - startOfCookie;
-    cookie = (char *) malloc(sizeof(char) * (charectersInCookie + 1));
-    if (cookie == NULL) {
-        return 21;
+    userAgent = read_from_file(cookieInfo, '\n', true);
+    if (userAgent == NULL || userAgent[0] == '\0') {
+        exit(23);
     }
-    strncpy(cookie, startOfCookie, charectersInCookie);
-    cookie[charectersInCookie] = '\0';
-    
-    char *startOfAgent = strchr((endOfCookie + 1), '\'');
-    if (startOfAgent++ == NULL) {
-        return 23;
-    } 
-    char *endOfAgent = strchr(startOfAgent, '\'');
-    if (endOfAgent == NULL) {
-        return 23;
-    }
-    size_t charectersInAgent = endOfAgent - startOfAgent;
-    userAgent = (char *) malloc(sizeof(char) * (charectersInAgent + 1));
-    if (userAgent == NULL) {
-        return 21;
-    }
-    strncpy(userAgent, startOfAgent, charectersInAgent);
-    userAgent[charectersInAgent] = '\0';
-    free(cookieInfo);
-    return 0;
+    fclose(cookieInfo);
 }
 
 //Create python script - temporary solution
@@ -81,8 +61,9 @@ char *makeCookieScript() {
     }
     fputs("import cfscrape\n", cookieScript);
     fprintf(cookieScript,
-            "print(cfscrape.get_cookie_string(\"http://%s\"))", 
-            get_domain());
+            "cookie_value, user_agent = cfscrape.get_cookie_string(\"http://%s\")"
+            , get_domain());
+    fputs("\nprint cookie_value\nprint user_agent\n", cookieScript);
     fflush(cookieScript);
     fclose(cookieScript);
     return scriptName;
@@ -130,11 +111,7 @@ void bypass_DDOS_protection() {
                 "and \"pip3\" instead of just \"pip\".\n", stderr);
         exit(25);
     } 
-    int error = update_cookie(read_all_from_fd(fds[0], false)); 
-    close(fds[0]);
-    if (error != 0) {
-        exit(error);
-    }
+    update_cookie(fds[0]); 
     remove(script);
     char *toFree = script;
     script = NULL;
