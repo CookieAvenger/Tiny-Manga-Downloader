@@ -152,6 +152,9 @@ void join_threaded_blacklist() {
     threadOn = false;
 }
 
+//Also tried it with popen and pclose, but will use that for something
+//that actually invokes sh -c '%s'
+//Other problem with that is I can't close(2);
 //Calculate sha256 hash of a particular file
 char *calculate_hash(char *filePath) {
     int fds[2];
@@ -176,7 +179,7 @@ char *calculate_hash(char *filePath) {
     if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
         errorOccured = true;
     }
-    if (WEXITSTATUS(status) != 0) {
+    if (!errorOccured && WEXITSTATUS(status) != 0) {
         errorOccured = true;
     }
     if (errorOccured) {

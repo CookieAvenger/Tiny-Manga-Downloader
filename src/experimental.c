@@ -6,6 +6,7 @@
 #include "generalMethods.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 //Weather or not any files were actually changed this run
 bool filesChanged = false;
@@ -30,16 +31,82 @@ void set_files_changed() {
 }
 
 //write a bash script to file
-void* write_script(char *name, char *script) {
-    char *scriptLocation = concat(get_series_folder(), name);
-    FILE *newScript = fopen(scriptLocation, "w");
+void* write_script(char *name, char *script, bool fullNameGiven) {
+    char *writingScriptLocation = name;
+    if (!fullNameGiven) {
+        writingScriptLocation = concat(get_series_folder(), name);
+    }
+    FILE *newScript = fopen(writingScriptLocation, "w");
     if (newScript == NULL) {
         exit(3);
     }
-    fprintf(newScript, "%s", script);
+    fprintf(newScript, "%s\n", script);
     fflush(newScript);
     fclose(newScript);
-    return scriptLocation;
+    return writingScriptLocation;
+}
+
+char *execute_script(char *scriptFile, int error, bool toPipe, int endRead) {
+    scriptLocation = scriptFile;
+    pid_t pid = fork();
+    int fds[2];
+    if (toPipe) {
+        if (pipe(fds) == -1) {
+            exit(21);
+        }
+    }
+    if (pid == -1) {
+        if (error != -1) {
+            exit(error);
+        }
+    } else if (pid == 0) {
+        //child
+        if (toPipe) {
+            dup2(fds[1], 1);
+            if (endRead >= -1) {
+                close(fds[0]);
+            }
+        } else {
+            if (endRead >= -1) {
+                close(1);
+            }
+        }
+        if (endRead >= -1) {
+            close(0), close(2);
+        }
+        execlp("sh", "sh", scriptLocation, NULL);
+        exit(24);
+    }
+    //parent
+    int status;
+    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
+        if (error != -1) {
+            exit(error);
+        }
+    }
+    if (WEXITSTATUS(status) != 0) {
+        //dunno what happned... exec probs failed
+        if (error != -1) {
+            exit(error);
+        }
+    }
+    char *toReturn = NULL;
+    if (toPipe) {
+        FILE *toRead = fdopen(fds[0], "r");
+        if (toRead == NULL) {
+            exit(21);
+        }
+        if (endRead < -1) {
+            endRead = EOF;
+        }
+        toReturn = read_from_file(toRead, endRead, false);
+        fclose(toRead);
+    }
+    remove(scriptLocation);
+    char *toFree = scriptLocation;
+    scriptLocation = NULL;
+    free(toFree);
+    return toReturn;
 }
 
 //Unzip all comic book archives
@@ -53,34 +120,10 @@ void unzip_all_comic_book_archives() {
     }
     sprintf(scriptToRun, "(cd %s && find -name '*.cbz' -exec sh -c 'unzip "
             "-qqo -d \"${1%%.cbz}\" \"$1\" && rm -f \"$1\"' _ {} \\;)", folderToSend);
-    scriptLocation = write_script(".unzip.sh", scriptToRun);
+    char *scriptFile = write_script(".unzip.sh", scriptToRun, false);
     free(folderToSend);
     free(scriptToRun);
-    pid_t pid = fork();
-    if (pid == -1) {
-        remove(scriptLocation);
-        exit(21);
-    } else if (pid == 0) {
-        //child
-        close(0), close(1), close(2);
-        execlp("sh", "sh", scriptLocation, NULL);
-        exit(24);
-    }
-    //parent
-    int status;
-    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
-        remove(scriptLocation);
-        exit(21);
-    }
-    if (WEXITSTATUS(status) != 0) {
-        //dunno what happned... exec probs failed
-        remove(scriptLocation);
-        exit(21);
-    }
-    remove(scriptLocation);
-    char *toFree = scriptLocation;
-    scriptLocation = NULL;
-    free(toFree);
+    (void) execute_script(scriptFile, 21, false, EOF); 
 }
 
 //Find and delete similar images
@@ -122,40 +165,16 @@ void rezip_all_folders() {
     sprintf(scriptToRun, "(cd %s && find . ! -path . -type d -not -empty -prune"
             " -exec sh -c 'zip -jXrq \"$1.cbz\" \"$1\" && "
             "rm -rf \"$1\"' _ {} \\;)", folderToSend);
-    scriptLocation = write_script(".zip.sh", scriptToRun);
+    char *scriptFile = write_script(".zip.sh", scriptToRun, false);
     free(folderToSend);
     free(scriptToRun);
-    pid_t pid = fork();
-    if (pid == -1) {
-        remove(scriptLocation);
-        exit(21);
-    } else if (pid == 0) {
-        //child
-        close(0), close(1), close(2);
-        execlp("sh", "sh", scriptLocation, NULL);
-        exit(24); 
-    }
-    //parent
-    int status;
-    if ((waitpid(pid, &status, 0) == -1) || (WIFEXITED(status) == 0)) {
-        remove(scriptLocation);
-        exit(21);
-    }
-    if (WEXITSTATUS(status) != 0) {
-        //dunno what happned... exec probs failed
-        remove(scriptLocation);
-        exit(21);
-    }
+    (void) execute_script(scriptFile, 24, false, EOF);
     processStarted = false;
-    remove(scriptLocation);
-    char *toFree = scriptLocation;
-    scriptLocation = NULL;
-    free(toFree);
 }
 
 //Run the duplication check program if allowed
 void experimental_find_dupes() {
-    if (!get_to_find_dupes() || !filesChanged) {
+    if (!get_to_find_dupes() || !filesChanged || get_series_folder() == NULL) {
         return;
     }
     if (get_verbose()) {

@@ -1,6 +1,9 @@
 #my final program
 manga-dl
 
+#packages releases
+*.tar.gz
+
 #vim stuff
 *.swp
 

@@ -82,29 +82,90 @@ int send_HTTP_request(char *domain, char *file, char *cookie, char *userAgent) {
     return fd;
 }
 
-//Download a file with curl
-int download_file(char *url, char *fileName) {                 
-    CURLcode toReturn;                                         
-    CURL *handle;                                              
-                                                               
-    handle = curl_easy_init();                                 
-    curl_easy_setopt(handle, CURLOPT_URL, url);                
-    curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1L);          
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "curl/7.47.0");
-    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 50L);          
-    curl_easy_setopt(handle, CURLOPT_TCP_KEEPALIVE, 1L);       
-                                                               
-    FILE* fileToSave = fopen(fileName, "w");                   
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, fileToSave) ;  
-                                                               
-    toReturn = curl_easy_perform(handle);                      
+//Struct for page data taken from curl examples
+struct MemoryStruct {
+    char *memory;
+    size_t size;
+};
+ 
+//Write to memory taken from curl examples
+static size_t write_memory_callback(void *contents, size_t size,
+        size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
 
-    curl_easy_cleanup(handle);                                 
-    handle = NULL;                                             
-                                                               
-    fclose(fileToSave);                                        
-    return (int)toReturn;                                      
-}                                                              
+    mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+    if(mem->memory == NULL) {
+        printf("Not enough memory (realloc returned NULL)\n");
+        return 0;
+    }
+
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
+ 
+//Get a page with curl taken from curl examples -- mainly to use for sites with
+//ssl security (https://github.com)
+char *curl_get_page(char *url) {
+    CURLcode res;
+    CURL *handle;
+
+    struct MemoryStruct chunk;
+
+    chunk.memory = malloc(sizeof(char));
+    chunk.size = 0;
+
+    handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_URL, url);
+    curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "curl/7.47.0");
+    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 50L);
+    curl_easy_setopt(handle, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    res = curl_easy_perform(handle);
+
+    if(res != CURLE_OK) {
+        fprintf(stderr, "Error fecthing %s: %s\n", url,
+                curl_easy_strerror(res));
+    }
+ 
+    /* cleanup curl stuff */ 
+    curl_easy_cleanup(handle);
+    if (res != CURLE_OK) {
+        free(chunk.memory);
+        return NULL;
+    }
+    return chunk.memory;
+}
+
+//Download a file with curl
+int download_file(char *url, char *fileName) {
+    CURLcode toReturn;
+    CURL *handle;
+
+    handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_URL, url);
+    curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "curl/7.47.0");
+    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 50L);
+    curl_easy_setopt(handle, CURLOPT_TCP_KEEPALIVE, 1L);
+
+    FILE* fileToSave = fopen(fileName, "w");
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, fileToSave);
+
+    toReturn = curl_easy_perform(handle);
+
+    curl_easy_cleanup(handle);
+    handle = NULL;
+
+    fclose(fileToSave);
+    return (int)toReturn;
+}
 
 //Kudos to http://stackoverflow.com/users/903194/david-m-syzdek
 void save_url_as_file(int s, FILE *fp) {

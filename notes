@@ -1,4 +1,4 @@
-Should I have a tar ball?
+REMEMBER TO EDIT MAKEFILE.AM and stuff for not file I used
 
 findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
 

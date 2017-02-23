@@ -44,14 +44,14 @@ Delete exact duplicate files - Default mode. This is useful to try to remove som
 Keep duplicate files. Running it in this mode is slightly lighter.
 .TP
 .B -e
-Experimental option to delete similar images using "findimagedupes" once main program is finished. This is an intensive process and requires quite a lot of time and resources after download is complete. It is nonetheless very effective in removing scanlator images but not nearly as safe at it. This will only run if something new was downloaded that run, use -e twice to force manga-dl to do a similarity check regardless.
+Experimental option to delete similar images using "findimagedupes" once main program is finished. This is an intensive process and requires quite a lot of time and resources after download is complete. It is nonetheless very effective in removing scanlator images but not nearly as safe at it. This will only run if something new was downloaded that run, use -e twice to force manga-dl to do a similarity check regardless (Really not recommended if -e is already on, some cases it detects everything as a duplicate and deletes it all).
 .SH AUTO-UPDATE MANGA
 .PP
 For automatic manga updation keep a directory with \fInothing\fR but all your manga series downloaded with manga-dl. Then you can use a cron job to run manga-dl (copy and paste below after running "crontab -e" to run an update at 10am every day)
 .PP
 .nf
 .RS
-    0 10 * * * manga-dl -u /path/to/manga/directories/* -s >> /path/to/file 2>&1
+    0 10 * * * manga-dl -u /path/to/manga/directories/* -sy >> /path/to/file 2>&1
 .RE
 .fi
 .PP

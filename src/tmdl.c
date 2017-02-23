@@ -15,6 +15,7 @@
 #include "experimental.h"
 #include "mangaSeeSupport.h"
 #include <curl/curl.h>
+#include "updater.h"
 
 //make this settable, percentage match required for dupe check
 int dupMatch = 95;
@@ -160,6 +161,10 @@ void print_error(int err, void *notUsing) {
     curl_global_cleanup();
     int status;
     while(wait(&status) != -1) {}
+    char *updateDirectory = get_update_directory();
+    if (updateDirectory != NULL) {
+        delete_folder(updateDirectory, -1);
+    }
     char *pythonScript = get_python_script_location();
     if (pythonScript != NULL) {
         remove(pythonScript);
@@ -241,6 +246,31 @@ void print_error(int err, void *notUsing) {
         case 31:
             fputs("Settings file is invalid or does not exist\n", stderr);
             break;
+        case 33:
+            fputs("Failed to download update\n", stderr);
+            break;
+        case 34:
+            fputs("Failed to unzip the downloaded update\n", stderr);
+            break;
+        case 35:
+            fputs("Failed to configure the downloaded update\nNew dependences"
+                    " may be required, visit https://github.com/CookieAvenger/"
+                    "Tiny-Manga-Downloader to find out.\n", stderr);
+            break;
+        case 36:
+            fputs("Failed to compile the downloaded update\nNew dependences"
+                    " may be required, visit https://github.com/CookieAvenger/"
+                    "Tiny-Manga-Downloader to find out.\n", stderr);
+            break;
+        case 37:
+            fputs("Failed to install the downloaded update, please ensure "
+                    "program is being run with sudo\n", stderr);
+            break;
+        case 42:
+            fputs("Please run again with sudo rights to check and install "
+                    "updates.\nThis can be done by running \"sudo !!\"\n"
+                    , stderr);
+            break;
     }
 }
 
@@ -319,9 +349,6 @@ Site read_settings() {
 
 //Set settings based on flags
 bool process_flag (char *flag) {
-    if (flag == NULL) {
-        exit(1);
-    }
     switch(flag[0]) {
         case '\0':
             return false;
@@ -352,6 +379,12 @@ bool process_flag (char *flag) {
             } else {
                 set_files_changed();
             }
+            return process_flag(flag+1);
+        case 'y':
+            set_yes();
+            return process_flag(flag+1);
+        case 'n':
+            set_no();
             return process_flag(flag+1);
         default:
             exit(1);
@@ -505,12 +538,18 @@ int main(int argc, char** argv) {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (strcmp(argv[1], "update") == 0) {
+        perform_flag_yes_no_checks(argc, argv);
+        perform_update_operations(true);
+        return 0;
+    }
     Site domainUsed = argument_check(argc, argv);
     set_source(domainUsed);
+    perform_update_operations(false);
     if (usingSettings) {
         threaded_load_blacklist();
     }
-    curl_global_init(CURL_GLOBAL_DEFAULT);
     if (domainUsed == kissmanga) {
         //if initial page is invalid just skip it
         setup_kissmanga_download();

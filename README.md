@@ -17,7 +17,7 @@ tar -xzvf tmdl\_0.1.0.tar.gz
 cd Tiny-Manga-Downloader  
 ./configure  
 make  
-sudo make install 
+sudo make install  
 optional: make clean  
   
 ##To uninstall  

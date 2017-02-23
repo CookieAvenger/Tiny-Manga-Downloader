@@ -3,7 +3,7 @@ CFLAGS = -Wall -pedantic -std=gnu99 -g
 LIBLINK = -lcurl -lpthread -lm
 all: manga-dl
 
-manga-dl: src/tmdl.o src/networking.o src/generalMethods.o src/kissMangaRead.o src/kissMangaDownload.o src/chaptersToDownload.o src/currentChapter.o src/blacklist.o src/hashMap.o src/customParser.o src/experimental.o src/mangaSeeSupport.o
+manga-dl: src/tmdl.o src/networking.o src/generalMethods.o src/kissMangaRead.o src/kissMangaDownload.o src/chaptersToDownload.o src/currentChapter.o src/blacklist.o src/hashMap.o src/customParser.o src/experimental.o src/mangaSeeSupport.o src/updater.o
 	${CC} ${CFLAGS} $^ -o $@ ${LIBLINK}
 
 tmdl.o: src/tmdl.c src/tmdl.h
@@ -30,7 +30,7 @@ currentChapter.o : src/currentChapter.c src/currentChapter.h
 hashMap.o : src/hashMap.c src/hashMap.h
 	${CC} ${CFLAGS} -c src/$<
 
-blacklist.o : src/blacklist.csrc/ blacklist.h
+blacklist.o : src/blacklist.c src/blacklist.h
 	${CC} ${CFLAGS} -c src/$<
 
 customParser.o : src/customParser.c src/customParser.h
@@ -42,10 +42,13 @@ experimental.o: src/experimental.c src/experimental.h
 mangaSeeSupport.o: src/mangaSeeSupport.c src/mangaSeeSupport.h
 	${CC} ${CFLAGS} -c src/$<
 
+updater.o: src/updater.c src/updater.h
+	${CC} ${CFLAGS} -c src/$<
+
 clean:
-	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete && rm manga-dl
+	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete && rm -f manga-dl
 
 install:
 	cp manga-dl /usr/bin && cp ./man/manga-dl.1 /usr/local/share/man/man1/
 uninstall:
-	rm /usr/bin/manga-dl && rm /usr/local/share/man/man1/manga-dl.1
+	rm -f /usr/bin/manga-dl && rm -f /usr/local/share/man/man1/manga-dl.1

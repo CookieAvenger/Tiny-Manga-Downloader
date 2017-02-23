@@ -8,6 +8,7 @@
 #include "chaptersToDownload.h"
 #include "customParser.h"
 #include "currentChapter.h"
+#include "customParser.h"
 
 //Get all images from a mangasee chapter
 char **setup_mangasee_chapter(Chapter *current) {
@@ -231,11 +232,14 @@ void setup_mangasee_download() {
     } else {
         parse_and_set_mangasee_series_folder(seriesPage, true);
         char *nameAndSpace = concat(get_manga_name(), " ");
-        char *chapterName = get_substring(seriesPage,
+        char *chapterNameLocation = get_substring(seriesPage, "<title>",
+                "</title>", 26);
+        decode_html_entities_utf8(chapterNameLocation, NULL);
+        char *chapterName = get_substring(chapterNameLocation,
                 nameAndSpace, " Page", 26);
+        free(nameAndSpace), free(chapterNameLocation);
         char *realSeriesPath = get_substring(seriesPage,
                 "<a href=\"", "\">", 26);
-        free(nameAndSpace);
         if (chapterName[0] == '\0'|| chapterName[1] == '\0') {
             exit(26);
         }
