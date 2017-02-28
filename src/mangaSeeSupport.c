@@ -53,6 +53,9 @@ void parse_and_set_mangasee_series_folder(char *page, bool chapterPage) {
     }
     decode_html_entities_utf8(seriesName, NULL);
     set_series_folder(seriesName);
+    if (seriesName != NULL) {
+        free(seriesName);
+    }
     free(seriesLocation);
 }
 
@@ -72,7 +75,9 @@ void setup_mangasee_chapters_download(char *seriesPage) {
         char *nameToAdd = get_substring(chaptersUnparse[i],
                 "chapterLabel\">", "<", 26);
         decode_html_entities_utf8(nameToAdd, NULL);
-        toAdd->name = nameToAdd;
+        char *nameRevised = str_replace(nameToAdd, "\\", "|");
+        free(nameToAdd);
+        toAdd->name = nameRevised;
         toAdd->link = linkToAdd;
         add_to_download_list(toAdd);
         free(chaptersUnparse[i]);

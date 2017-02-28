@@ -41,7 +41,9 @@ void fill_up_queue(char **unparsedChapters) {
         free(linkToAdd);
         char *nameToAdd = get_substring(unparsedChapters[i], "\n", "\n", 26);
         decode_html_entities_utf8(nameToAdd, NULL);
-        toAdd->name = nameToAdd;
+        char *nameRevised = str_replace(nameToAdd, "\\", "|");
+        free(nameToAdd);
+        toAdd->name = nameRevised;
         toAdd->link = concatedLinkToAdd;
         add_to_download_list(toAdd);
         free(unparsedChapters[i]);

@@ -151,4 +151,7 @@ void parse_and_set_kissmanga_series_folder(char *chapterPage) {
             "\n", 26);
     decode_html_entities_utf8(folder, NULL);
     set_series_folder(folder);
+    if (folder != NULL) {
+        free(folder);
+    }
 }

@@ -32,7 +32,8 @@ char *get_series_folder() {
 
 //Set manga save location
 void set_series_folder(char *folder) {
-    mangaName = folder;
+    char *folderRevised = str_replace(folder, "\\", "|");
+    mangaName = folderRevised;
     if (seriesFolder != NULL) {
         return;
     }
@@ -41,10 +42,11 @@ void set_series_folder(char *folder) {
         seriesFolder = path;
     } else {
         char *path = concat(get_save_directory(), "/");
-        if (strcmp(rstrstr(get_save_directory(), "/")+1, folder) == 0) {
+        if (strcmp(rstrstr(get_save_directory(), "/")+1,
+                folderRevised) == 0) {
             seriesFolder = path;
         } else {
-            char *fullFolder = concat(path, folder);
+            char *fullFolder = concat(path, folderRevised);
             free(path);
             seriesFolder = concat(fullFolder, "/");
             free(fullFolder);
