@@ -404,7 +404,9 @@ char *size_to_string (size_t value) {
 
 //Makes a command bash ready - atm just sounds with ""
 char *make_bash_ready (char *toChange) {
-    char *start = concat("\"", toChange);
+    char *toChangeRevised = str_replace(toChange, "\"", "\\\"");
+    char *start = concat("\"", toChangeRevised);
+    free(toChangeRevised);
     char *final = concat(start, "\"");
     free(start);
     return final;

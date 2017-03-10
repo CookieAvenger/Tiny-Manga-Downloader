@@ -49,6 +49,6 @@ clean:
 	find . -type f -name '*.o' -delete && find . -type f -name '*.gch' -delete && rm -f manga-dl
 
 install:
-	cp manga-dl /usr/bin && cp ./man/manga-dl.1 /usr/local/share/man/man1/
+	cp manga-dl /usr/local/bin && cp ./man/manga-dl.1 /usr/local/share/man/man1/
 uninstall:
-	rm -f /usr/bin/manga-dl && rm -f /usr/local/share/man/man1/manga-dl.1
+	rm -f /usr/local/bin/manga-dl && rm -f /usr/local/share/man/man1/manga-dl.1

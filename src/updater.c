@@ -139,22 +139,32 @@ char *untar_update(char *fileLocation) {
     char *folderToSend = make_bash_ready(updateDirectory);
     char *fileToSend = make_bash_ready(fileLocation);
     char *untarScript = (char *) malloc(sizeof(char) * (strlen(folderToSend)
-            + strlen(fileToSend) + 32));
+            + strlen(fileToSend) + 30));
     if (untarScript == NULL) {
         exit(21);
     }
-    sprintf(untarScript, "(cd %s && tar --overwrite -zvxf %s)",
+    sprintf(untarScript, "(cd %s && tar --overwrite -xf %s)",
             folderToSend, fileToSend);
     char *scriptName = concat(updateDirectory, ".extract.sh");
     (void) write_script(scriptName, untarScript, true); 
     free(untarScript);
     //execute script frees scriptName
-    char *newFolderName = execute_script(scriptName, 34, true, '\n');
+    //want to do tar -xvf, but -v in piping causes broken pipe :/
+    char *newFolderName = execute_script(scriptName, 34, true, '\n', get_verbose());
+    //atm just making magic happen, tried using find to duplicate -v effect 
+    //but that also threw broken pipe
+    //to delete
+    if (newFolderName != NULL) {
+        free(newFolderName);
+    }
+    newFolderName = make_permenent_string("Tiny-Manga-Downloader/");
+    //end of to delete
+    char *emptyFolderCheck = concat(updateDirectory, newFolderName);
     //this also returns if path doesn't exist
-    if (newFolderName == NULL || is_directory_empty(newFolderName)) {
+    if (newFolderName == NULL || is_directory_empty(emptyFolderCheck)) {
         exit(34);
     }
-    free(folderToSend), free(fileToSend);
+    free(emptyFolderCheck), free(folderToSend), free(fileToSend);
     char *finalFolder = concat(updateDirectory, newFolderName);
     free(newFolderName);
     return finalFolder;
@@ -163,18 +173,18 @@ char *untar_update(char *fileLocation) {
 void install_update(char *folderToRunIn) {
     char *folderToSend = make_bash_ready(folderToRunIn);
     size_t folderLength = strlen(folderToSend);
-    //configure
-    char *configureScript = (char *) malloc(sizeof(char) * (folderLength + 21));
+    puts("Configuring updating...");
+    char *configureScript = (char *) malloc(sizeof(char) * (folderLength + 26));
     if (configureScript == NULL) {
         exit(21);
     } 
-    sprintf(configureScript, "(cd %s && ./configure)", folderToSend);
+    sprintf(configureScript, "(cd %s && bash ./configure)", folderToSend);
     char *scriptName = concat(updateDirectory, ".configure.sh");
     (void) write_script(scriptName, configureScript, true); 
     free(configureScript);
-    (void) execute_script(scriptName, 35, false, -2);
-    //configure done 
-    //compile
+    (void) execute_script(scriptName, 35, false, EOF, get_verbose());
+    puts("Configuration complete");
+    puts("Compiling program...");
     char *makeScript = (char *) malloc(sizeof(char) * (folderLength + 14));
     if (makeScript == NULL) {
         exit(21);
@@ -183,33 +193,35 @@ void install_update(char *folderToRunIn) {
     scriptName = concat(updateDirectory, ".make.sh");
     (void) write_script(scriptName, makeScript, true);
     free(makeScript);
-    (void) execute_script(scriptName, 36, false, -2);
-    //compilation done
-    //install now
+    (void) execute_script(scriptName, 36, false, EOF, get_verbose());
+    puts("Compilation complete");
+    puts("Installing update...");
     char *installScript = (char *) malloc(sizeof(char) * (folderLength + 
-            strlen(updateDirectory) + 38));
+            strlen(updateDirectory) + 70));
     if (installScript == NULL) {
         exit(21);
     }
-    sprintf(installScript, "(cd %s && sudo make install && rm -fr %s)",
-            folderToSend, updateDirectory);
+    sprintf(installScript, "(cd %s && sudo make install && rm -fr %s && echo"
+            " 'Installation complete')", folderToSend, updateDirectory);
     free(folderToSend);
     scriptName = concat(updateDirectory, ".install.sh");
     (void) write_script(scriptName, installScript, true);
     execlp("sh", "sh", scriptName, NULL); 
     exit(37); 
-    //installation done
 }
 
 void full_update_installation_process(char *downloadLink, char *downloadName) {
     setUpdateDirectory();
     //download into file
     char *downloadFile = concat(updateDirectory, downloadName);
+    puts("Downloading File...");
     int success = download_file(downloadLink, downloadFile);
     if (success != 0) {
         exit(33);
     }
+    puts("Download complete\nUncompressing File...");
     char *uncompressedFolder = untar_update(downloadFile);
+    puts("Decompression complete");
     install_update(uncompressedFolder);
     //stuff that never actually happens
     //free(downloadFile), free(uncompressedFolder);
@@ -242,6 +254,7 @@ void perform_update_operations(bool update) {
         return;
     }
     //One day maybe read and print the message that went along with the release
+    //Impliment to print all changlog scince this version :p
     char *downloadSection = strstr(releaseLocation, "Downloads");
     if (downloadSection == NULL) {
         print_parse_error();

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([manga-dl], [0.1.0], [krishna@pparth.net])
+AC_INIT([manga-dl], [0.1.1], [krishna@pparth.net])
 
 AM_INIT_AUTOMAKE
 

@@ -46,7 +46,7 @@ void* write_script(char *name, char *script, bool fullNameGiven) {
     return writingScriptLocation;
 }
 
-char *execute_script(char *scriptFile, int error, bool toPipe, int endRead) {
+char *execute_script(char *scriptFile, int error, bool toPipe, int endRead, bool keepOutput) {
     scriptLocation = scriptFile;
     pid_t pid = fork();
     int fds[2];
@@ -63,17 +63,16 @@ char *execute_script(char *scriptFile, int error, bool toPipe, int endRead) {
         //child
         if (toPipe) {
             dup2(fds[1], 1);
-            if (endRead >= -1) {
-                close(fds[0]);
-            }
+            close(fds[0]);
         } else {
-            if (endRead >= -1) {
+            if (!keepOutput) {
                 close(1);
             }
         }
-        if (endRead >= -1) {
-            close(0), close(2);
+        if (!keepOutput) {
+            close(2);
         }
+        close(0);
         execlp("sh", "sh", scriptLocation, NULL);
         exit(24);
     }
@@ -84,14 +83,9 @@ char *execute_script(char *scriptFile, int error, bool toPipe, int endRead) {
             exit(error);
         }
     }
-    if (WEXITSTATUS(status) != 0) {
-        //dunno what happned... exec probs failed
-        if (error != -1) {
-            exit(error);
-        }
-    }
     char *toReturn = NULL;
     if (toPipe) {
+        close(fds[1]);
         FILE *toRead = fdopen(fds[0], "r");
         if (toRead == NULL) {
             exit(21);
@@ -100,7 +94,22 @@ char *execute_script(char *scriptFile, int error, bool toPipe, int endRead) {
             endRead = EOF;
         }
         toReturn = read_from_file(toRead, endRead, false);
+        if (keepOutput && toReturn != NULL) {
+            printf("%s", toReturn);
+            if (endRead != EOF) {
+                char toOut; 
+                while (toOut = fgetc(toRead), toOut != EOF) {
+                    printf("%c", toOut);
+                }
+            }
+        }
         fclose(toRead);
+    }
+    if (WEXITSTATUS(status) != 0) {
+        //dunno what happened... exec probs failed
+        if (error != -1) {
+            exit(error);
+        }
     }
     remove(scriptLocation);
     char *toFree = scriptLocation;
@@ -123,7 +132,7 @@ void unzip_all_comic_book_archives() {
     char *scriptFile = write_script(".unzip.sh", scriptToRun, false);
     free(folderToSend);
     free(scriptToRun);
-    (void) execute_script(scriptFile, 21, false, EOF); 
+    (void) execute_script(scriptFile, 21, false, EOF, false); 
 }
 
 //Find and delete similar images
@@ -168,7 +177,7 @@ void rezip_all_folders() {
     char *scriptFile = write_script(".zip.sh", scriptToRun, false);
     free(folderToSend);
     free(scriptToRun);
-    (void) execute_script(scriptFile, 24, false, EOF);
+    (void) execute_script(scriptFile, 24, false, EOF, false);
     processStarted = false;
 }
 

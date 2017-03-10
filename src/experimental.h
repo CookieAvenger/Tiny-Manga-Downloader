@@ -7,4 +7,5 @@ void rezip_all_folders();
 bool get_dupe_started();
 char *get_bash_script_location();
 void* write_script(char *name, char *script, bool fullNameGiven);
-char *execute_script(char *scriptFile, int error, bool toPipe, char endRead);
+char *execute_script(char *scriptFile, int error, bool toPipe,
+        char endRead, bool keepOutput);

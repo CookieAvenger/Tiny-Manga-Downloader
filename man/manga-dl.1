@@ -1,4 +1,4 @@
-.TH MANGA-DL 1 "20 February 2017" "Version 0.1.0" "Tiny Manga Downloader"
+.TH MANGA-DL 1 "20 February 2017" "Version 0.1.1" "Tiny Manga Downloader"
 .SH NAME
 manga-dl \- download manga from kissmanga or mangasee
 .SH SYNOPSIS
@@ -10,6 +10,9 @@ manga-dl \- download manga from kissmanga or mangasee
 .PP
 .B manga-dl
 -u <savelocation> [<savelocations>] [options]
+.PP
+.B sudo manga-dl
+update [-y|-n]
 .PP
 .B Warning:
 behaviour is unknown if not strictly followed
@@ -43,6 +46,12 @@ Delete exact duplicate files - Default mode. This is useful to try to remove som
 .B -k
 Keep duplicate files. Running it in this mode is slightly lighter.
 .TP
+.B -y
+Automatically say yes to any prompt e.g. say yes to continue anyway if update is available.
+.TP
+.B -n
+Automatically say no to any prompt e.g. say no and do not attempt to continue if an update is available
+.TP
 .B -e
 Experimental option to delete similar images using "findimagedupes" once main program is finished. This is an intensive process and requires quite a lot of time and resources after download is complete. It is nonetheless very effective in removing scanlator images but not nearly as safe at it. This will only run if something new was downloaded that run, use -e twice to force manga-dl to do a similarity check regardless (Really not recommended if -e is already on, some cases it detects everything as a duplicate and deletes it all).
 .SH AUTO-UPDATE MANGA
@@ -51,7 +60,7 @@ For automatic manga updation keep a directory with \fInothing\fR but all your ma
 .PP
 .nf
 .RS
-    0 10 * * * manga-dl -u /path/to/manga/directories/* -sy >> /path/to/file 2>&1
+    0 10 * * * manga-dl -u /path/to/manga/directories/* -sn >> /path/to/file 2>&1
 .RE
 .fi
 .PP

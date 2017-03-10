@@ -36,6 +36,8 @@ cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfsc
 findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distributions should have it with their respective package managers  
 shasum (comes with perl)  
 zip  
+tar  
+find  
 bash (rm and mkdir too)  
   
 ###Dependences to compile  
