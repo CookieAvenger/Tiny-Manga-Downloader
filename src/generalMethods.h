@@ -22,3 +22,5 @@ bool is_directory_empty (char *directoryPath);
 void write_string_array_to_file (char *initial, char **strings,
         char *betweenArray, char *end, FILE *toWriteTo);
 size_t run_html_decode_on_strings(char **strings);
+char *continous_find_and_replace(char *toRemoveFrom, char *removeStart,
+        char *removeEnd, char *replaceWith);
