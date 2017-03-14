@@ -18,7 +18,7 @@
 long major = 0;
 long normal = 1;
 long minor = 1;
-char currentVersion = "v0.1.1"
+char *currentVersion = "v0.1.1";
 
 //Weather to continue even if there is an update
 bool continueAnyway = false;
@@ -259,8 +259,8 @@ void perform_update_operations(bool update) {
     char *lastOfUs = rstrstr(releaseLocation, currentVersion);
     if (lastOfUs != NULL) {
         char *nextLocation = lastOfUs;
-        char *messageToProcess, finalMessage;
-        unsigned size_t initialMessage = 0;
+        char *messageToProcess, *finalMessage;
+        size_t initialMessage = 0;
         while (nextLocation = rstrstr(nextLocation, "markdown-body"),
                 nextLocation != NULL) {
             messageToProcess = get_substring(nextLocation, "\">", "</div>", -1);
@@ -277,7 +277,7 @@ void perform_update_operations(bool update) {
             if (nameSection != NULL) {
                 char *nameOfChangelogVersion = get_substring(nameSection, "\">", "</a>", -1);
                 if (nameOfChangelogVersion != NULL) {
-                    printf("%s\n", nameOfChangelogVersion;
+                    printf("%s\n", nameOfChangelogVersion);
                     free(nameOfChangelogVersion);
                 }
                 //may be printed even if finalmessage is empty, I know, that's okay :)

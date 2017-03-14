@@ -437,10 +437,10 @@ bool is_directory_empty (char *directoryPath) {
 
 //Not best code I've ever written, maybe go through again later
 //free returned value ;)
-char *continous_find_and_replace(char *toRemoveFrom, char *removeStart,
+char *continuous_find_and_replace(char *toRemoveFrom, char *removeStart,
         char *removeEnd, char *replaceWith) {
-    char *toRemove,tempToSave;
-    char *removedVersion = get_permenent_string(toRemoveFrom);
+    char *toRemove, *tempToSave;
+    char *removedVersion = make_permenent_string(toRemoveFrom);
     char *toSearchFrom = toRemoveFrom;
     while (toRemove = get_substring(toSearchFrom, removeStart, removeEnd, -1),
             toRemove != NULL) {
