@@ -24,3 +24,4 @@ void write_string_array_to_file (char *initial, char **strings,
 size_t run_html_decode_on_strings(char **strings);
 char *continuous_find_and_replace(char *toRemoveFrom, char *removeStart,
         char *removeEnd, char *replaceWith);
+char *replace_leading_whitespace(char *toTrim, char *toReplace);

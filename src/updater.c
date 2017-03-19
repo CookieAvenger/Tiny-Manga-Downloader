@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+char *releasePage = "https://github.com/CookieAvenger/Tiny-Manga-Downloader/releases";
+
 //current version - 0.1.1
 long major = 0;
 long normal = 1;
@@ -75,8 +77,8 @@ void perform_flag_yes_no_checks(int argc, char **argv) {
 
 //Print parsing error with regards to updating
 void print_parse_error() {
-    fputs("Github parsing error, please report.", stderr);
-    fputs("Failed to check for updates, continuing anyway.", stderr);
+    fputs("Github parsing error, please report.\n", stderr);
+    fputs("Failed to check for updates, continuing anyway.\n", stderr);
     errorOccured = true;
 }
 
@@ -238,9 +240,9 @@ void perform_update_operations(bool update) {
     if (get_verbose()) {
         puts("Checking for program update");
     }
-    char *page = curl_get_page("https://github.com/CookieAvenger/Tiny-Manga-Downloader/releases");
+    char *page = curl_get_page(releasePage);
     if (page == NULL) {
-        fputs("Failed to check for updates, continuing anyway.", stderr);
+        fputs("Failed to check for updates, continuing anyway.\n", stderr);
         return;
     }
     char *releaseLocation = strstr(page, "Latest release");
@@ -254,37 +256,48 @@ void perform_update_operations(bool update) {
         print_parse_error();
         return;
     }
-    //One day maybe read and print the message that went along with the release
-    //Impliment to print all changlog scince this version :p
+    //rn is fine, but remeber there can be a next page in releases!!
     char *lastOfUs = rstrstr(releaseLocation, currentVersion);
     if (lastOfUs != NULL) {
-        char *nextLocation = lastOfUs;
-        char *messageToProcess, *finalMessage;
+        char *nextLocation = releaseLocation;
+        char *messageToProcess, *finalMessage, *lastLocation, *almostFinalMessage;
         size_t initialMessage = 0;
-        while (nextLocation = rstrstr(nextLocation, "markdown-body"),
-                nextLocation != NULL) {
+        while (lastLocation = nextLocation, nextLocation = strstr(nextLocation, "markdown-body"),
+                (nextLocation != NULL) || (nextLocation - lastOfUs >= 0)) {
             messageToProcess = get_substring(nextLocation, "\">", "</div>", -1);
             if (messageToProcess == NULL) {
                 break;
             }
-            finalMessage = continuous_find_and_replace(messageToProcess, "<", ">", "");
+            almostFinalMessage = continuous_find_and_replace(messageToProcess, "<", ">", "");
             free(messageToProcess);
+            finalMessage = replace_leading_whitespace(almostFinalMessage, "\t");
+            free(almostFinalMessage);
             if (++initialMessage == 1) {
                 puts("Changelog:");
                 //may be printed even if finalmessage is empty, I know, that's okay :)
             }
-            char *nameSection = rstrstr(nextLocation, "release-title\">");
+            char *nameSection = strstr(lastLocation, "release-title\">");
             if (nameSection != NULL) {
-                char *nameOfChangelogVersion = get_substring(nameSection, "\">", "</a>", -1);
-                if (nameOfChangelogVersion != NULL) {
-                    printf("%s\n", nameOfChangelogVersion);
-                    free(nameOfChangelogVersion);
+                char *skipABit = strstr(nameSection, "\">");
+                if (skipABit != NULL) {
+                    skipABit += 2;
+                    char *nameOfChangelogVersion = get_substring(skipABit, "\">", "</a>", -1);
+                    if (nameOfChangelogVersion != NULL) {
+                        printf("%s\n", nameOfChangelogVersion);
+                        free(nameOfChangelogVersion);
+                    }
                 }
                 //may be printed even if finalmessage is empty, I know, that's okay :)
             }
             if (finalMessage != NULL) {
                 printf("%s\n", finalMessage);
                 free(finalMessage);
+            }
+            //skip markdown body part of it
+            nextLocation += 13;
+            //insanity check - defenive programming
+            if (nextLocation - lastOfUs >= 0) {
+                break;
             }
         }
     }

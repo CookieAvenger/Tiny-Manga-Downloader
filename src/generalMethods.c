@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "customParser.h"
+#include <ctype.h>
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
 //DOES NOT RETURN NEW MALLOC STRING
@@ -439,16 +440,49 @@ bool is_directory_empty (char *directoryPath) {
 //free returned value ;)
 char *continuous_find_and_replace(char *toRemoveFrom, char *removeStart,
         char *removeEnd, char *replaceWith) {
-    char *toRemove, *tempToSave;
+    char *toRemove, *tempToSave, *toRemoveTemp, *toRemoveFinal;
     char *removedVersion = make_permenent_string(toRemoveFrom);
     char *toSearchFrom = toRemoveFrom;
     while (toRemove = get_substring(toSearchFrom, removeStart, removeEnd, -1),
             toRemove != NULL) {
-        toSearchFrom = strstr(toSearchFrom, toRemove) + strlen(toRemove); //can't fail already found it
-        tempToSave = str_replace(removedVersion, toRemove, replaceWith);  
-        free(removedVersion);
-        removedVersion = tempToSave;
+        toRemoveTemp = concat(removeStart, toRemove);
         free(toRemove);
+        toRemoveFinal = concat(toRemoveTemp, removeEnd);
+        free(toRemoveTemp);
+        toSearchFrom = strstr(toSearchFrom, toRemoveFinal) + strlen(toRemoveFinal); //can't fail already found it
+        tempToSave = str_replace(removedVersion, toRemoveFinal, replaceWith);  
+        free(removedVersion), free(toRemoveFinal);
+        removedVersion = tempToSave;
     }
     return removedVersion;
+}
+
+char *replace_leading_whitespace(char *toTrim, char *toReplace) {
+    if (toTrim == NULL) {
+        return make_permenent_string("");
+    }
+    if (toReplace == NULL) {
+        toReplace = "";
+    }
+    char *toReturn = malloc(sizeof(char) * strlen(toTrim));
+    if (toReturn == NULL) {
+        exit(21);
+    }
+    size_t pointer = 0, returnPointer = 0, replacePointer = 0, replaceSize = strlen(toReplace);
+    while (toTrim[pointer] != '\0') {
+        while (toTrim[pointer] != '\0' && isspace(toTrim[pointer])) {
+            pointer++;
+        }
+        //put replace here
+        while(toTrim[pointer] != '\0' && replacePointer < replaceSize) {
+            toReturn[returnPointer++] = toReplace[replacePointer++];
+        }
+        replacePointer = 0;
+        while (toTrim[pointer] != '\n' && toTrim[pointer] != '\0') {
+            toReturn[returnPointer++] = toTrim[pointer++];
+        }
+        toReturn[returnPointer++] = '\n';
+    }
+    toReturn[returnPointer] = '\0';
+    return toReturn;
 }
