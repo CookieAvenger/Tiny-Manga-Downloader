@@ -2,6 +2,8 @@ findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | x
 
 when decryting image locations say I'm doing that for kissmanga
 
+learn the README.md format =|
+
 use option --posix when making next tar
  configure line 560
 test -n "$DJDIR" || exec 7<&0 </dev/null

@@ -27,7 +27,7 @@ char *continuous_find_and_replace(char *toRemoveFrom, char *removeStart,
         char *removeEnd, char *replaceWith);
 char *replace_leading_whitespace(char *toTrim, char *toReplace);
 char **find_all_occurances(char *page, regex_t *compiledReg);
-char *trim_whitespace(const char *str);
+char *trim_whitespaces(const char *str);
 bool compare_arrays(void **arr1, void **arr2,
         int (*comparator) (const void *, const void *));
 int string_comparator_wrapper(const void *a, const void *b);

@@ -1,4 +1,4 @@
-# Tiny-Manga-Downloader  
+# Tiny-Manga-Downloader   
   
 Tiny C program to download manga seires and update already downloaded ones.  
 Can save each chapter as a comic book archive, and can delete duplicate images
@@ -46,7 +46,6 @@ make
 a C compiler  
     
 ##What's planned to come  
-  
 0.1.2  
     - Update option  
     - kissmanga fix  

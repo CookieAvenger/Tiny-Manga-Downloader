@@ -20,7 +20,7 @@ void free_kissmanga_regex() {
 }
 
 void compile_kissmanga_regex() {
-    if (regcomp(&keyFinder, "(.*CryptoJS.*)", 0) != 0) {
+    if (regcomp(&keyFinder, "(.*CryptoJS.*)", REG_EXTENDED|REG_NEWLINE) != 0) {
         fputs("Could not compile regex", stderr);
         exit(24);
     }

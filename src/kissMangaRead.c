@@ -115,8 +115,8 @@ void bypass_DDOS_protection() {
         exit(21);
     }
     if (WEXITSTATUS(status) != 0) {
-        fputs("Failed to run program to bypass cloudflares DDOS protection"
-                "Ensure the latest version of cfscrape and python 2.7 is installed and kissmanga is up\n"
+        fputs("Failed to run program to bypass cloudflares DDOS protection\n"
+                "Ensure the latest version of cfscrape and python 2.7 is installed and kissmanga is up - otherwise just try again - cloudflare sometimes put sadditional security randomly\n"
                 "To install cfscrape please run the following command:\n"
                 "sudo -H pip install cfscrape\n"
                 "Some systems may require to install with \"pip2\" "
@@ -209,8 +209,10 @@ void start_decryption_program() {
         fputs("Failed to run program to decrypt kissmanga links\n"
                 "Make sure you have python 2.7 installed and not just 3.5,"
                 " otherwise please send an error report\n", stderr); 
-        exit(24);
+        exit(25);
     }
+    puts("Decryption section successfully up and running");
+    fflush(stdout);
 }
 
 //Manages newKeys memory, and return its answer in encryptedSites
@@ -242,6 +244,7 @@ char **run_page_decryption(char **newKeys, char **encryptedSites) {
     }
     for (size_t i = 0; encryptedSites[i] != NULL; i++) {
         fprintf(scriptWrite, "v\n%s\n", encryptedSites[i]);
+        fflush(scriptWrite);
         free(encryptedSites[i]);
         encryptedSites[i] = read_from_file(scriptRead, '\n', true);
     }
@@ -255,7 +258,7 @@ void stop_decryption_program() {
         return;
     }
     if (get_verbose()) {
-        puts("Stopping decryption program");
+        puts("Finished for now, stopping decryption program");
         fflush(stdout);
     }
     free_kissmanga_regex();
@@ -264,6 +267,7 @@ void stop_decryption_program() {
         currentKeys = NULL;
     }
     fputs("q\n", scriptWrite);
+    fflush(scriptWrite);
     char *finishCheck = read_from_file(scriptRead, '\n', false);
     if (finishCheck == NULL || strcmp(finishCheck, "finished") != 0) {
         //otherwise kill
@@ -346,26 +350,26 @@ void setup_page_decryption() {
     fclose(loSave); 
 
     //now write the python script
-    decryptionScript = concat(get_series_folder(), ".decryptionMachine!");
+    decryptionScript = concat(get_series_folder(), ".decryptionMachine.py");
     FILE *decryptWrite = fopen(decryptionScript, "w");
     if (decryptWrite == NULL) {
         exit(3);
     }
-    puts("import js2py\nimport sys\n\n"
+    fputs("import js2py\nimport sys\n\n"
             "caCont = js2py.get_file_contents(\".ca.js\")\n"
             "loCont = js2py.get_file_contents(\".lo.js\")\n"
             "js = js2py.EvalJs()\n"
             "js.execute(\"\"\"escape = function(text){pyimport urllib; return urllib.quote(text)};\n"
             "unescape = function(text){pyimport urllib; return urllib.unquote(text)};\n"
-            "encodeURI = function(text){pyimport urllib; return urllib.quote(text, safe='~@#$&()*!+=:;,.?/\\'')};\n"
+            "encodeURI = function(text){pyimport urllib; return urllib.quote(text, safe='~@#$&()*!+=:;,.?/\\\\'')};\n"
             "decodeURI = unescape;\n"
-            "encodeURIComponent = function(text){pyimport urllib; return urllib.quote(text, safe='~()*!.\\'')};\n"
+            "encodeURIComponent = function(text){pyimport urllib; return urllib.quote(text, safe='~()*!.\\\\'')};\n"
             "decodeURIComponent = unescape;\"\"\")\n"
             "js.execute(caCont)\njs.execute(loCont)\n"
-            "sys.stdout.write('ready\\n')\nsys.stdout.flush()\n"
+            "sys.stdout.write('ready\\n')\nsys.stdout.flush()\n\n"
             "while True:\n"
-            "   line = sys.stdin.readline()\ni"
-            "   if line == \"x\\n\":\ni"
+            "   line = sys.stdin.readline()\n"
+            "   if line == \"x\\n\":\n"
             "       read = sys.stdin.readline()\n"
             "       js.execute(read)\n"
             "   elif line == \"v\\n\":\n"
@@ -373,10 +377,10 @@ void setup_page_decryption() {
             "       sys.stdout.write(js.eval(read)+\"\\n\")\n"
             "       sys.stdout.flush()\n"
             "   elif line == \"q\\n\":\n"
-            "       sys.stdout.write('finished\\n')"
+            "       sys.stdout.write('finished\\n')\n"
             "       quit(0)\n"
             "   else:\n"
-            "       quit(1)\n");
+            "       quit(1)\n", decryptWrite);
     fflush(decryptWrite);
     fclose(decryptWrite);
 }

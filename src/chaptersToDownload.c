@@ -117,13 +117,19 @@ void download_entire_queue() {
     if (source == kissmanga) {
         if (get_verbose()) {
             puts("All kissmanga chapters have to be decrypted (sadly will be "
-                    "memory intensive... now ay to make it light for this atm) "
+                    "resource intensive... no way to make it light for this atm) "
                     "before download can begin, please be patient");
             fflush(stdout);
         }
         ChapterQueue *pointer = head;
-        while (pointer->current != NULL) {
+        size_t tempCurrent = 0;
+        while (pointer != NULL) {
+            ++tempCurrent;
             if (!chapterExists(pointer->current->name)) {
+                if (get_verbose()) {
+                    printf("Decrypting links for chapter %zu/%zu\n", tempCurrent, fullLength);
+                    fflush(stdout);
+                }
                 pointer->current->customData =
                         setup_kissmanga_chapter(pointer->current);
             } else {
@@ -131,6 +137,8 @@ void download_entire_queue() {
             }
             pointer = pointer->next;
         }
+        puts("Finished decryption relavent links");
+        fflush(stdout);
         stop_decryption_program();
     }
     if (fullLength == 0) {
@@ -145,6 +153,9 @@ void download_entire_queue() {
         free(toDownload->link);
         free(toDownload);
     }
+    //won't ever happen, if I just remove the if source == kissmanga line, then it would do the process
+    //chapter by chapter instead of all chapters in a go, could provide option, but in my opinion, do first
+    //is a far better strategy, anyway, it's gonna change at 0.2.0 with chapter selection
     stop_decryption_program();
     fullLength = overallPointer = 0;
     head = tail = NULL;

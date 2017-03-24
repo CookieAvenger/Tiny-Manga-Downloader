@@ -11,6 +11,7 @@
 #include "customParser.h"
 #include <ctype.h>
 #include <regex.h>
+#include "generalMethods.h"
 
 //Kudos to http://stackoverflow.com/users/140740/digitalross
 //DOES NOT RETURN NEW MALLOC STRING
@@ -153,8 +154,7 @@ char **continuous_substring(char *string, char *start, char *end) {
         strncpy(substring, startOfSubstring, charectersInSubstring);
         substring[charectersInSubstring] = '\0';
         
-        count ++;
-        if (count == dynamic) {
+        if (++count == dynamic) {
             dynamic *= 2;
             substringsFound = (char **) realloc(substringsFound, 
                     sizeof(char *) * dynamic);
@@ -270,8 +270,7 @@ char *read_from_file(FILE *source, int end, bool perfectSize) {
             }
             break;
         }
-        count++;
-        if (count == dynamic) {
+        if (++count == dynamic) {
             dynamic *= 2;
             text = (char *) realloc(text, sizeof(char) * dynamic);
             if (text == NULL) {
@@ -301,8 +300,7 @@ char *read_all_from_fd(int fd, bool perfectSize) {
         exit(21);
     }
     while(next = fgetc(source), next != EOF) {
-        count++;
-        if (count == dynamic) {
+        if (++count == dynamic) {
             dynamic *= 2;
             text = (char *) realloc(text, sizeof(char) * dynamic);
             if (text == NULL) {
@@ -508,20 +506,20 @@ bool compare_arrays(void **arr1, void **arr2,
 }
 
 char **find_all_occurances(char *page, regex_t *compiledReg) {
-    size_t nsub = 1;
+    size_t nsub = 1, returnPointer = 0, dynamicArray = 4;
     regmatch_t matchLocations[nsub];
-    int currentPointer = 0;
-    int dynamicArray = 4;
     char **toReturn = (char **) malloc(sizeof(char *) * dynamicArray);
     if (toReturn == NULL) {
         exit(21);
     }
+    bool keepRunning = true;
     do {
         if (regexec(compiledReg, page, nsub, matchLocations, 0) != 0) {
-            return NULL;
+            break;
         }
         for (size_t i = 0; i < nsub; i++) {
             if (matchLocations[i].rm_so == -1) {
+                keepRunning = false;
                 break;
             }
             size_t lengthOfKey = matchLocations[i].rm_eo - matchLocations[i].rm_so;
@@ -529,9 +527,9 @@ char **find_all_occurances(char *page, regex_t *compiledReg) {
             if (newKey == NULL) {
                 exit(21);
             }
-            memcpy(newKey, page+matchLocations[i].rm_so, lengthOfKey);
+            memcpy(newKey, page+(matchLocations[i].rm_so), lengthOfKey);
             newKey[lengthOfKey] = '\0';
-            if (dynamicArray - 1 <= currentPointer) {
+            if (++returnPointer == dynamicArray) {
                 dynamicArray *= 2;
                 toReturn = (char **) realloc(toReturn,
                         sizeof(char *) * dynamicArray);
@@ -539,19 +537,19 @@ char **find_all_occurances(char *page, regex_t *compiledReg) {
                     exit(21);
                 }
             }
-            toReturn[currentPointer++] = newKey;
+            toReturn[returnPointer - 1] = trim_whitespaces(newKey);
+            free(newKey);
         }
         page += matchLocations[0].rm_eo;
-    } while(true);
-    toReturn[currentPointer] = NULL;
+    } while(keepRunning);
+    toReturn[returnPointer] = NULL;
     return toReturn;
 }
 
 
 //Shout out to http://stackoverflow.com/users/9530/adam-rosenfield
 //free str after this
-//also this method is not being used, just kept in case I need it further down the line
-char *trim_whitespace(const char *str) {
+char *trim_whitespaces(const char *str) {
     size_t len = strlen(str);
     if (len == 0) {
         return NULL;
