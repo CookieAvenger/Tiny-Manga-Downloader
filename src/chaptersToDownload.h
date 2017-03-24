@@ -2,6 +2,7 @@
 #define CHAPTER
 
 #include <stddef.h>
+#include <stdbool.h>
 
 //Enum of what site is being used
 typedef enum site { kissmanga, mangasee, other } Site;
@@ -10,6 +11,8 @@ typedef enum site { kissmanga, mangasee, other } Site;
 typedef struct chapter {
     char *name;
     char *link;
+    void *customData;
+    bool doneWith;
 } Chapter;
 
 //Singly linked list made for Chapter Queue

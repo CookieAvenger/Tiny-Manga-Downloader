@@ -101,7 +101,7 @@ void remake_hash_function(hashMap *map) {
     //dumb and simple prime calculation, should never come to this though
     while (map->prime < LONG_MAX || map->prime < map->meta) {
         incrementing += 2;
-        for (int i = 3; i < incrementing/2; i += 2) {
+        for (size_t i = 3; i < incrementing/2; i += 2) {
             if (incrementing % i == 0) {
                 flag = false;
                 break;
@@ -142,7 +142,7 @@ void *resize_hash_map(void *voidMap) {
     set_to_null(newTable, map->meta);
     map->totalItems = 0;
     //go through every element and add to new while freeing from old
-    for (int i = 0; i < oldSize; i++) {
+    for (size_t i = 0; i < oldSize; i++) {
         if (map->table[i] == NULL) {
             continue;
         }
@@ -202,7 +202,7 @@ hashMap *hash_map_construction(void **items, size_t totalItems,
         exit(21);
     }
     remake_hash_function(map);
-    int i = 0;
+    size_t i = 0;
     void *current;
     while(items[i] != NULL) {
         current = items[i++];

@@ -4,6 +4,8 @@
 #include "currentChapter.h"
 #include <string.h>
 #include "blacklist.h"
+#include "kissMangaRead.h"
+#include "kissMangaDownload.h"
 
 //site being used in this instance of tmdl
 Site source;
@@ -43,10 +45,10 @@ void set_series_folder(char *folder) {
     } else {
         char *path = concat(get_save_directory(), "/");
         if (strcmp(rstrstr(get_save_directory(), "/")+1,
-                folderRevised) == 0) {
+                mangaName) == 0) {
             seriesFolder = path;
         } else {
-            char *fullFolder = concat(path, folderRevised);
+            char *fullFolder = concat(path, mangaName);
             free(path);
             seriesFolder = concat(fullFolder, "/");
             free(fullFolder);
@@ -111,6 +113,26 @@ Chapter *pop_from_download() {
 
 //Go through the queue and download every chapter
 void download_entire_queue() {
+    //if kissmanga, try to decrypt all the chapters first
+    if (source == kissmanga) {
+        if (get_verbose()) {
+            puts("All kissmanga chapters have to be decrypted (sadly will be "
+                    "memory intensive... now ay to make it light for this atm) "
+                    "before download can begin, please be patient");
+            fflush(stdout);
+        }
+        ChapterQueue *pointer = head;
+        while (pointer->current != NULL) {
+            if (!chapterExists(pointer->current->name)) {
+                pointer->current->customData =
+                        setup_kissmanga_chapter(pointer->current);
+            } else {
+                pointer->current->doneWith = true;
+            }
+            pointer = pointer->next;
+        }
+        stop_decryption_program();
+    }
     if (fullLength == 0) {
         threaded_save_blacklist(true, false);
         return;
@@ -118,10 +140,12 @@ void download_entire_queue() {
     Chapter *toDownload;
     while (toDownload = pop_from_download(), toDownload != NULL) {
         download_chapter(toDownload, source);
+        toDownload->doneWith = true;
         free(toDownload->name);
         free(toDownload->link);
         free(toDownload);
     }
+    stop_decryption_program();
     fullLength = overallPointer = 0;
     head = tail = NULL;
 }

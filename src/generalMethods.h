@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <regex.h>
 
 bool is_file(const char* path);
 char *concat (const char *s1, const char *s2);
@@ -25,3 +26,8 @@ size_t run_html_decode_on_strings(char **strings);
 char *continuous_find_and_replace(char *toRemoveFrom, char *removeStart,
         char *removeEnd, char *replaceWith);
 char *replace_leading_whitespace(char *toTrim, char *toReplace);
+char **find_all_occurances(char *page, regex_t *compiledReg);
+char *trim_whitespace(const char *str);
+bool compare_arrays(void **arr1, void **arr2,
+        int (*comparator) (const void *, const void *));
+int string_comparator_wrapper(const void *a, const void *b);

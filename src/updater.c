@@ -119,6 +119,7 @@ void continue_prompt() {
         exit(0);
     }
     printf("Would you like to continue anyway? [Y/n]:");
+    fflush(stdout);
     char response = fgetc(stdin);
     char end = fgetc(stdin);
     if (end != '\n' && end != EOF) {
@@ -126,6 +127,7 @@ void continue_prompt() {
             end = fgetc(stdin);
         }
         puts("Sorry that is not a recognised response, please try again");
+        fflush(stdout);
         continue_prompt();
     }
     if (response == 'y' || response == 'Y') {
@@ -134,6 +136,7 @@ void continue_prompt() {
         exit(0);
     }
     puts("Sorry that is not a recognised response, please try again");
+    fflush(stdout);
     continue_prompt();    
 }
 
@@ -177,6 +180,7 @@ void install_update(char *folderToRunIn) {
     char *folderToSend = make_bash_ready(folderToRunIn);
     size_t folderLength = strlen(folderToSend);
     puts("Configuring updating...");
+    fflush(stdout);
     char *configureScript = (char *) malloc(sizeof(char) * (folderLength + 26));
     if (configureScript == NULL) {
         exit(21);
@@ -188,6 +192,7 @@ void install_update(char *folderToRunIn) {
     (void) execute_script(scriptName, 35, false, EOF, get_verbose());
     puts("Configuration complete");
     puts("Compiling program...");
+    fflush(stdout);
     char *makeScript = (char *) malloc(sizeof(char) * (folderLength + 14));
     if (makeScript == NULL) {
         exit(21);
@@ -199,6 +204,7 @@ void install_update(char *folderToRunIn) {
     (void) execute_script(scriptName, 36, false, EOF, get_verbose());
     puts("Compilation complete");
     puts("Installing update...");
+    fflush(stdout);
     char *installScript = (char *) malloc(sizeof(char) * (folderLength + 
             strlen(updateDirectory) + 70));
     if (installScript == NULL) {
@@ -218,13 +224,16 @@ void full_update_installation_process(char *downloadLink, char *downloadName) {
     //download into file
     char *downloadFile = concat(updateDirectory, downloadName);
     puts("Downloading File...");
+    fflush(stdout);
     int success = download_file(downloadLink, downloadFile);
     if (success != 0) {
         exit(33);
     }
     puts("Download complete\nUncompressing File...");
+    fflush(stdout);
     char *uncompressedFolder = untar_update(downloadFile);
     puts("Decompression complete");
+    fflush(stdout);
     install_update(uncompressedFolder);
     //stuff that never actually happens
     //free(downloadFile), free(uncompressedFolder);
@@ -239,6 +248,7 @@ void perform_update_operations(bool update) {
     }
     if (get_verbose()) {
         puts("Checking for program update");
+        fflush(stdout);
     }
     char *page = curl_get_page(releasePage);
     if (page == NULL) {
@@ -261,7 +271,7 @@ void perform_update_operations(bool update) {
     if (lastOfUs != NULL) {
         char *nextLocation = releaseLocation;
         char *messageToProcess, *finalMessage, *lastLocation, *almostFinalMessage;
-        size_t initialMessage = 0;
+        size_t numberOfChanges = 0;
         while (lastLocation = nextLocation, nextLocation = strstr(nextLocation, "markdown-body"),
                 (nextLocation != NULL) || (nextLocation - lastOfUs >= 0)) {
             messageToProcess = get_substring(nextLocation, "\">", "</div>", -1);
@@ -272,18 +282,24 @@ void perform_update_operations(bool update) {
             free(messageToProcess);
             finalMessage = replace_leading_whitespace(almostFinalMessage, "\t");
             free(almostFinalMessage);
-            if (++initialMessage == 1) {
-                puts("Changelog:");
-                //may be printed even if finalmessage is empty, I know, that's okay :)
-            }
             char *nameSection = strstr(lastLocation, "release-title\">");
+            //if not null well..
             if (nameSection != NULL) {
                 char *skipABit = strstr(nameSection, "\">");
                 if (skipABit != NULL) {
                     skipABit += 2;
                     char *nameOfChangelogVersion = get_substring(skipABit, "\">", "</a>", -1);
                     if (nameOfChangelogVersion != NULL) {
+                        char *version = strstr(nameOfChangelogVersion, "v");
+                        if (version == NULL || strcmp(version, currentVersion) == 0) {
+                            break;
+                        }
+                        if (++numberOfChanges == 1) {
+                            puts("\n");
+                            fflush(stdout);
+                        }
                         printf("%s\n", nameOfChangelogVersion);
+                        fflush(stdout);
                         free(nameOfChangelogVersion);
                     }
                 }
@@ -291,6 +307,7 @@ void perform_update_operations(bool update) {
             }
             if (finalMessage != NULL) {
                 printf("%s\n", finalMessage);
+                fflush(stdout);
                 free(finalMessage);
             }
             //skip markdown body part of it
@@ -300,50 +317,55 @@ void perform_update_operations(bool update) {
                 break;
             }
         }
-    }
-    char *downloadSection = strstr(releaseLocation, "Downloads");
-    if (downloadSection == NULL) {
-        print_parse_error();
-        return;
-    }
-    char *downloadLink = get_substring(downloadSection, "<a href=\"", "\"", -1);
-    if (downloadLink == NULL) {
-        print_parse_error();
-        return;
-    }
-    char *downloadName = get_substring(downloadSection, "<strong>",
-            "</strong>", -1);
-    if (downloadName == NULL) {
-        print_parse_error();
-        return;
-    }
-    free(page);
-    decode_html_entities_utf8(downloadName, NULL);
-    char *fullDownloadLink = concat("https://github.com", downloadLink);;
-    free(downloadLink);
-    int difference = process_version(version + 1);
-    if (errorOccured) {
-        return;
-    }
-    if (update) {
-        if (difference == 0) {
-            puts("Nothing to update, already on the latest stable release");
-        } else if (difference > 0) {
-            puts("You are currently on a newer version that the latest stable,"
-                    " continuing will downgrade to the latest stable.");
-            continue_prompt();
-            //do update thing
-            full_update_installation_process(fullDownloadLink, downloadName);
-        } else {
-            //do update thing
-            full_update_installation_process(fullDownloadLink, downloadName);
+        if (numberOfChanges > 0) {
+            printf("Number of Updates: %zu\n", numberOfChanges);
+            fflush(stdout);
+            }
         }
-    } else {
-        if (difference < 0) {
-            printf("New stable version v%ld.%ld.%ld->%s of Tiny-Manga-Downloader is now "
+        char *downloadSection = strstr(releaseLocation, "Downloads");
+        if (downloadSection == NULL) {
+            print_parse_error();
+            return;
+        }
+        char *downloadLink = get_substring(downloadSection, "<a href=\"", "\"", -1);
+        if (downloadLink == NULL) {
+            print_parse_error();
+            return;
+        }
+        char *downloadName = get_substring(downloadSection, "<strong>",
+                "</strong>", -1);
+        if (downloadName == NULL) {
+            print_parse_error();
+            return;
+        }
+        free(page);
+        decode_html_entities_utf8(downloadName, NULL);
+        char *fullDownloadLink = concat("https://github.com", downloadLink);;
+        free(downloadLink);
+        int difference = process_version(version + 1);
+        if (errorOccured) {
+            return;
+        }
+        if (update) {
+            if (difference == 0) {
+                puts("Nothing to update, already on the latest stable release");
+            } else if (difference > 0) {
+                puts("You are currently on a newer version that the latest stable,"
+                        " continuing will downgrade to the latest stable.");
+                continue_prompt();
+                //do update thing
+                full_update_installation_process(fullDownloadLink, downloadName);
+            } else {
+                //do update thing
+                full_update_installation_process(fullDownloadLink, downloadName);
+            }
+        } else {
+            if (difference < 0) {
+                printf("New stable version v%ld.%ld.%ld->%s of Tiny-Manga-Downloader is now "
                     "available, it is highly recommended to update\n"
                     "You can do that with \"sudo manga-dl update\"\n",
                     major, normal, minor, version);
+            fflush(stdout);
             continue_prompt();
         }
     }

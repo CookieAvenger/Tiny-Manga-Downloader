@@ -5,6 +5,7 @@ Can save each chapter as a comic book archive, and can delete duplicate images
 (works for some scanlator images).  
 Experimental image duplication finder to try and remove all possible
 scanlator images  
+Automatic program updation included  
 Some sort of chapter selection option to come  
   
 kissmanga.com and mangasee supported (can request other sites, not too hard to impliment)  
@@ -18,7 +19,6 @@ cd Tiny-Manga-Downloader
 ./configure  
 make  
 sudo make install  
-optional: make clean  
   
 ##To uninstall  
 In above Tiny-Manga-Downloader folder run  
@@ -32,7 +32,7 @@ And check out the man page with
 man manga-dl  
   
 ###Dependences to run  
-cfscrape - for kissmanga.com (and by extension python) "sudo -H pip install cfscrape" should do the trick   
+cfscrape - for kissmanga.com (and by extension python 2.7) "sudo -H pip install cfscrape" should do the trick   
 findimagedupes - for experimental feature "sudo apt install findimagedupes" works on Ubuntu, other distributions should have it with their respective package managers  
 shasum (comes with perl)  
 zip  
@@ -44,6 +44,22 @@ bash (rm and mkdir too)
 libcurl  
 make  
 a C compiler  
+
+    
+##What's planned to come
+0.1.2
+    - Update option
+    - kissmanga fix
+0.1.3  
+    - Don't update manga marked finished online  
+    - Add to http request "if not changed scince (date)" and store that date and weather everything was downloaded on settings file, this way if every chapter has been downloaded and page has not changed, don't bother :P
+    - allow multiple download threads, allow user to specify - try and make a method to work out optimal 
+    - add option for downloading backwards, to stop after n chapters, to stop at chapter called s
+0.1.4
+    - Clean up code (and restructure)!! -- really need to do, changed design and features too often while making
+    - Start using more regex
+0.2.0
+    - add an option to be able to select chapters, use a terminal graphics library for this
 
 ##License 
   

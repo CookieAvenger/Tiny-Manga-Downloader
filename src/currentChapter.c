@@ -125,7 +125,7 @@ void process_and_download_urls(char **pictureUrls, Chapter *current) {
         if (curlSuccess != 0) {
             free(fileNumber), free(numberFilePath), free(pictureUrls[i]);
             //Make this better at some point
-            fprintf(stderr, "Error downloading page %zu from %s\n", 
+            fprintf(stderr, "\nError downloading page %zu from %s\n", 
                     i+1, current->name);
             continue;
         }
@@ -235,7 +235,7 @@ bool chapterExists(char *toCheck) {
 //Start downloading a chapter
 void download_chapter(Chapter *current, Site source) {
     setup_incomplete_chapter_folder(current->name);
-    if (chapterExists(current->name)) {
+    if (current->doneWith || chapterExists(current->name)) {
         if (get_verbose()) {
             printf("Skipping %s - already downloaded\n", current->name);
             fflush(stdout);

@@ -169,6 +169,7 @@ void print_error(int err, void *notUsing) {
     if (pythonScript != NULL) {
         remove(pythonScript);
     }
+    clean_up_page_decryption();
     char *bashScript = get_bash_script_location();
     if (bashScript != NULL) {
         remove(get_bash_script_location());
@@ -561,6 +562,7 @@ int main(int argc, char** argv) {
     } 
     save_settings();
     download_entire_queue();
+    clean_up_page_decryption();
     curl_global_cleanup();
     //join that final blacklist save(true)
     join_threaded_blacklist();

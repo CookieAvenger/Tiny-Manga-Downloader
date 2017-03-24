@@ -1,5 +1,7 @@
 findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
 
+when decryting image locations say I'm doing that for kissmanga
+
 use option --posix when making next tar
  configure line 560
 test -n "$DJDIR" || exec 7<&0 </dev/null
@@ -20,17 +22,8 @@ what if instead of series just a chapter page is given - then just download the 
 
 clean up code!!
 
-quick fail downloading chapters - and move on don't exit
-
-keep auto-updating desired mangas - just run the url every day automatically or whatever
-store somewhere where to update from and so if you just run tmdl in that folder it'll just work on updating it
-
 improve the verbose print
 
-impliment download of a single chapter kissMangaDownload.c:78
-
 make a massive defines file for all the places I search for in source code to get stuff so if the site changes its easier to update
-
-have a --version option and a update option - write and executes a script as sudo that checks github for version change
 
 improve error messages

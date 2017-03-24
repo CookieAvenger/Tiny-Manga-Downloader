@@ -8,23 +8,59 @@
 #include "currentChapter.h"
 #include "networking.h"
 #include "mangaSeeSupport.h"
+#include <regex.h>
+
+regex_t keyFinder = { .re_nsub = 0 };
+
+void free_kissmanga_regex() {
+    if (keyFinder.re_nsub != 0) {
+        regfree(&keyFinder);
+        keyFinder.re_nsub = 0;
+    }
+}
+
+void compile_kissmanga_regex() {
+    if (regcomp(&keyFinder, "(.*CryptoJS.*)", 0) != 0) {
+        fputs("Could not compile regex", stderr);
+        exit(24);
+    }
+}
 
 //Get every image to download in a kissmanga chapter
 char **setup_kissmanga_chapter(Chapter *current) {
+    //do only if customData is NULL
+    if (current->customData != NULL) {
+        return current->customData;
+    }
+    if (keyFinder.re_nsub == 0) {
+        compile_kissmanga_regex();
+    }
     char *page = get_kissmanga_page(current->link);
     if (page == NULL) {
         fprintf(stderr, "Failed to access: %s\n", current->name);
         return NULL;
     }
-    char *unparsedImageList = get_substring(page, "lstImage", "currImage", -1);
+    char **allKeys = find_all_occurances(page, &keyFinder);
+    //we know there are only ever 2 :p
+    //regexSucces could != 0 due to memory problems or no match among other
+    if (allKeys == NULL || allKeys[0] == NULL) {
+        free(page);
+        fprintf(stderr, "Couldn't parse chapter: %s\n", current->name);
+        return NULL;
+    }
+    //need to find and parse keys here
+    
+    char *unparsedImageList = get_substring(page, "lstImages", "currImage", -1);
     free(page);
     if (unparsedImageList == NULL) {
         fprintf(stderr, "Couldn't parse chapter: %s\n", current->name);
         return NULL;
     }
-    char **toReturn = continuous_substring(unparsedImageList, "\"", "\"");
+    char **toReturn = continuous_substring(unparsedImageList, 
+            "lstImages.push(", ");");
     free(unparsedImageList);
-    return toReturn;
+    //below method mangaes allkeys memory, and returns answer in toReturn
+    return run_page_decryption(allKeys, toReturn);
 }
 
 //Parse chapters section and push onto chaptersQueue
@@ -36,6 +72,8 @@ void fill_up_queue(char **unparsedChapters) {
         if (toAdd == NULL) {
             exit(21);
         }
+        toAdd->customData = NULL;
+        toAdd->doneWith = false;
         char *linkToAdd = get_substring(unparsedChapters[i], "\"", "\"", 26);
         char *concatedLinkToAdd = concat(seriesPath, linkToAdd);
         free(linkToAdd);

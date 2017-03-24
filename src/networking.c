@@ -272,7 +272,7 @@ char *get_standard_manga_page(char *file) {
 //Handles html error codes
 char *handle_error_codes(char *page) {
     //3XX error codes are redirects
-    if (strncmp(page + 9, "3", 1) == 0) {
+    if (*(page + 9)== '3') {
         char *redirectTo = get_substring(page, "Location: ", "\n", 6);
         free(page);
         Site source = get_source();
@@ -284,7 +284,7 @@ char *handle_error_codes(char *page) {
         free(redirectTo);
         return page;
     //4XX error codes are issues like page doesnt exist ect.
-    } else if (strncmp(page + 9, "4", 1) == 0) {
+    } else if (*(page + 9) == '4') {
         free(page);
         return NULL;
     }

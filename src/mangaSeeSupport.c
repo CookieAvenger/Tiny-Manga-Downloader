@@ -71,6 +71,8 @@ void setup_mangasee_chapters_download(char *seriesPage) {
         if (toAdd == NULL) {
             exit(21);
         }
+        toAdd->customData = NULL;
+        toAdd->doneWith = false;
         char *linkToAdd = get_substring(chaptersUnparse[i], "href=\"", "\"", 26);
         char *nameToAdd = get_substring(chaptersUnparse[i],
                 "chapterLabel\">", "<", 26);
