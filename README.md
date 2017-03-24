@@ -44,23 +44,23 @@ bash (rm and mkdir too)
 libcurl  
 make  
 a C compiler  
-
     
-##What's planned to come
-0.1.2
-    - Update option
-    - kissmanga fix
-0.1.3  
+##What's planned to come  
+  
+0.1.2  
+    - Update option  
+    - kissmanga fix  
+0.1.3   
     - Don't update manga marked finished online  
-    - Add to http request "if not changed scince (date)" and store that date and weather everything was downloaded on settings file, this way if every chapter has been downloaded and page has not changed, don't bother :P
-    - allow multiple download threads, allow user to specify - try and make a method to work out optimal 
-    - add option for downloading backwards, to stop after n chapters, to stop at chapter called s
-0.1.4
-    - Clean up code (and restructure)!! -- really need to do, changed design and features too often while making
-    - Start using more regex
-0.2.0
-    - add an option to be able to select chapters, use a terminal graphics library for this
-
+    - Add to http request "if not changed scince (date)" and store that date and weather everything was downloaded on settings file, this way if every chapter has been downloaded and page has not changed, don't bother :P  
+    - allow multiple download threads, allow user to specify - try and make a method to work out optimal   
+    - add option for downloading backwards, to stop after n chapters, to stop at chapter called s  
+0.1.4  
+    - Clean up code (and restructure)!! -- really need to do, changed design and features too often while making  
+    - Start using more regex  
+0.2.0  
+    - add an option to be able to select chapters, use a terminal graphics library for this  
+  
 ##License 
   
     Copyright 2016 Krishna Shukla                                           
