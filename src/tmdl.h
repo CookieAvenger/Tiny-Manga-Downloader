@@ -14,3 +14,4 @@ bool get_to_find_dupes();
 int get_similarity_percentage();
 void set_series_path(char *newPath);
 Site process_first_url(char *url);
+bool get_decrypt_first();

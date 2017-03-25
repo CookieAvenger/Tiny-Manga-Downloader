@@ -107,24 +107,19 @@ Chapter *pop_from_download() {
     if (head == NULL) {
         tail = NULL;
     }
-    overallPointer++;
+    ++overallPointer;
     return toDownload;
 }
 
 //Go through the queue and download every chapter
 void download_entire_queue() {
     //if kissmanga, try to decrypt all the chapters first
-    if (source == kissmanga) {
-        if (get_verbose()) {
-            puts("All kissmanga chapters have to be decrypted (sadly will be "
-                    "resource intensive... no way to make it light for this atm) "
-                    "before download can begin, please be patient");
-            fflush(stdout);
-        }
+    //for small mangas, best to do decryption first -- make memory available fast
+    if (source == kissmanga && ((fullLength - overallPointer) <= 5)) {
         ChapterQueue *pointer = head;
-        size_t tempCurrent = 0;
+        size_t tempCurrent = overallPointer;
         while (pointer != NULL) {
-            ++tempCurrent;
+            ++overallPointer;
             if (!chapterExists(pointer->current->name)) {
                 if (get_verbose()) {
                     printf("Decrypting links for chapter %zu/%zu\n", tempCurrent, fullLength);
@@ -137,6 +132,7 @@ void download_entire_queue() {
             }
             pointer = pointer->next;
         }
+        overallPointer = tempCurrent;
         puts("Finished decryption relavent links");
         fflush(stdout);
         stop_decryption_program();
@@ -153,9 +149,6 @@ void download_entire_queue() {
         free(toDownload->link);
         free(toDownload);
     }
-    //won't ever happen, if I just remove the if source == kissmanga line, then it would do the process
-    //chapter by chapter instead of all chapters in a go, could provide option, but in my opinion, do first
-    //is a far better strategy, anyway, it's gonna change at 0.2.0 with chapter selection
     stop_decryption_program();
     fullLength = overallPointer = 0;
     head = tail = NULL;

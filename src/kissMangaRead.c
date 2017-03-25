@@ -226,6 +226,11 @@ char **run_page_decryption(char **newKeys, char **encryptedSites) {
     //if keys entered are same as what I already have, don't run kets again
     //check keys with compare_arrays
     //also in cleanup remember to free the keys array
+    if (get_verbose()) {
+        printf("Decrypting links for chapter %zu/%zu\n",
+                get_current_download_chapter(), get_download_length());
+        fflush(stdout);
+    }
     bool runKeys = false;
     if (currentKeys == NULL) {
         currentKeys = newKeys;
