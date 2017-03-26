@@ -50,7 +50,7 @@ a C compiler
     
 ##What's planned to come  
   
-0.1.3  
+0.1.2  
    
     - Don't update manga marked finished online  
     - Add to http request "if not changed scince (date)" and store that date and weather everything was downloaded on settings file, this way if every chapter has been downloaded and page has not changed, don't bother :P  
@@ -58,7 +58,7 @@ a C compiler
     - Thread and interleive kissmanga chapter decryption, so decrypt first link, start download, while downloading first, decrypt next link and so on
     - add option for downloading backwards, to stop after n chapters, to stop at chapter called s  
   
-0.1.4 
+0.1.3 
    
     - Clean up code (and restructure)!! -- really need to do, changed design and features too often while making  
     - Start using more regex  
