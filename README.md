@@ -72,7 +72,7 @@ a C compiler
     - experimental feature that uses findimagedupes - in one experiment, running -e again deleted everything already checked even though it's already on database, one possible reason may be metadata checks - the time stamps change as I unzip it and rezip it (on rezip I set it to lose all metadata) - havn't tried disabling and renabling it yet, but if that is the case may not be a full fix man pages for zip says not all extended file attirbutes are copied any - any thing it doesn't understand zip strips anyway, and it adds system specific file attributes when unzipping  
     - End of main method I have to fork and exec in order to keep terminal in attention, if I just exec it I lose the terminal focus, wnat to keep focus and just exec :/  
     - to run autoinstall through app gives a bad line descriptor error in configure script :/
-        line is "test -n "$DJDIR" || exec 7<&0 </dev/null", changing it to 0<&0 instead of 7<&0 fixes it...
+        its line 560 - "test -n "$DJDIR" || exec 7<&0 </dev/null", changing it to 0<&0 instead of 7<&0 fixes it...
         but dunno why... hah ah... =S
   
 ##License  
