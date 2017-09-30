@@ -1,5 +1,8 @@
 # Tiny-Manga-Downloader   
   
+This project has now been abandoned for the time being thanks to the release of HakuNekoS:https://sourceforge.net/projects/hakuneko/ which I recomend  
+If HakuNekoS stops supporting the lastest Ubuntu LTS again, this will be remaintained, although next time most porbably as a java program, not a systems one  
+  
 Tiny C program to download manga seires and update already downloaded ones.  
 Can save each chapter as a comic book archive, and can delete duplicate images
 (works for some scanlator images).  
@@ -8,7 +11,7 @@ scanlator images
 Automatic program updation included  
 Some sort of chapter selection option to come  
   
-kissmanga.com and mangasee supported (can request other sites, not too hard to impliment)  
+mangasee supported (can request other sites, not too hard to impliment), kissmanga was supported, but now abandonded  
 Should run on all posix systems (untested) - only being tested on Ubuntu  
   
 ##To Install  

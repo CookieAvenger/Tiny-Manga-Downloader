@@ -210,6 +210,9 @@ void print_error(int err, void *notUsing) {
             fputs("Do not have nessacary read and write permissions ", stderr);
             fputs("in current directory\n", stderr);
             break;
+        case 5:
+            fputs("Domain hostname invalid\n", stderr);
+            break;
         case 6:
             fputs("Invalid series location\n", stderr);
             break;
@@ -540,6 +543,9 @@ int main(int argc, char** argv) {
     signal(SIGINT, terminate_handler);
     on_exit(print_error, NULL);
     curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (argc == 1) {
+        exit(1);
+    }
     if (strcmp(argv[1], "update") == 0) {
         perform_flag_yes_no_checks(argc, argv);
         perform_update_operations(true);

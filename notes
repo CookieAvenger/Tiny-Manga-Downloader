@@ -1,5 +1,9 @@
 findimagedupes -f .fingerprints.fid -i 'VIEW(){ for f in "$@";do echo \"$f\" | xargs rm -f ;done }' -t 95% -q -q -R "%s"
 
+USE THE V8 ENGINE FOR THE JAVASCRIPT STUFF!!!!
+
+need to differentiaite bewteen domain and hostname
+
 when decryting image locations say I'm doing that for kissmanga
 
 learn the README.md format =|
